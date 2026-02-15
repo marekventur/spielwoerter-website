@@ -25,16 +25,26 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## VPS deployment
 
+**Using the deploy scripts (recommended):** Set `NAME` and `PORT` in `app.config`, then from your machine (or a GitHub Action):
+
+```bash
+./deploy.sh /path/to/deploy-key
+# or: SSH_PRIVATE_KEY=/path/to/key ./deploy.sh
+```
+
+This rsyncs the repo to `root@vps3.marekventur.com:/var/www/<NAME>` and runs `post_deploy.sh` on the VPS (npm ci, build, PM2 restart/start).
+
+**Manual deploy:**
+
 1. On the server: clone repo, then `npm ci` and `npm run build`.
-2. Set env (e.g. in `ecosystem.config.cjs` or `.env`):
+2. Set `NAME` and `PORT` in `app.config` (or env):
    - `NODE_ENV=production`
-   - `PORT` (default `3000`)
    - Optional: `DATABASE_PATH` (default: `./data/app.db`)
 3. Start with PM2:
    ```bash
-   npm run pm2:start
+   ./post_deploy.sh
    ```
-   Or install PM2 globally and run: `pm2 start ecosystem.config.cjs`.
+   Or: `source app.config && pm2 start ecosystem.config.cjs`.
 4. Use a reverse proxy (e.g. Nginx/Caddy) in front of the app and optionally `pm2 save` + `pm2 startup` for persistence.
 
 ## Stack
@@ -59,7 +69,11 @@ Open [http://localhost:3000](http://localhost:3000).
 ├── server/
 │   └── app.ts           # Express app + React Router handler
 ├── server.js            # Entry (dev: Vite middleware, prod: static + build)
-├── ecosystem.config.cjs # PM2 config
+├── app.config            # NAME + PORT (deploy & PM2)
+├── verify.sh             # Local: npm ci, typecheck, build (run by deploy.sh first)
+├── deploy.sh             # Verify, then rsync to VPS + run post_deploy.sh
+├── post_deploy.sh        # On VPS: npm ci, build, PM2 restart/start
+├── ecosystem.config.cjs  # PM2 config (uses NAME/PORT from app.config)
 ├── react-router.config.ts
 ├── vite.config.ts
 └── tsconfig*.json
