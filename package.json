@@ -18,6 +18,7 @@
     "compression": "^1.8.1",
     "express": "^5.1.0",
     "isbot": "^5.1.31",
+    "lucide-react": "^0.564.0",
     "morgan": "^1.10.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -36,9 +37,9 @@
     "@types/react-dom": "^19.2.3",
     "cross-env": "^10.0.0",
     "daisyui": "^5.5.0",
+    "pm2": "^5.4.3",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",
-    "pm2": "^5.4.3",
     "vite": "^7.1.7",
     "vite-tsconfig-paths": "^5.1.4"
   }
