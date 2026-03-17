@@ -11,5 +11,8 @@ export default defineConfig(({ isSsrBuild }) => ({
         }
       : undefined,
   },
+  server: {
+    allowedHosts: ["dev.spielwoerter.de"],
+  },
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
 }));

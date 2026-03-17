@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
+import { initSchema } from "./schema.js";
 
 const DB_PATH = process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "app.db");
 
@@ -11,6 +12,7 @@ export function getDb(): Database.Database {
     fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
     db = new Database(DB_PATH);
     db.pragma("journal_mode = WAL");
+    initSchema(db);
   }
   return db;
 }

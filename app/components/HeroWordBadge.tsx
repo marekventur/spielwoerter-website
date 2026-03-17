@@ -27,6 +27,12 @@ const statusConfig: Record<
     icon: <X className="w-6 h-6" />,
     message: "Noch nicht im Wörterbuch",
   },
+  uncertain: {
+    bg: "bg-amber-100 border-amber-300",
+    text: "text-amber-800",
+    icon: null,
+    message: "Status unsicher",
+  },
   "pending-add": {
     bg: "bg-blue-100 border-blue-300",
     text: "text-blue-800",

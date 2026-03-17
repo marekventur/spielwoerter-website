@@ -4,18 +4,21 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "dev": "cross-env NODE_ENV=development node server.js",
+    "dev": "cross-env NODE_ENV=development PORT=3004 node server.js",
     "start": "node server.js",
     "typecheck": "react-router typegen && tsc -b",
     "pm2:start": "pm2 start ecosystem.config.cjs",
     "pm2:stop": "pm2 stop default-app",
-    "pm2:restart": "pm2 restart default-app"
+    "pm2:restart": "pm2 restart default-app",
+    "sync:pull": "tsx scripts/sync-pull.ts"
   },
   "dependencies": {
     "@react-router/express": "^7.12.0",
     "@react-router/node": "^7.12.0",
     "better-sqlite3": "^11.6.0",
     "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.3.1",
     "express": "^5.1.0",
     "isbot": "^5.1.31",
     "lucide-react": "^0.564.0",
@@ -29,6 +32,7 @@
     "@tailwindcss/vite": "^4.1.13",
     "@types/better-sqlite3": "^7.6.11",
     "@types/compression": "^1.8.1",
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.3",
     "@types/express-serve-static-core": "^5.0.7",
     "@types/morgan": "^1.9.10",
@@ -39,6 +43,7 @@
     "daisyui": "^5.5.0",
     "pm2": "^5.4.3",
     "tailwindcss": "^4.1.13",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.7",
     "vite-tsconfig-paths": "^5.1.4"

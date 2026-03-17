@@ -1,17 +1,27 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Search } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import type { Route } from "./+types/home";
 
+export async function loader({ context }: Route.LoaderArgs) {
+  return { user: context.user };
+}
+
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Spielwörter.de – Das offene deutsche Scrabble-Wörterbuch" }];
 }
 
-export default function Home() {
+export default function Home({ loaderData }: Route.ComponentProps) {
+  const { user } = loaderData;
   const [searchWord, setSearchWord] = useState("");
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.reload();
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,12 +61,39 @@ export default function Home() {
             >
               Download
             </a>
-            <Button
-              variant="outline"
-              className="border-orange-500 text-orange-600 hover:bg-orange-50"
-            >
-              Login
-            </Button>
+            {user ? (
+              <div className="flex items-center gap-3">
+                {user.isModerator && (
+                  <Link to="/moderation" className="text-gray-600 hover:text-orange-600 transition-colors text-sm">
+                    Moderation
+                  </Link>
+                )}
+                {user.isAdmin && (
+                  <Link to="/admin" className="text-gray-600 hover:text-orange-600 transition-colors text-sm">
+                    Admin
+                  </Link>
+                )}
+                <Link to="/meine-vorschlaege" className="text-gray-600 hover:text-orange-600 transition-colors text-sm">
+                  Meine Vorschläge
+                </Link>
+                <Button
+                  variant="outline"
+                  className="border-gray-300 text-gray-600 hover:bg-gray-50"
+                  onClick={handleLogout}
+                >
+                  Abmelden
+                </Button>
+              </div>
+            ) : (
+              <Link to="/login">
+                <Button
+                  variant="outline"
+                  className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                >
+                  Anmelden
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </nav>
