@@ -22,7 +22,7 @@ app.use(express.json());
 // ── Auth API ────────────────────────────────────────────────────────────────
 
 app.post("/api/auth/request-code", async (req, res) => {
-  const { email } = req.body as { email?: string };
+  const { email } = (req.body ?? {}) as { email?: string };
   if (!email || !email.includes("@")) {
     res.status(400).json({ error: "Ungültige E-Mail-Adresse" });
     return;
@@ -54,7 +54,7 @@ app.post("/api/auth/request-code", async (req, res) => {
 });
 
 app.post("/api/auth/verify-code", (req, res) => {
-  const { email, code } = req.body as { email?: string; code?: string };
+  const { email, code } = (req.body ?? {}) as { email?: string; code?: string };
   if (!email || !code) {
     res.status(400).json({ error: "Fehlende Felder" });
     return;
@@ -141,7 +141,10 @@ app.post("/api/auth/logout", (req, res) => {
 
 function requireUser(req: express.Request, res: express.Response) {
   const sessionId = req.cookies?.session as string | undefined;
-  if (!sessionId) return null;
+  if (!sessionId) {
+    res.status(401).json({ error: "Nicht angemeldet" });
+    return null;
+  }
   const user = getUserFromSession(getDb(), sessionId);
   if (!user) {
     res.status(401).json({ error: "Nicht angemeldet" });
@@ -494,6 +497,7 @@ async function mailgunSend(
       Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
     },
     body: form,
+    signal: AbortSignal.timeout(10_000),
   });
 
   if (!response.ok) {

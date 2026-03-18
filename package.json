@@ -10,7 +10,8 @@
     "pm2:start": "pm2 start ecosystem.config.cjs",
     "pm2:stop": "pm2 stop default-app",
     "pm2:restart": "pm2 restart default-app",
-    "sync:pull": "tsx scripts/sync-pull.ts"
+    "sync:pull": "tsx scripts/sync-pull.ts",
+    "test:e2e": "playwright test --config tests/playwright.config.ts"
   },
   "dependencies": {
     "@react-router/express": "^7.12.0",
@@ -28,6 +29,7 @@
     "react-router": "^7.12.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@react-router/dev": "^7.12.0",
     "@tailwindcss/vite": "^4.1.13",
     "@types/better-sqlite3": "^7.6.11",
