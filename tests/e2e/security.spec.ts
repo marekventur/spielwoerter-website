@@ -154,6 +154,20 @@ test("user cannot delete another user's suggestion", async ({ request }) => {
   expect(still).toBeTruthy();
 });
 
+test("user cannot patch another user's draft", async ({ request }) => {
+  const userAId = seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  const suggId = seedSuggestion(userAId, "patchword", "add", "draft");
+
+  seedUser(TEST_USER2_EMAIL, { licenseApproved: true });
+  const sessionIdB = await loginViaApi(TEST_USER2_EMAIL);
+
+  const res = await request.patch(`/api/suggestions/${suggId}`, {
+    headers: { Cookie: `session=${sessionIdB}` },
+    data: { payload: { description: "hacked" } },
+  });
+  expect(res.status()).toBe(404);
+});
+
 // ── Input validation ─────────────────────────────────────────────────────────
 
 test("request-code rejects email without @", async ({ request }) => {

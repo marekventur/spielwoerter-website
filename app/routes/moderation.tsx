@@ -61,16 +61,12 @@ function groupByBase(items: ModerationItem[]): Group[] {
 }
 
 export default function ModerationPage({ loaderData }: Route.ComponentProps) {
-  const { user, items: initialItems } = loaderData;
+  const { items: initialItems } = loaderData;
   const [decided, setDecided] = useState<Map<number, "approved" | "rejected">>(
     new Map()
   );
   const [loading, setLoading] = useState<Set<number>>(new Set());
 
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/";
-  };
 
   const decide = async (ids: number[], action: "approve" | "reject") => {
     setLoading((prev) => {
@@ -113,27 +109,7 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
   const groups = groupByBase(pending);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-50">
-      {/* Navigation */}
-      <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex gap-1">
-              <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-white font-bold text-sm">S</div>
-              <div className="w-8 h-8 bg-orange-400 rounded flex items-center justify-center text-white font-bold text-sm">W</div>
-            </div>
-            <span className="text-xl font-bold text-gray-800">Spielwörter.de</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link to="/meine-vorschlaege" className="text-sm text-gray-600 hover:text-orange-600">
-              Meine Vorschläge
-            </Link>
-            <Button variant="outline" className="border-gray-300 text-gray-600 hover:bg-gray-50" onClick={handleLogout}>
-              Abmelden
-            </Button>
-          </div>
-        </div>
-      </nav>
+    <div>
 
       <div className="max-w-4xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-8">
@@ -224,8 +200,14 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
 
                             {payload?.description && (
                               <p className="text-sm text-gray-700 mb-1">
-                                <span className="font-medium">Vorgeschlagen:</span>{" "}
+                                <span className="font-medium">Beschreibung:</span>{" "}
                                 {payload.description}
+                              </p>
+                            )}
+                            {item.action === "add" && payload?.base && (
+                              <p className="text-sm text-gray-500 mb-1">
+                                <span className="font-medium text-gray-600">Grundform:</span>{" "}
+                                <span className="font-mono">{payload.base}</span>
                               </p>
                             )}
 

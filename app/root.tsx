@@ -8,6 +8,8 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { NavBar } from "~/components/NavBar";
+import { SiteFooter } from "~/components/SiteFooter";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -32,7 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
         <Meta />
       </head>
-      <body className="min-h-screen bg-base-100 font-sans antialiased">
+      <body className="font-sans antialiased">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -41,8 +43,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
-  return <Outlet />;
+export async function loader({ context }: Route.LoaderArgs) {
+  return { user: context.user };
+}
+
+export default function App({ loaderData }: Route.ComponentProps) {
+  const { user } = loaderData;
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-50 flex flex-col">
+      <NavBar user={user} />
+      <main className="flex-1 flex flex-col">
+        <Outlet />
+      </main>
+      <SiteFooter />
+    </div>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

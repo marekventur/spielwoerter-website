@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { Search } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
@@ -13,15 +13,9 @@ export function meta({}: Route.MetaArgs) {
   return [{ title: "Spielwörter.de – Das offene deutsche Scrabble-Wörterbuch" }];
 }
 
-export default function Home({ loaderData }: Route.ComponentProps) {
-  const { user } = loaderData;
+export default function Home({}: Route.ComponentProps) {
   const [searchWord, setSearchWord] = useState("");
   const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.reload();
-  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,72 +25,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-50">
-      {/* Navigation */}
-      <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1">
-              <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-white font-bold text-sm">
-                S
-              </div>
-              <div className="w-8 h-8 bg-orange-400 rounded flex items-center justify-center text-white font-bold text-sm">
-                W
-              </div>
-            </div>
-            <span className="text-xl font-bold text-gray-800">
-              Spielwörter.de
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <a
-              href="#"
-              className="text-gray-600 hover:text-orange-600 transition-colors"
-            >
-              Über das Projekt
-            </a>
-            <a
-              href="#"
-              className="text-gray-600 hover:text-orange-600 transition-colors"
-            >
-              Download
-            </a>
-            {user ? (
-              <div className="flex items-center gap-3">
-                {user.isModerator && (
-                  <Link to="/moderation" className="text-gray-600 hover:text-orange-600 transition-colors text-sm">
-                    Moderation
-                  </Link>
-                )}
-                {user.isAdmin && (
-                  <Link to="/admin" className="text-gray-600 hover:text-orange-600 transition-colors text-sm">
-                    Admin
-                  </Link>
-                )}
-                <Link to="/meine-vorschlaege" className="text-gray-600 hover:text-orange-600 transition-colors text-sm">
-                  Meine Vorschläge
-                </Link>
-                <Button
-                  variant="outline"
-                  className="border-gray-300 text-gray-600 hover:bg-gray-50"
-                  onClick={handleLogout}
-                >
-                  Abmelden
-                </Button>
-              </div>
-            ) : (
-              <Link to="/login">
-                <Button
-                  variant="outline"
-                  className="border-orange-500 text-orange-600 hover:bg-orange-50"
-                >
-                  Anmelden
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-      </nav>
+    <div>
+      
 
       {/* Hero Section */}
       <div className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
@@ -309,19 +239,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-gray-50 border-t py-8">
-        <div className="max-w-6xl mx-auto px-6 text-center text-gray-600">
-          <p className="mb-2">
-            <strong>Spielwörter.de</strong> – Ein offenes Projekt für die
-            deutsche Wortspiel-Community
-          </p>
-          <p className="text-sm">
-            Lizenziert unter einer offenen Lizenz · Hosted auf GitHub · Made
-            with ❤️ für Wortspieler
-          </p>
-        </div>
-      </footer>
+      
     </div>
   );
 }

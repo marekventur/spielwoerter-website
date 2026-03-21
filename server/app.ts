@@ -246,6 +246,53 @@ app.delete("/api/suggestions/:id", (req, res) => {
   res.json({ ok: true });
 });
 
+app.patch("/api/suggestions/:id", (req, res) => {
+  const user = requireUser(req, res);
+  if (!user) return;
+
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ error: "Ungültige ID" });
+    return;
+  }
+
+  const { payload: patchPayload } = req.body as {
+    payload?: Record<string, string>;
+  };
+  if (!patchPayload || typeof patchPayload !== "object") {
+    res.status(400).json({ error: "payload fehlt" });
+    return;
+  }
+
+  const db = getDb();
+  const row = db
+    .prepare(
+      "SELECT id, payload, status FROM suggestions WHERE id = ? AND user_id = ?"
+    )
+    .get(id, user.id) as
+    | { id: number; payload: string | null; status: string }
+    | undefined;
+
+  if (!row) {
+    res.status(404).json({ error: "Nicht gefunden" });
+    return;
+  }
+  if (row.status !== "draft") {
+    res.status(403).json({ error: "Nur Entwürfe können bearbeitet werden" });
+    return;
+  }
+
+  const existing = row.payload
+    ? (JSON.parse(row.payload) as Record<string, string>)
+    : {};
+  const merged = { ...existing, ...patchPayload };
+  db.prepare(
+    `UPDATE suggestions SET payload = ?, last_modified_at = datetime('now') WHERE id = ?`
+  ).run(JSON.stringify(merged), id);
+
+  res.json({ ok: true });
+});
+
 // ── Moderation API ───────────────────────────────────────────────────────────
 
 type SuggRow = { id: number; word: string; action: string; status: string };
@@ -390,6 +437,120 @@ app.post("/api/sync/push", async (req, res) => {
 });
 
 // ── Public word API ──────────────────────────────────────────────────────────
+
+// ── Word enrichment helpers ────────────────────────────────────────────────────
+
+const GERMAN_SUFFIXES = ["nen", "ern", "ste", "en", "es", "em", "er", "e", "s", "n"];
+
+function deUmlaut(s: string) {
+  return s.replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u");
+}
+
+function detectAlgorithmicBase(word: string): string | null {
+  const db = getDb();
+  for (const suffix of GERMAN_SUFFIXES) {
+    if (word.endsWith(suffix) && word.length - suffix.length >= 2) {
+      const stem = word.slice(0, word.length - suffix.length);
+      if (db.prepare("SELECT 1 FROM words WHERE word = ?").get(stem)) return stem;
+      const plain = deUmlaut(stem);
+      if (plain !== stem && db.prepare("SELECT 1 FROM words WHERE word = ?").get(plain)) return plain;
+    }
+  }
+  return null;
+}
+
+const DEEPSEEK_SYSTEM_PROMPT = `\
+Du bist ein Lexikograf für das Spielwörter.de-Projekt – eine gemeinschaftliche Scrabble-Wortliste für das Deutsche.
+
+Deine Aufgabe: Gib für ein gegebenes deutsches Wort (immer in Kleinbuchstaben) eine Kurzbeschreibung im Hausstil zurück, sowie die Grundform (Lemma) — aber NUR wenn das Wort wirklich eine flektierte Form ist.
+
+Antworte NUR mit einem JSON-Objekt: {"description": "...", "base": "..." oder null}
+
+WICHTIG – zwei verschiedene Fälle:
+
+Fall 1 – Grundform (Lemma): Infinitiv, Nominativ Singular, Positiv eines Adjektivs
+→ "base": null, Beschreibung = vollständige Kurzdefinition
+
+Fall 2 – Flektierte Form: Plural, Genitiv, Dativ, Akkusativ, konjugiertes Verb, Partizip, dekliniertes Adjektiv, Komparativ, Superlativ
+→ "base": die Grundform (Kleinbuchstaben), Beschreibung = knapper grammatischer Hinweis ("Pl. von X.", "Genitiv Singular von X." usw.)
+
+Beispiele:
+- aal → {"description": "Subst., m. — schlangenförmiger Knochenfisch.", "base": null}
+- aale → {"description": "Pl. von Aal.", "base": "aal"}
+- aalen → {"description": "Verb — sich träge ausstrecken; (Fischfang) Aale fangen.", "base": null}
+- aalend → {"description": "Partizip I von aalen.", "base": "aalen"}
+- aalartig → {"description": "Adj. — einem Aal ähnlich.", "base": null}
+- aalartiger → {"description": "Deklinierte Form von aalartig.", "base": "aalartig"}
+- aacheners → {"description": "Genitiv Singular von Aachener (Einwohner von Aachen).", "base": "aachener"}
+- aaargh → {"description": "Interjektion — Ausdruck von Schmerz, Wut oder Frustration.", "base": null}
+- hunde → {"description": "Pl. von Hund.", "base": "hund"}
+- hundes → {"description": "Genitiv Singular von Hund.", "base": "hund"}
+- aalbude → {"description": "Subst., f. — Verkaufsstand für Aale.", "base": null}
+- spielwörter → {"description": "Pl. von Spielwort (Wort, das beim Wortspiel verwendet wird).", "base": "spielwort"}
+
+Regeln:
+- Verben im Infinitiv sind Grundformen → "base": null
+- "base" enthält KEIN Großbuchstabe, NUR Kleinbuchstaben
+- Beschreibungen enden mit einem Punkt
+- Bei unbekannten Wörtern: beste Schätzung basierend auf Wortform und -endung`;
+
+// Algorithmic base-word detection (fast, no AI)
+app.get("/api/word-base/:word", (req, res) => {
+  res.json({ base: detectAlgorithmicBase(req.params.word.toLowerCase()) });
+});
+
+// Full word enrichment: DeepSeek description + base (falls back gracefully)
+app.get("/api/word-enrich/:word", async (req, res) => {
+  const word = req.params.word.toLowerCase();
+  const algorithmicBase = detectAlgorithmicBase(word);
+  const apiKey = process.env.DEEPSEEK_API_KEY_SUGGESTIONS;
+
+  if (!apiKey) {
+    res.json({ base: algorithmicBase, description: null });
+    return;
+  }
+
+  try {
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        temperature: 0.2,
+        max_tokens: 120,
+        messages: [
+          { role: "system", content: DEEPSEEK_SYSTEM_PROMPT },
+          { role: "user", content: word },
+        ],
+      }),
+      signal: AbortSignal.timeout(12_000),
+    });
+
+    if (!response.ok) {
+      res.json({ base: algorithmicBase, description: null });
+      return;
+    }
+
+    const data = await response.json() as { choices?: { message?: { content?: string } }[] };
+    const text = data.choices?.[0]?.message?.content ?? "";
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) as { description?: string; base?: string | null } : null;
+
+    // Trust DeepSeek's base (including explicit null = it's a lemma).
+    // Only fall back to the algorithm when DeepSeek failed entirely.
+    const base = parsed !== null ? (parsed.base ?? null) : algorithmicBase;
+
+    res.json({
+      base: base || null,
+      description: parsed?.description ?? null,
+    });
+  } catch {
+    res.json({ base: algorithmicBase, description: null });
+  }
+});
 
 app.get("/api/words/:word", (req, res) => {
   const word = req.params.word.toLowerCase();

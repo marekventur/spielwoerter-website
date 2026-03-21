@@ -161,7 +161,7 @@ export async function syncPush(
           accepted = insertSorted(accepted, {
             word: s.word,
             description: payload?.description ?? null,
-            base: null,
+            base: payload?.base ?? null,
             source: "community",
             verified_by: "moderator",
           });

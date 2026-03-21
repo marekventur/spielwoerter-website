@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, redirect, useNavigate } from "react-router";
+import { redirect, useNavigate } from "react-router";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import type { Route } from "./+types/login";
@@ -72,25 +72,7 @@ export default function LoginPage({}: Route.ComponentProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-50 flex flex-col">
-      {/* Navigation */}
-      <nav className="border-b bg-white/80 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <Link to="/" className="flex items-center gap-2 w-fit">
-            <div className="flex gap-1">
-              <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-white font-bold text-sm">
-                S
-              </div>
-              <div className="w-8 h-8 bg-orange-400 rounded flex items-center justify-center text-white font-bold text-sm">
-                W
-              </div>
-            </div>
-            <span className="text-xl font-bold text-gray-800">
-              Spielwörter.de
-            </span>
-          </Link>
-        </div>
-      </nav>
+    <div>
 
       {/* Login card */}
       <div className="flex-1 flex items-center justify-center px-6 py-16">

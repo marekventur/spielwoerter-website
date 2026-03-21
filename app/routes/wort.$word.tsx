@@ -5,6 +5,9 @@ import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { WordBadge } from "~/components/WordBadge";
 import { HeroWordBadge } from "~/components/HeroWordBadge";
+import { CC0LicenseConfirm } from "~/components/CC0LicenseConfirm";
+import { AddWordSuggestionForm } from "~/components/AddWordSuggestionForm";
+import { AddWordSuggestionDoneState } from "~/components/AddWordSuggestionDoneState";
 import type { Route } from "./+types/wort.$word";
 import type { WordBadgeStatus } from "~/components/WordBadge";
 
@@ -97,18 +100,43 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
   const [selectedMorph, setSelectedMorph] = useState<Set<string>>(new Set());
   const [morphState, setMorphState] = useState<"idle" | "loading" | "done">("idle");
 
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.reload();
+  // Inline "add" form state
+  const [addFormOpen, setAddFormOpen] = useState(false);
+  const [description, setDescription] = useState("");
+  const [base, setBase] = useState("");
+  const [baseLoading, setBaseLoading] = useState(false);
+
+  const openAddForm = async () => {
+    setAddFormOpen(true);
+    setDescription("");
+    setBase("");
+    setBaseLoading(true);
+    try {
+      const r = await fetch(`/api/word-enrich/${encodeURIComponent(wordLower)}`);
+      const d = await r.json() as { base: string | null; description: string | null };
+      setBase(d.base ?? "");
+      setDescription(d.description ?? "");
+    } catch { /* ignore */ }
+    setBaseLoading(false);
   };
 
-  const submitSuggestion = async (action: "add" | "remove") => {
+  const submitSuggestion = async (
+    action: "add" | "remove",
+    payload?: { description?: string; base?: string },
+  ) => {
     setActionState("loading");
     setActionError(null);
+    const body: Record<string, unknown> = { word: wordLower, action };
+    if (payload && (payload.description || payload.base)) {
+      const p: Record<string, string> = {};
+      if (payload.description) p.description = payload.description;
+      if (payload.base) p.base = payload.base;
+      body.payload = p;
+    }
     const res = await fetch("/api/suggestions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word: wordLower, action }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (res.status === 403 && data.error === "license_required") {
@@ -120,10 +148,17 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
     } else {
       setLastAction(action);
       setActionState("done");
+      setAddFormOpen(false);
     }
   };
 
-  const handleSuggest = (action: "add" | "remove") => submitSuggestion(action);
+  const handleSuggest = (action: "add" | "remove") => {
+    if (action === "add") {
+      openAddForm();
+    } else {
+      submitSuggestion(action);
+    }
+  };
 
   const handleMorphSubmit = async () => {
     if (selectedMorph.size === 0 || !lastAction) return;
@@ -144,8 +179,11 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
   const handleAcceptLicense = async () => {
     await fetch("/api/auth/accept-license", { method: "POST" });
     if (pendingAction) {
+      const action = pendingAction;
       setPendingAction(null);
-      await submitSuggestion(pendingAction);
+      // Re-submit with the description/base payload if this was an "add" action
+      const payload = action === "add" ? { description, base } : undefined;
+      await submitSuggestion(action, payload);
     }
   };
 
@@ -162,53 +200,7 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-50">
-      {/* Navigation */}
-      <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex gap-1">
-              <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-white font-bold text-sm">
-                S
-              </div>
-              <div className="w-8 h-8 bg-orange-400 rounded flex items-center justify-center text-white font-bold text-sm">
-                W
-              </div>
-            </div>
-            <span className="text-xl font-bold text-gray-800">
-              Spielwörter.de
-            </span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <a href="#" className="text-gray-600 hover:text-orange-600 transition-colors">
-              Über das Projekt
-            </a>
-            <a href="#" className="text-gray-600 hover:text-orange-600 transition-colors">
-              Download
-            </a>
-            {user ? (
-              <div className="flex items-center gap-3">
-                <Link to="/meine-vorschlaege" className="text-gray-600 hover:text-orange-600 transition-colors text-sm">
-                  Meine Vorschläge
-                </Link>
-                <Button
-                  variant="outline"
-                  className="border-gray-300 text-gray-600 hover:bg-gray-50"
-                  onClick={handleLogout}
-                >
-                  Abmelden
-                </Button>
-              </div>
-            ) : (
-              <Link to="/login">
-                <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50">
-                  Anmelden
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-      </nav>
+    <div>
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-6 py-12">
@@ -226,85 +218,26 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
 
           <div className="flex flex-col items-center gap-3 mt-6">
             {actionState === "license" ? (
-              <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 max-w-md text-left">
-                <h3 className="font-bold text-gray-900 mb-2">CC0-Lizenz bestätigen</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Beiträge zu Spielwörter.de werden unter der{" "}
-                  <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.de" target="_blank" rel="noopener noreferrer" className="underline text-orange-600">
-                    CC0-Lizenz (Public Domain)
-                  </a>{" "}
-                  veröffentlicht. Mit dem Absenden verzichtest du auf alle Urheberrechte an deinem Beitrag.
-                </p>
-                <div className="flex gap-3">
-                  <Button
-                    className="bg-orange-500 hover:bg-orange-600 text-white"
-                    onClick={handleAcceptLicense}
-                    disabled={actionState !== "license"}
-                  >
-                    Ich stimme zu
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => { setActionState("idle"); setPendingAction(null); }}
-                  >
-                    Abbrechen
-                  </Button>
-                </div>
-              </div>
+              <CC0LicenseConfirm
+                actionState={actionState}
+                onAccept={handleAcceptLicense}
+                onCancel={() => {
+                  setActionState("idle");
+                  setPendingAction(null);
+                }}
+              />
             ) : actionState === "done" ? (
-              <div className="w-full max-w-md">
-                <p className="text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-sm mb-3">
-                  ✓ Entwurf gespeichert.{" "}
-                  <Link to="/meine-vorschlaege" className="underline font-medium">
-                    Meine Vorschläge
-                  </Link>
-                </p>
-
-                {morphCandidates.length > 0 && morphState !== "done" && (
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                    <p className="text-sm font-medium text-gray-700 mb-3">
-                      Weitere Formen mit gleichem Stichwort:
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {morphCandidates.map((r) => (
-                        <label
-                          key={r.word}
-                          className="flex items-center gap-1.5 cursor-pointer select-none"
-                        >
-                          <input
-                            type="checkbox"
-                            className="rounded"
-                            checked={selectedMorph.has(r.word)}
-                            onChange={(e) => {
-                              const next = new Set(selectedMorph);
-                              e.target.checked ? next.add(r.word) : next.delete(r.word);
-                              setSelectedMorph(next);
-                            }}
-                          />
-                          <span className="text-sm font-mono font-bold text-gray-800">
-                            {r.word.toUpperCase()}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                    <Button
-                      className="bg-orange-500 hover:bg-orange-600 text-white text-sm"
-                      disabled={selectedMorph.size === 0 || morphState === "loading"}
-                      onClick={handleMorphSubmit}
-                    >
-                      {morphState === "loading"
-                        ? "Wird gespeichert…"
-                        : `${selectedMorph.size > 0 ? selectedMorph.size + " " : ""}Entwurf${selectedMorph.size !== 1 ? "würfe" : ""} hinzufügen`}
-                    </Button>
-                  </div>
-                )}
-
-                {morphState === "done" && (
-                  <p className="text-sm text-gray-500 text-center">
-                    Weitere Entwürfe gespeichert.
-                  </p>
-                )}
-              </div>
+              <AddWordSuggestionDoneState
+                morphCandidates={morphCandidates}
+                morphState={morphState}
+                selectedMorph={selectedMorph}
+                onToggleMorphWord={(w, checked) => {
+                  const next = new Set(selectedMorph);
+                  checked ? next.add(w) : next.delete(w);
+                  setSelectedMorph(next);
+                }}
+                onMorphSubmit={handleMorphSubmit}
+              />
             ) : anyActive ? (
               <p className="text-sm text-gray-500">
                 Du hast bereits einen Vorschlag für dieses Wort.{" "}
@@ -328,14 +261,28 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
                 <AlertCircle className="w-4 h-4 mr-2" />
                 {actionState === "loading" ? "Wird gespeichert…" : "Melde dieses Wort als fehlerhaft"}
               </Button>
+            ) : addFormOpen ? (
+              <AddWordSuggestionForm
+                word={word}
+                baseLoading={baseLoading}
+                description={description}
+                base={base}
+                actionState={actionState}
+                onDescriptionChange={setDescription}
+                onBaseChange={setBase}
+                onSubmit={({ description, base }) => submitSuggestion("add", { description, base })}
+                onCancel={() => {
+                  setAddFormOpen(false);
+                  setActionState("idle");
+                }}
+              />
             ) : (
               <Button
                 className="bg-orange-500 hover:bg-orange-600"
-                disabled={actionState === "loading"}
                 onClick={() => handleSuggest("add")}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                {actionState === "loading" ? "Wird gespeichert…" : "Hinzufügen vorschlagen"}
+                Hinzufügen vorschlagen
               </Button>
             )}
             {actionState === "error" && (
@@ -396,19 +343,7 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
         </p>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-gray-50 border-t py-8 mt-16">
-        <div className="max-w-6xl mx-auto px-6 text-center text-gray-600">
-          <p className="mb-2">
-            <strong>Spielwörter.de</strong> – Ein offenes Projekt für die
-            deutsche Wortspiel-Community
-          </p>
-          <p className="text-sm">
-            Lizenziert unter einer offenen Lizenz · Hosted auf GitHub · Made
-            with ❤️ für Wortspieler
-          </p>
-        </div>
-      </footer>
+      
     </div>
   );
 }
