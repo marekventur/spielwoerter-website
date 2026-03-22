@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Search } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
@@ -10,7 +10,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Spielwörter.de – Das offene deutsche Scrabble-Wörterbuch" }];
+  return [{ title: "Spielwörter.de – Das offene deutsche Wortspiel-Wörterbuch" }];
 }
 
 export default function Home({}: Route.ComponentProps) {
@@ -29,13 +29,12 @@ export default function Home({}: Route.ComponentProps) {
       
 
       {/* Hero Section */}
-      <div className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
+      <div className="max-w-4xl mx-auto px-6 pt-10 pb-16 text-center">
         <h1 className="text-5xl font-bold text-gray-900 mb-6">
-          Das offene deutsche Scrabble-Wörterbuch
+          Das freie Wortspiel-Wörterbuch
         </h1>
         <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
-          Eine gemeinschaftlich erstellte, frei lizenzierte Wortliste für
-          Wortspiele. Von der Community, für die Community.
+          <Link to="https://creativecommons.org/public-domain/cc0/" className="text-orange-600">Offen lizenzierte</Link>, kostenlos und ohne Einschränkungen verfügbar
         </p>
 
         {/* Search Box – single combined unit; button inset with padding; focus state transitions */}
@@ -48,7 +47,7 @@ export default function Home({}: Route.ComponentProps) {
               value={searchWord}
               onChange={(e) => setSearchWord(e.target.value.toUpperCase())}
               placeholder="Wort nachschlagen..."
-              className="h-full w-full text-2xl pl-6 pr-[4rem] border-0 bg-gray-50 rounded-l-xl rounded-r-none placeholder:text-gray-500 focus:ring-0 focus:ring-offset-0 focus:border-0 focus:bg-white shadow-none transition-colors duration-200"
+              className="h-full w-full text-2xl pl-6 pr-[4rem] border-0 bg-gray-50 rounded-xl  placeholder:text-gray-500 focus:ring-0 focus:ring-offset-0 focus:border-0 focus:bg-white shadow-none transition-colors duration-200 "
             />
             <Button
               type="submit"
@@ -58,9 +57,6 @@ export default function Home({}: Route.ComponentProps) {
               <Search className="h-6 w-6 shrink-0" />
             </Button>
           </div>
-          <p className="text-sm text-gray-500 mt-3 text-center">
-            Drücke Enter oder klicke auf die Suche, um ein Wort zu prüfen
-          </p>
         </form>
 
         {/* Scrabble Tiles Decoration */}
@@ -129,7 +125,7 @@ export default function Home({}: Route.ComponentProps) {
               </h3>
               <p className="text-gray-600">
                 Jeder kann beitragen. Gemeinsam erstellen wir das beste
-                deutsche Wörterbuch.
+                Wortspiel-Wörterbuch.
               </p>
             </div>
 
@@ -153,18 +149,15 @@ export default function Home({}: Route.ComponentProps) {
                 Geprüfte Qualität
               </h3>
               <p className="text-gray-600">
-                Alle Einträge werden von der Community überprüft und validiert.
+                Alle Vorschläge werden automatisch überprüft und validiert.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* How It Works */}
+      {/* FAQ */}
       <div className="max-w-4xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
-          So funktioniert's
-        </h2>
         <div className="space-y-8">
           <div className="flex gap-6 items-start">
             <div className="flex-shrink-0 w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
@@ -172,11 +165,10 @@ export default function Home({}: Route.ComponentProps) {
             </div>
             <div>
               <h3 className="text-xl font-bold mb-2 text-gray-800">
-                Wort nachschlagen
+                Warum nicht einfach ein Wörterbuch verwenden?
               </h3>
               <p className="text-gray-600">
-                Gib einfach ein Wort ein, um zu prüfen, ob es im Wörterbuch
-                enthalten ist. Funktioniert auch ohne Anmeldung.
+                Duden und Co. sind prima, aber für non-kommerzielle Wortspiele gibt es keine guten Wortlisten unter einer offenen Lizenz.
               </p>
             </div>
           </div>
@@ -187,11 +179,10 @@ export default function Home({}: Route.ComponentProps) {
             </div>
             <div>
               <h3 className="text-xl font-bold mb-2 text-gray-800">
-                Fehler korrigieren
+                Wie kann ich einen Fehler korrigieren?
               </h3>
               <p className="text-gray-600">
-                Fehlt ein Wort oder ist ein falsches Wort eingetragen? Schlage
-                eine Korrektur vor – die Community wird sie prüfen.
+                Melde dich an und korrigiere den Fehler auf der entsprechenden Wortseite. Sobald deine Entfehlung akzeptiert wurde, schicken wir dir eine E-Mail.
               </p>
             </div>
           </div>
@@ -202,11 +193,10 @@ export default function Home({}: Route.ComponentProps) {
             </div>
             <div>
               <h3 className="text-xl font-bold mb-2 text-gray-800">
-                Gemeinsam verbessern
+                Was sind die Wortregeln?
               </h3>
               <p className="text-gray-600">
-                Reviewer prüfen alle Vorschläge. So entsteht ein verlässliches,
-                umfassendes Wörterbuch für alle.
+                Wir haben eine eigene <Link to="/regeln" className="text-orange-600 hover:underline">Wortregel-Liste</Link>, die im größtenteils an die offiziellen ORZ-Regeln von Scrabble Deutschland e.V. angelehnt ist.
               </p>
             </div>
           </div>
@@ -218,10 +208,11 @@ export default function Home({}: Route.ComponentProps) {
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold mb-4">Bereit mitzumachen?</h2>
           <p className="text-xl mb-8 text-orange-50">
-            Hilf uns, das beste deutsche Scrabble-Wörterbuch aufzubauen.
+            Hilf uns, das beste deutsche Wortspiel-Wörterbuch aufzubauen.
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-wrap gap-4 justify-center">
             <Button
+              to="/login"
               size="lg"
               variant="secondary"
               className="bg-white text-orange-600 hover:bg-orange-50"
@@ -229,6 +220,7 @@ export default function Home({}: Route.ComponentProps) {
               Jetzt beitragen
             </Button>
             <Button
+              to="/warum"
               size="lg"
               variant="outline"
               className="border-white text-white hover:bg-orange-600"

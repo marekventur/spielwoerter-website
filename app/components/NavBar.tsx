@@ -15,12 +15,18 @@ type Props = {
 
 export function NavBar({ user }: Props) {
   const [open, setOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const infoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      const t = e.target as Node;
+      if (ref.current && !ref.current.contains(t)) {
         setOpen(false);
+      }
+      if (infoRef.current && !infoRef.current.contains(t)) {
+        setInfoOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -32,37 +38,126 @@ export function NavBar({ user }: Props) {
     window.location.href = "/";
   };
 
+  const navText =
+    "text-sm font-medium leading-5 text-gray-600 hover:text-orange-600 whitespace-nowrap";
+
   return (
     <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between gap-4 min-h-[3rem]">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex gap-1">
-            <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-white font-bold text-sm">
-              S
+        <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+          <Link
+            to="/"
+            className="flex items-center gap-2 shrink-0 text-sm font-bold leading-5 text-gray-800"
+          >
+            <div className="flex gap-1 shrink-0" aria-hidden>
+              <div className="size-8 bg-orange-500 rounded flex items-center justify-center text-white text-sm leading-none">
+                S
+              </div>
+              <div className="size-8 bg-orange-400 rounded flex items-center justify-center text-white text-sm leading-none">
+                W
+              </div>
             </div>
-            <div className="w-8 h-8 bg-orange-400 rounded flex items-center justify-center text-white font-bold text-sm">
-              W
+            <span className="hidden sm:inline text-base leading-5">
+              Spielwoerter.de
+            </span>
+          </Link>
+
+          {/* lg+: separate info links */}
+          <div className="hidden lg:flex items-center gap-5 xl:gap-6">
+            <Link to="/regeln" className={navText}>
+              Regeln
+            </Link>
+            <Link to="/warum" className={navText}>
+              Warum
+            </Link>
+            <Link to="/entstehung" className={navText}>
+              Entstehung
+            </Link>
+            <Link to="/mitmachen" className={navText}>
+              Mitmachen
+            </Link>
+          </div>
+
+          {/* &lt; lg: Menü (Regeln, Warum, Entstehung, Mitmachen) */}
+          <div className="flex lg:hidden items-center">
+            <div className="relative" ref={infoRef}>
+              <button
+                type="button"
+                onClick={() => setInfoOpen((o) => !o)}
+                className="inline-flex h-9 items-center gap-1 rounded-lg px-2.5 text-sm font-medium leading-5 text-gray-700 hover:bg-gray-100 transition-colors"
+                aria-expanded={infoOpen}
+                aria-haspopup="menu"
+                aria-label="Weitere Seiten"
+              >
+                Menü
+                <ChevronDown
+                  className={`size-4 text-gray-400 transition-transform shrink-0 ${infoOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {infoOpen && (
+                <div
+                  className="absolute left-0 mt-2 w-52 rounded-md border bg-white shadow-lg py-1 z-50"
+                  role="menu"
+                >
+                  <Link
+                    to="/regeln"
+                    className="flex px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                    onClick={() => setInfoOpen(false)}
+                    role="menuitem"
+                  >
+                    Regeln
+                  </Link>
+                  <Link
+                    to="/warum"
+                    className="flex px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                    onClick={() => setInfoOpen(false)}
+                    role="menuitem"
+                  >
+                    Warum
+                  </Link>
+                  <Link
+                    to="/entstehung"
+                    className="flex px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                    onClick={() => setInfoOpen(false)}
+                    role="menuitem"
+                  >
+                    Entstehung
+                  </Link>
+                  <Link
+                    to="/mitmachen"
+                    className="flex px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                    onClick={() => setInfoOpen(false)}
+                    role="menuitem"
+                  >
+                    Mitmachen
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
-          <span className="hidden sm:inline text-xl font-bold text-gray-800">Spielwörter.de</span>
-        </Link>
+        </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           {user ? (
             <div className="relative" ref={ref}>
               <button
+                type="button"
                 onClick={() => setOpen((o) => !o)}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium leading-5 text-gray-700 hover:bg-gray-100 transition-colors"
               >
-                <User className="w-4 h-4 text-gray-500" />
-                <span className="hidden sm:inline max-w-[160px] truncate">{user.email}</span>
-                <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+                <User className="size-4 shrink-0 text-gray-500" />
+                <span className="hidden sm:inline max-w-[160px] truncate leading-5">
+                  {user.email}
+                </span>
+                <ChevronDown
+                  className={`hidden sm:block size-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+                />
               </button>
 
               {open && (
-                <div className="absolute right-0 mt-1 w-56 rounded-xl border bg-white shadow-lg py-1 z-50">
+                <div className="absolute right-0 mt-1 w-56 rounded-md border bg-white shadow-lg py-1 z-50">
                   <Link
                     to="/meine-vorschlaege"
                     className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
@@ -99,14 +194,13 @@ export function NavBar({ user }: Props) {
               )}
             </div>
           ) : (
-            <Link to="/login">
-              <Button
-                variant="outline"
-                className="border-orange-500 text-orange-600 hover:bg-orange-50"
-              >
-                Anmelden
-              </Button>
-            </Link>
+            <Button
+              to="/login"
+              variant="outline"
+              className="h-9 min-h-0 border-orange-500 px-3 py-0 text-sm font-medium leading-5 text-orange-600 hover:bg-orange-50"
+            >
+              Anmelden
+            </Button>
           )}
         </div>
       </div>

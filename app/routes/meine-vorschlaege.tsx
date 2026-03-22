@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, redirect } from "react-router";
 import { Pencil, X } from "lucide-react";
 import { Card } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
 import type { Route } from "./+types/meine-vorschlaege";
 
 type Suggestion = {
@@ -13,6 +14,7 @@ type Suggestion = {
   created_at: string;
   last_modified_at: string;
   word_description: string | null;
+  word_base: string | null;
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -96,24 +98,67 @@ function SuggestionMainCell({ s }: { s: Suggestion }) {
   }
 
   if (s.action === "change_description") {
+    const oldDesc = (s.word_description ?? "").trim();
+    const newDesc = (payload?.description ?? "").trim();
+    const descChanged = oldDesc !== newDesc;
+
+    const oldBase = (s.word_base ?? "").trim().toLowerCase();
+    const newBase = (payload?.base ?? "").trim().toLowerCase();
+    const baseChanged = oldBase !== newBase;
+
+    const displayDesc = (payload?.description ?? s.word_description ?? "").trim();
+    const displayBase = payload?.base ?? s.word_base;
+
     return (
       <div className="min-w-0 space-y-0.5">
+        <div className="text-gray-700 text-sm font-medium">Beschreibung / Grundform ändern</div>
         <Link
           to={wortHref(s.word)}
           className="font-bold text-gray-900 uppercase hover:text-orange-600"
         >
           {wordUpper}
         </Link>
-        {s.word_description && (
-          <p className="text-red-700 text-sm leading-snug whitespace-pre-wrap break-words">
-            {s.word_description}
-          </p>
+        {descChanged ? (
+          <>
+            {oldDesc !== "" && (
+              <p className="text-red-700 text-sm leading-snug whitespace-pre-wrap break-words">
+                {s.word_description}
+              </p>
+            )}
+            {newDesc !== "" && (
+              <p className="text-green-700 text-sm leading-snug whitespace-pre-wrap break-words">
+                {payload?.description}
+              </p>
+            )}
+          </>
+        ) : (
+          displayDesc !== "" && (
+            <p className="text-gray-900 text-sm leading-snug whitespace-pre-wrap break-words">
+              {payload?.description ?? s.word_description}
+            </p>
+          )
         )}
-        {payload?.description && (
-          <p className="text-green-700 text-sm leading-snug whitespace-pre-wrap break-words">
-            {payload.description}
-          </p>
-        )}
+        {(s.word_base || payload?.base) &&
+          (baseChanged ? (
+            <p className="text-xs space-y-0.5">
+              {(s.word_base ?? "").trim() !== "" && (
+                <span className="text-red-700 block">
+                  Grundform bisher: <span className="font-mono">{s.word_base}</span>
+                </span>
+              )}
+              {(payload?.base ?? "").trim() !== "" && (
+                <span className="text-green-700 block">
+                  Grundform neu: <span className="font-mono">{payload?.base}</span>
+                </span>
+              )}
+            </p>
+          ) : (
+            (displayBase ?? "").trim() !== "" && (
+              <p className="text-xs text-gray-700">
+                Grundform: <span className="font-mono">{displayBase}</span>
+              </p>
+            )
+          ))}
       </div>
     );
   }
@@ -140,7 +185,8 @@ export async function loader({ context }: Route.LoaderArgs) {
   const suggestions = context.db
     .prepare(
       `SELECT s.id, s.word, s.action, s.payload, s.status,
-              s.created_at, s.last_modified_at, w.description AS word_description
+              s.created_at, s.last_modified_at, w.description AS word_description,
+              w.base AS word_base
        FROM suggestions s
        LEFT JOIN words w ON w.word = s.word
        WHERE s.user_id = ?
@@ -159,6 +205,9 @@ export default function MeineVorschlaege({ loaderData }: Route.ComponentProps) {
   const [payloadOverrides, setPayloadOverrides] = useState<
     Record<number, string | null>
   >({});
+  const [editingDraftId, setEditingDraftId] = useState<number | null>(null);
+  const [editDescription, setEditDescription] = useState("");
+  const [editBase, setEditBase] = useState("");
 
   const withPayload = (s: Suggestion): Suggestion => ({
     ...s,
@@ -181,18 +230,77 @@ export default function MeineVorschlaege({ loaderData }: Route.ComponentProps) {
     setDeleting(null);
   };
 
-  const handleEditDescription = async (s: Suggestion) => {
+  const openDraftEditor = (s: Suggestion) => {
     const effective = withPayload(s);
-    const payload = parsePayload(effective);
-    const current = payload?.description ?? "";
-    const next = window.prompt("Beschreibung bearbeiten:", current);
-    if (next === null) return;
+    const payload = parsePayload(effective) ?? {};
+    setEditingDraftId(s.id);
+    setEditDescription(
+      s.action === "change_description"
+        ? (payload.description ?? s.word_description ?? "")
+        : (payload.description ?? "")
+    );
+    setEditBase(
+      s.action === "change_description"
+        ? (payload.base ?? s.word_base ?? "")
+        : (payload.base ?? "")
+    );
+  };
+
+  const cancelDraftEditor = () => {
+    setEditingDraftId(null);
+  };
+
+  const confirmDraftEdit = async (s: Suggestion) => {
+    const effective = withPayload(s);
+    const payload = parsePayload(effective) ?? {};
+    const nextDesc = editDescription;
+    const nextBaseRaw = editBase;
+    const baseNorm = nextBaseRaw.trim().toLowerCase();
+
+    if (s.action === "change_description") {
+      const origDesc = (s.word_description ?? "").trim();
+      const origBase = (s.word_base ?? "").trim().toLowerCase();
+      if (nextDesc.trim() === origDesc && baseNorm === origBase) {
+        setPatching(s.id);
+        const res = await fetch(`/api/suggestions/${s.id}`, {
+          method: "DELETE",
+        });
+        setPatching(null);
+        if (!res.ok) {
+          const data = (await res.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          window.alert(data.error ?? "Löschen fehlgeschlagen.");
+          return;
+        }
+        setLocalDeleted((prev) => new Set(prev).add(s.id));
+        setPayloadOverrides((prev) => {
+          const next = { ...prev };
+          delete next[s.id];
+          return next;
+        });
+        setEditingDraftId(null);
+        return;
+      }
+    }
+
+    const patch: Record<string, string> = { description: nextDesc };
+    const prevBase = (
+      s.action === "change_description"
+        ? (payload.base ?? s.word_base ?? "")
+        : (payload.base ?? "")
+    )
+      .trim()
+      .toLowerCase();
+    if (baseNorm !== prevBase) {
+      patch.base = baseNorm;
+    }
 
     setPatching(s.id);
     const res = await fetch(`/api/suggestions/${s.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ payload: { description: next } }),
+      body: JSON.stringify({ payload: patch }),
     });
     setPatching(null);
 
@@ -202,11 +310,12 @@ export default function MeineVorschlaege({ loaderData }: Route.ComponentProps) {
       return;
     }
 
-    const merged = { ...(payload ?? {}), description: next };
+    const merged = { ...payload, ...patch };
     setPayloadOverrides((prev) => ({
       ...prev,
       [s.id]: JSON.stringify(merged),
     }));
+    setEditingDraftId(null);
   };
 
   return (
@@ -251,16 +360,72 @@ export default function MeineVorschlaege({ loaderData }: Route.ComponentProps) {
                       >
                         <td className="py-2.5 px-3 align-top">
                           <SuggestionMainCell s={row} />
+                          {editingDraftId === s.id && (
+                            <div className="mt-3 flex flex-wrap items-end gap-x-3 gap-y-2">
+                              <div className="min-w-0 flex-1">
+                                <label
+                                  htmlFor={`draft-desc-${s.id}`}
+                                  className="mb-1 block text-xs font-medium text-gray-600"
+                                >
+                                  Beschreibung
+                                </label>
+                                <Input
+                                  id={`draft-desc-${s.id}`}
+                                  value={editDescription}
+                                  onChange={(e) => setEditDescription(e.target.value)}
+                                  disabled={patching === s.id}
+                                  className="w-full min-w-0 py-1.5 text-sm"
+                                />
+                              </div>
+                              <div className="w-36 shrink-0">
+                                <label
+                                  htmlFor={`draft-base-${s.id}`}
+                                  className="mb-1 block text-xs font-medium text-gray-600"
+                                >
+                                  Grundform
+                                </label>
+                                <Input
+                                  id={`draft-base-${s.id}`}
+                                  value={editBase}
+                                  onChange={(e) => setEditBase(e.target.value)}
+                                  disabled={patching === s.id}
+                                  className="w-full min-w-0 py-1.5 font-mono text-sm"
+                                />
+                              </div>
+                              <div className="flex shrink-0 gap-2 pb-0.5 max-sm:w-full max-sm:justify-end">
+                                <button
+                                  type="button"
+                                  className="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                                  disabled={patching === s.id}
+                                  onClick={() => void confirmDraftEdit(s)}
+                                >
+                                  {patching === s.id ? "…" : "Bestätigen"}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                                  disabled={patching === s.id}
+                                  onClick={cancelDraftEditor}
+                                >
+                                  Abbrechen
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </td>
                         <td className="py-2.5 px-2 align-top w-px">
                           <div className="flex items-start gap-1 justify-end">
                             {s.action !== "remove" && (
                               <button
                                 type="button"
-                                aria-label="Beschreibung bearbeiten"
-                                disabled={patching === s.id || deleting === s.id}
+                                aria-label="Entwurf bearbeiten"
+                                disabled={
+                                  patching === s.id ||
+                                  deleting === s.id ||
+                                  editingDraftId === s.id
+                                }
                                 className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-                                onClick={() => handleEditDescription(s)}
+                                onClick={() => openDraftEditor(s)}
                               >
                                 {patching === s.id ? (
                                   <span className="text-xs text-gray-500">

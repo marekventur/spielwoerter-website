@@ -1,6 +1,6 @@
-# Default App Template
+# Spielwörter.de (Website)
 
-Starter template: **Node.js**, **React Router v7** (framework mode), **Express**, **Tailwind CSS**, **DaisyUI**, **SQLite**, **TypeScript**, **PM2**.
+Web frontend and API for **[Spielwörter](https://github.com/marekventur/spielwoerter)** — the open German word list. Built with **React Router v7** (framework mode), **Express**, **Tailwind CSS v4**, **SQLite**, **TypeScript**.
 
 ## Quick start
 
@@ -9,86 +9,60 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3004](http://localhost:3004) (port from `package.json` / `server.js`).
 
 ## Scripts
 
-| Script          | Description                    |
-|----------------|--------------------------------|
-| `npm run dev`  | Dev server (Vite HMR + Express)|
-| `npm run build`| Production build               |
-| `npm run start`| Run production server          |
-| `npm run typecheck` | Type check + route types  |
-| `npm run pm2:start`  | Start with PM2 (after build) |
-| `npm run pm2:stop`   | Stop PM2 process              |
-| `npm run pm2:restart`| Restart PM2 process           |
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Dev: Vite HMR + Express (`PORT=3004` by default) |
+| `npm run build` | Production build |
+| `npm run start` | Production server (`node server.js`) |
+| `npm run typecheck` | `react-router typegen` + `tsc -b` |
+| `npm run test:e2e` | Playwright tests (`tests/e2e/`) |
+| `npm run sync:pull` | Pull wordlists from GitHub into SQLite (see `scripts/sync-pull.ts`) |
+| `npm run pm2:*` | PM2 process management (after build) |
+
+## Main routes (`app/routes.ts`)
+
+| Path | Purpose |
+|------|---------|
+| `/` | Home / search |
+| `/wort/:word` | Word detail, suggestions (add/remove/change) |
+| `/login` | Email OTP login |
+| `/meine-vorschlaege` | User’s drafts and suggestion status |
+| `/regeln`, `/warum`, `/entstehung`, `/mitmachen` | Static info pages |
+| `/moderation` | Moderators only |
+| `/admin` | Admins only |
+
+## Backend (`server/app.ts`)
+
+Express app: session auth, REST APIs for suggestions, moderation, auth, word enrichment, etc. React Router is mounted as middleware. Loaders receive `context.db` and `context.user` (see `getLoadContext`).
+
+Shared logic lives under `lib/` (`db.ts`, `schema.ts`, `auth.ts`, `sync.ts`).
 
 ## VPS deployment
 
-**Using the deploy scripts (recommended):** Set `NAME` and `PORT` in `app.config`, then from your machine (or a GitHub Action):
+Same flow as the template: `app.config` (`NAME`, `PORT`), `./deploy.sh`, `./post_deploy.sh`, PM2 — see inline comments in those scripts.
 
-```bash
-./deploy.sh /path/to/deploy-key
-# or: SSH_PRIVATE_KEY=/path/to/key ./deploy.sh
-```
+## Stack (summary)
 
-This rsyncs the repo to `root@vps3.marekventur.com:/var/www/<NAME>` and runs `post_deploy.sh` on the VPS (npm ci, build, PM2 restart/start).
+- **React Router v7** — file-based routes, loaders, SSR via Express adapter.
+- **Express** — `server/app.ts`; entry `server.js`.
+- **Tailwind v4** + **DaisyUI** — `app/app.css`; root uses `data-theme` / base colors (some UI uses small local components under `app/components/ui/`).
+- **SQLite** — `better-sqlite3`; path `DATABASE_PATH` or `./data/app.db`.
+- **TypeScript** — app, server, `lib/`; `server.js` stays JS.
 
-**Manual deploy:**
-
-1. On the server: clone repo, then `npm ci` and `npm run build`.
-2. Set `NAME` and `PORT` in `app.config` (or env):
-   - `NODE_ENV=production`
-   - Optional: `DATABASE_PATH` (default: `./data/app.db`)
-3. Start with PM2:
-   ```bash
-   ./post_deploy.sh
-   ```
-   Or: `source app.config && pm2 start ecosystem.config.cjs`.
-4. Use a reverse proxy (e.g. Nginx/Caddy) in front of the app and optionally `pm2 save` + `pm2 startup` for persistence.
-
-## Stack
-
-- **React Router v7** – Framework mode, file-based routes, loaders/actions, SSR.
-- **Express** – Custom server; use `server/app.ts` and `server.js` to add middleware or routes.
-- **Tailwind v4** – Via `@tailwindcss/vite`; styles in `app/app.css`.
-- **DaisyUI** – `@plugin "daisyui"` in `app/app.css`; use `data-theme` on `<html>` to switch themes.
-- **SQLite** – `better-sqlite3`; DB at `data/app.db` (or `DATABASE_PATH`). Use `context.db` in loaders/actions (see `server/app.ts` and `lib/db.ts`).
-- **TypeScript** – App, server, and lib are TypeScript; `server.js` stays JS so `node server.js` works in production.
-
-## Project layout
+## Layout
 
 ```
-├── app/
-│   ├── app.css          # Tailwind + DaisyUI
-│   ├── root.tsx         # Root layout, ErrorBoundary
-│   ├── routes.ts        # Route config
-│   └── routes/         # File-based routes
-├── lib/
-│   └── db.ts            # SQLite connection (getDb)
-├── server/
-│   └── app.ts           # Express app + React Router handler
-├── server.js            # Entry (dev: Vite middleware, prod: static + build)
-├── app.config            # NAME + PORT (deploy & PM2)
-├── verify.sh             # Local: npm ci, typecheck, build (run by deploy.sh first)
-├── deploy.sh             # Verify, then rsync to VPS + run post_deploy.sh
-├── post_deploy.sh        # On VPS: npm ci, build, PM2 restart/start
-├── ecosystem.config.cjs  # PM2 config (uses NAME/PORT from app.config)
-├── react-router.config.ts
-├── vite.config.ts
-└── tsconfig*.json
+├── app/                 # React app: routes, components, styles
+├── lib/                 # DB, schema, auth, GitHub sync helpers
+├── server/app.ts        # Express + API + RR handler
+├── scripts/             # e.g. sync-pull
+├── tests/e2e/           # Playwright
+├── server.js            # Dev/prod entry
+└── react-router.config.ts
 ```
 
-## Using the database in routes
-
-In any route loader or action, you get `context.db` (from `getLoadContext` in `server/app.ts`):
-
-```ts
-// app/routes/some-route.tsx
-export async function loader({ context }: Route.LoaderArgs) {
-  const row = context.db.prepare("SELECT 1 as one").get();
-  return { row };
-}
-```
-
-Create tables or run migrations in `lib/db.ts` or a dedicated migration step; the template only opens the DB and exposes it via context.
+The **word list data** is maintained in the [spielwoerter](https://github.com/marekventur/spielwoerter) repo; this site hosts community suggestions and moderation workflows that can sync changes back via GitHub.

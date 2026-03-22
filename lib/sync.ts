@@ -179,19 +179,33 @@ export async function syncPush(
             verified_by: "moderator",
           });
         }
-      } else if (s.action === "change_description" && payload?.description) {
-        const ai = accepted.findIndex((w) => w.word === s.word);
-        if (ai !== -1) {
-          accepted[ai] = { ...accepted[ai], description: payload.description };
-        } else {
-          const ui = uncertain.findIndex((w) => w.word === s.word);
-          if (ui !== -1) {
-            uncertain[ui] = {
-              ...uncertain[ui],
-              description: payload.description,
-            };
+      } else if (s.action === "change_description" && payload) {
+        const hasDesc = payload.description !== undefined;
+        const hasBase = payload.base !== undefined;
+        if (!hasDesc && !hasBase) continue;
+        const apply = (list: JsonlWord[]): JsonlWord[] => {
+          const i = list.findIndex((w) => w.word === s.word);
+          if (i === -1) return list;
+          const cur = list[i];
+          const next: JsonlWord = { ...cur };
+          if (hasDesc) {
+            next.description =
+              String(payload.description).trim() === ""
+                ? null
+                : String(payload.description).trim();
           }
-        }
+          if (hasBase) {
+            next.base =
+              String(payload.base).trim() === ""
+                ? null
+                : String(payload.base).trim().toLowerCase();
+          }
+          const copy = [...list];
+          copy[i] = next;
+          return copy;
+        };
+        accepted = apply(accepted);
+        uncertain = apply(uncertain);
       }
     }
 

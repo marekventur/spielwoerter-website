@@ -15,8 +15,8 @@ test.beforeEach(() => {
 });
 
 test("moderation page shows pending suggestions", async ({ page }) => {
-  seedUser(TEST_MOD_EMAIL, { isModerator: true, licenseApproved: true });
-  const userId = seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const userId = seedUser(TEST_USER_EMAIL);
   seedSuggestion(userId, "neuword", "add", "pending_review");
 
   await loginAs(page, TEST_MOD_EMAIL);
@@ -36,8 +36,8 @@ test("moderation page shows pending suggestions", async ({ page }) => {
 test("approve single suggestion removes it from queue and updates DB", async ({
   page,
 }) => {
-  seedUser(TEST_MOD_EMAIL, { isModerator: true, licenseApproved: true });
-  const userId = seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const userId = seedUser(TEST_USER_EMAIL);
   const suggId = seedSuggestion(userId, "approveword", "add", "pending_review");
 
   await loginAs(page, TEST_MOD_EMAIL);
@@ -58,8 +58,8 @@ test("approve single suggestion removes it from queue and updates DB", async ({
 test("reject single suggestion updates DB and adds to rejected_words", async ({
   page,
 }) => {
-  seedUser(TEST_MOD_EMAIL, { isModerator: true, licenseApproved: true });
-  const userId = seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const userId = seedUser(TEST_USER_EMAIL);
   const suggId = seedSuggestion(userId, "rejectword", "add", "pending_review");
 
   await loginAs(page, TEST_MOD_EMAIL);
@@ -82,8 +82,8 @@ test("reject single suggestion updates DB and adds to rejected_words", async ({
 });
 
 test("batch approve entire group", async ({ page }) => {
-  seedUser(TEST_MOD_EMAIL, { isModerator: true, licenseApproved: true });
-  const userId = seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const userId = seedUser(TEST_USER_EMAIL);
   // Two words with the same base (hund group)
   const id1 = seedSuggestion(userId, "hund", "remove", "pending_review");
   const id2 = seedSuggestion(userId, "hunde", "remove", "pending_review");
@@ -109,8 +109,8 @@ test("batch approve entire group", async ({ page }) => {
 
 
 test("batch reject entire group", async ({ page }) => {
-  seedUser(TEST_MOD_EMAIL, { isModerator: true, licenseApproved: true });
-  const userId = seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const userId = seedUser(TEST_USER_EMAIL);
   const id1 = seedSuggestion(userId, "katze", "remove", "pending_review");
   const id2 = seedSuggestion(userId, "hund", "remove", "pending_review");
 
@@ -131,14 +131,14 @@ test("batch reject entire group", async ({ page }) => {
 });
 
 test("empty moderation queue shows Nichts zu prüfen", async ({ page }) => {
-  seedUser(TEST_MOD_EMAIL, { isModerator: true, licenseApproved: true });
+  seedUser(TEST_MOD_EMAIL, { isModerator: true });
   await loginAs(page, TEST_MOD_EMAIL);
   await page.goto("/moderation");
   await expect(page.getByText("Nichts zu prüfen")).toBeVisible();
 });
 
 test("non-moderator is redirected from /moderation", async ({ page }) => {
-  seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  seedUser(TEST_USER_EMAIL);
   await loginAs(page, TEST_USER_EMAIL);
   await page.goto("/moderation");
   await expect(page).toHaveURL("/");
@@ -152,7 +152,7 @@ test("unauthenticated user redirected from /moderation to login", async ({
 });
 
 test("regular user cannot call moderation API", async ({ request }) => {
-  seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  seedUser(TEST_USER_EMAIL);
   const sessionId = await loginViaApi(TEST_USER_EMAIL);
 
   const res = await request.post("/api/moderation/1/approve", {

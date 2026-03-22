@@ -5,7 +5,6 @@ export type User = {
   email: string;
   isModerator: boolean;
   isAdmin: boolean;
-  licenseApproved: boolean;
 };
 
 export function getUserFromSession(
@@ -14,7 +13,7 @@ export function getUserFromSession(
 ): User | null {
   const row = db
     .prepare(
-      `SELECT u.id, u.email, u.is_moderator, u.is_admin, u.license_approved
+      `SELECT u.id, u.email, u.is_moderator, u.is_admin
        FROM sessions s
        JOIN users u ON u.id = s.user_id
        WHERE s.id = ? AND s.expires_at > datetime('now')`
@@ -25,7 +24,6 @@ export function getUserFromSession(
         email: string;
         is_moderator: number;
         is_admin: number;
-        license_approved: number;
       }
     | undefined;
 
@@ -35,6 +33,5 @@ export function getUserFromSession(
     email: row.email,
     isModerator: !!row.is_moderator,
     isAdmin: !!row.is_admin,
-    licenseApproved: !!row.license_approved,
   };
 }

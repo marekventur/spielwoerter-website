@@ -50,10 +50,31 @@ export async function loader({ context }: Route.LoaderArgs) {
   return { user: context.user, items };
 }
 
+/** Base form for grouping: DB join only fills `base` when the suggested word already exists in `words`. */
+function parsePayloadBase(payload: string | null): string | null {
+  if (!payload) return null;
+  try {
+    const p = JSON.parse(payload) as Record<string, unknown>;
+    const b = p?.base;
+    if (typeof b === "string" && b.trim()) return b.trim().toLowerCase();
+  } catch {
+    /* ignore invalid JSON */
+  }
+  return null;
+}
+
+function groupKeyForItem(item: ModerationItem): string {
+  const fromWord = item.base?.trim().toLowerCase();
+  if (fromWord) return fromWord;
+  const fromPayload = parsePayloadBase(item.payload);
+  if (fromPayload) return fromPayload;
+  return item.word.toLowerCase();
+}
+
 function groupByBase(items: ModerationItem[]): Group[] {
   const map = new Map<string, ModerationItem[]>();
   for (const item of items) {
-    const key = item.base ?? item.word;
+    const key = groupKeyForItem(item);
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(item);
   }
@@ -207,6 +228,12 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                             {item.action === "add" && payload?.base && (
                               <p className="text-sm text-gray-500 mb-1">
                                 <span className="font-medium text-gray-600">Grundform:</span>{" "}
+                                <span className="font-mono">{payload.base}</span>
+                              </p>
+                            )}
+                            {item.action === "change_description" && payload?.base && (
+                              <p className="text-sm text-gray-500 mb-1">
+                                <span className="font-medium text-gray-600">Grundform (neu):</span>{" "}
                                 <span className="font-mono">{payload.base}</span>
                               </p>
                             )}

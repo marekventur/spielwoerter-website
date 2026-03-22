@@ -21,17 +21,15 @@ export function seedUser(
   opts?: {
     isModerator?: boolean;
     isAdmin?: boolean;
-    licenseApproved?: boolean;
   }
 ): number {
   const db = getTestDb();
   db.prepare(
-    "INSERT OR IGNORE INTO users (email, is_moderator, is_admin, license_approved) VALUES (?, ?, ?, ?)"
+    "INSERT OR IGNORE INTO users (email, is_moderator, is_admin) VALUES (?, ?, ?)"
   ).run(
     email,
     opts?.isModerator ? 1 : 0,
-    opts?.isAdmin ? 1 : 0,
-    opts?.licenseApproved ? 1 : 0
+    opts?.isAdmin ? 1 : 0
   );
   const row = db
     .prepare("SELECT id FROM users WHERE email = ?")

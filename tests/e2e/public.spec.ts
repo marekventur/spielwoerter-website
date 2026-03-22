@@ -10,13 +10,13 @@ test("homepage loads with search box", async ({ page }) => {
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: "Das offene deutsche Scrabble-Wörterbuch",
+      name: "Das freie Wortspiel-Wörterbuch",
     })
   ).toBeVisible();
   await expect(
     page.getByPlaceholder("Wort nachschlagen...")
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Anmelden" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Anmelden" })).toBeVisible();
 });
 
 test("search navigates to word page", async ({ page }) => {
@@ -61,7 +61,7 @@ test("unauthenticated user sees login prompt on word page", async ({
 }) => {
   await page.goto("/wort/ZZZNEU");
   const loginBtn = page.getByRole("button", {
-    name: "Anmelden zum Vorschlagen",
+    name: "Fehler gefunden? Anmelden und beheben!",
   });
   await expect(loginBtn).toBeVisible();
   await loginBtn.click();

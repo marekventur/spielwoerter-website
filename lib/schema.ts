@@ -6,8 +6,7 @@ export function initSchema(db: Database.Database): void {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT NOT NULL UNIQUE,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      is_moderator INTEGER NOT NULL DEFAULT 0,
-      license_approved INTEGER NOT NULL DEFAULT 0
+      is_moderator INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS sessions (
@@ -58,6 +57,9 @@ export function initSchema(db: Database.Database): void {
   ).map((r) => r.name);
   if (!userCols.includes("is_admin")) {
     db.prepare("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0").run();
+  }
+  if (userCols.includes("license_approved")) {
+    db.prepare("ALTER TABLE users DROP COLUMN license_approved").run();
   }
 
   const suggCols = (

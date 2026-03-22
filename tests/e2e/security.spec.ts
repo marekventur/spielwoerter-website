@@ -134,11 +134,11 @@ test("moderator cannot set-moderator on other users", async ({ request }) => {
 
 test("user cannot delete another user's suggestion", async ({ request }) => {
   // User A owns the suggestion
-  const userAId = seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  const userAId = seedUser(TEST_USER_EMAIL);
   const suggId = seedSuggestion(userAId, "ownedword", "add", "draft");
 
   // User B tries to delete it
-  seedUser(TEST_USER2_EMAIL, { licenseApproved: true });
+  seedUser(TEST_USER2_EMAIL);
   const sessionIdB = await loginViaApi(TEST_USER2_EMAIL);
 
   const res = await request.delete(`/api/suggestions/${suggId}`, {
@@ -155,10 +155,10 @@ test("user cannot delete another user's suggestion", async ({ request }) => {
 });
 
 test("user cannot patch another user's draft", async ({ request }) => {
-  const userAId = seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  const userAId = seedUser(TEST_USER_EMAIL);
   const suggId = seedSuggestion(userAId, "patchword", "add", "draft");
 
-  seedUser(TEST_USER2_EMAIL, { licenseApproved: true });
+  seedUser(TEST_USER2_EMAIL);
   const sessionIdB = await loginViaApi(TEST_USER2_EMAIL);
 
   const res = await request.patch(`/api/suggestions/${suggId}`, {
@@ -178,7 +178,7 @@ test("request-code rejects email without @", async ({ request }) => {
 });
 
 test("suggestions rejects missing word field", async ({ request }) => {
-  const userId = seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  const userId = seedUser(TEST_USER_EMAIL);
   const sessionId = await loginViaApi(TEST_USER_EMAIL);
 
   const res = await request.post("/api/suggestions", {
@@ -189,7 +189,7 @@ test("suggestions rejects missing word field", async ({ request }) => {
 });
 
 test("suggestions rejects invalid action", async ({ request }) => {
-  seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  seedUser(TEST_USER_EMAIL);
   const sessionId = await loginViaApi(TEST_USER_EMAIL);
 
   const res = await request.post("/api/suggestions", {
@@ -218,7 +218,7 @@ test("SQL injection in word lookup does not crash the server", async ({
 test("SQL injection in suggestion word stored literally", async ({
   request,
 }) => {
-  seedUser(TEST_USER_EMAIL, { licenseApproved: true });
+  seedUser(TEST_USER_EMAIL);
   const sessionId = await loginViaApi(TEST_USER_EMAIL);
 
   const maliciousWord = "'; DROP TABLE suggestions;--";

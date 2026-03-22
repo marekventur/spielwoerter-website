@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { redirect, useNavigate } from "react-router";
+import { redirect } from "react-router";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import type { Route } from "./+types/login";
@@ -18,7 +18,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export default function LoginPage({}: Route.ComponentProps) {
-  const navigate = useNavigate();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -105,6 +104,7 @@ export default function LoginPage({}: Route.ComponentProps) {
                       className="w-full"
                     />
                   </div>
+                  
                   {error && (
                     <p className="text-sm text-red-600">{error}</p>
                   )}
@@ -115,6 +115,21 @@ export default function LoginPage({}: Route.ComponentProps) {
                   >
                     {loading ? "Wird gesendet…" : "Code senden"}
                   </Button>
+                  <p className="text-gray-500 mb-4 text-sm">
+                    Wir benutzen deine E-Mail-Adresse nur zum Login und für Updates zu deinen Wortvorschlägen.
+                  </p>
+                  <p className="text-gray-500 text-xs leading-relaxed">
+                    Mit deinen Beiträgen stimmst du zu, dass sie unter{" "}
+                    <a
+                      href="https://creativecommons.org/publicdomain/zero/1.0/deed.de"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-orange-600 underline hover:text-orange-700"
+                    >
+                      CC0 (Public Domain)
+                    </a>{" "}
+                    veröffentlicht werden.
+                  </p>
                 </form>
               </>
             ) : (
@@ -168,6 +183,18 @@ export default function LoginPage({}: Route.ComponentProps) {
                   >
                     Andere E-Mail verwenden
                   </button>
+                  <p className="text-gray-500 text-xs leading-relaxed text-center pt-2">
+                    Beiträge werden unter{" "}
+                    <a
+                      href="https://creativecommons.org/publicdomain/zero/1.0/deed.de"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-orange-600 underline hover:text-orange-700"
+                    >
+                      CC0
+                    </a>{" "}
+                    veröffentlicht.
+                  </p>
                 </form>
               </>
             )}
