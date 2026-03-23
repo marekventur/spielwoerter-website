@@ -92,4 +92,11 @@ export function initSchema(db: Database.Database): void {
       "ALTER TABLE suggestions ADD COLUMN moderator_fast_track INTEGER NOT NULL DEFAULT 0"
     ).run();
   }
+
+  // Ensure bootstrap admin always has full privileges
+  db.prepare(
+    `INSERT INTO users (email, is_moderator, is_admin)
+     VALUES ('marekventur@gmail.com', 1, 1)
+     ON CONFLICT(email) DO UPDATE SET is_moderator = 1, is_admin = 1`
+  ).run();
 }
