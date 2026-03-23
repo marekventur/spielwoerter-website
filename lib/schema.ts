@@ -35,8 +35,6 @@ export function initSchema(db: Database.Database): void {
       normalised TEXT
     );
 
-    CREATE INDEX IF NOT EXISTS idx_words_normalised ON words(normalised);
-
     CREATE TABLE IF NOT EXISTS suggestions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id),
