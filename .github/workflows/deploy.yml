@@ -24,6 +24,7 @@ jobs:
       - name: Deploy
         env:
           SSH_PRIVATE_KEY_CONTENT: ${{ secrets.SSH_PRIVATE_KEY }}
+          ENV_FILE_CONTENT: ${{ secrets.ENV_FILE }}
         run: |
           if [[ -z "$SSH_PRIVATE_KEY_CONTENT" ]]; then
             echo "ERROR: SSH_PRIVATE_KEY secret is not set"
@@ -33,4 +34,12 @@ jobs:
           printf '%s\n' "$SSH_PRIVATE_KEY_CONTENT" > "$key_file"
           chmod 600 "$key_file"
           ./deploy.sh "$key_file"
-          # Key file is on ephemeral runner; no need to delete
+          # Write .env to VPS (rsync excludes it)
+          if [[ -z "$ENV_FILE_CONTENT" ]]; then
+            echo "ERROR: ENV_FILE secret is not set"
+            exit 1
+          fi
+          NAME=$(grep '^NAME=' app.config | cut -d= -f2-)
+          SSH_OPTS=(-i "$key_file" -o StrictHostKeyChecking=accept-new)
+          printf '%s' "$ENV_FILE_CONTENT" | ssh "${SSH_OPTS[@]}" root@vps3.marekventur.com "cat > /var/www/$NAME/.env"
+          echo "=== .env written to VPS ==="
