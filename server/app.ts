@@ -4,7 +4,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import { getDb } from "../lib/db.js";
 import { getUserFromSession, type User } from "../lib/auth.js";
-import { startPromotionJob, startSyncJob } from "./jobs.js";
+import { startPromotionJob, startSyncJob, startBackupJob } from "./jobs.js";
 import { authRouter } from "./routes/auth.js";
 import { suggestionsRouter } from "./routes/suggestions.js";
 import { moderationRouter } from "./routes/moderation.js";
@@ -34,6 +34,7 @@ app.use("/api", wordRouter);
 
 startPromotionJob();
 startSyncJob();
+startBackupJob();
 
 app.use(
   createRequestHandler({
