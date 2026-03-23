@@ -6,7 +6,7 @@ const LICENSE =
 const CC0 = "https://creativecommons.org/publicdomain/zero/1.0/";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Warum Spielwörter? – Spielwörter.de" }];
+  return [{ title: "Warum Spielwörter? – Spielwoerter.de" }];
 }
 
 export default function WarumPage() {
@@ -95,7 +95,7 @@ export default function WarumPage() {
           Wahrheit: Sprache ändert sich, und Computer können irren.
         </p>
         <p className="text-sm leading-relaxed mb-3">
-          Auf <strong>Spielwörter.de</strong> kannst du deshalb{" "}
+          Auf <strong>Spielwoerter.de</strong> kannst du deshalb{" "}
           <strong>aktiv mitgestalten</strong>: fehlende Wörter vorschlagen,
           falsche Einträge melden, Beschreibungen verbessern. Nach Prüfung fließen
           angenommene Änderungen in die Wortliste ein.

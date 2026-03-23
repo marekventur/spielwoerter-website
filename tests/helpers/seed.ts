@@ -1,5 +1,6 @@
 import { getTestDb } from "./db";
 import { initSchema } from "../../lib/schema";
+import { promoteEligibleDrafts } from "../../lib/promotion";
 
 export function seedWords(): void {
   const db = getTestDb();
@@ -44,14 +45,22 @@ export function seedSuggestion(
   status = "draft"
 ): number {
   const db = getTestDb();
-  // Backdate pending_review items so they look like they were promoted naturally
-  const lastModified =
-    status === "pending_review" || status === "moderator_approved" || status === "moderator_rejected"
-      ? new Date(Date.now() - 70 * 60 * 1000).toISOString()
-      : new Date().toISOString();
-  db.prepare(
-    "INSERT INTO suggestions (user_id, word, action, status, last_modified_at) VALUES (?, ?, ?, ?, ?)"
-  ).run(userId, word, action, status, lastModified);
+  // Use SQLite datetime() so promotion / idle checks match server SQL.
+  const backdated =
+    status === "pending_review" ||
+    status === "moderator_approved" ||
+    status === "moderator_rejected";
+  if (backdated) {
+    db.prepare(
+      `INSERT INTO suggestions (user_id, word, action, status, last_modified_at)
+       VALUES (?, ?, ?, ?, datetime('now', '-70 minutes'))`
+    ).run(userId, word, action, status);
+  } else {
+    db.prepare(
+      `INSERT INTO suggestions (user_id, word, action, status, last_modified_at)
+       VALUES (?, ?, ?, ?, datetime('now'))`
+    ).run(userId, word, action, status);
+  }
   const row = db
     .prepare("SELECT last_insert_rowid() as id")
     .get() as { id: number };
@@ -59,20 +68,15 @@ export function seedSuggestion(
 }
 
 /**
- * Backdate a draft's last_modified_at and immediately run the promotion SQL,
- * so it appears as pending_review without waiting 60 minutes.
+ * Backdate a draft's last_modified_at and run promotion (pending_review or moderator_approved
+ * depending on moderator_fast_track).
  */
 export function promoteDraft(suggestionId: number): void {
   const db = getTestDb();
-  const past = new Date(Date.now() - 70 * 60 * 1000).toISOString();
   db.prepare(
-    "UPDATE suggestions SET last_modified_at = ? WHERE id = ?"
-  ).run(past, suggestionId);
-  db.prepare(
-    `UPDATE suggestions SET status = 'pending_review'
-     WHERE status = 'draft'
-     AND last_modified_at <= datetime('now', '-60 minutes')`
-  ).run();
+    "UPDATE suggestions SET last_modified_at = datetime('now', '-70 minutes') WHERE id = ?"
+  ).run(suggestionId);
+  promoteEligibleDrafts(db);
 }
 
 export function cleanDb(): void {

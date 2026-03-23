@@ -1,4 +1,5 @@
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
+import { normalise } from "../../lib/normalise.js";
 import { ExternalLink } from "lucide-react";
 import { Card } from "~/components/ui/card";
 import { WordBadge } from "~/components/WordBadge";
@@ -25,7 +26,7 @@ function toStatus(inList: string | undefined): WordBadgeStatus {
 }
 
 export function meta({ params }: Route.MetaArgs) {
-  return [{ title: `${params.word} – Spielwörter.de` }];
+  return [{ title: `${params.word} – Spielwoerter.de` }];
 }
 
 type SuggestionRow = {
@@ -35,7 +36,11 @@ type SuggestionRow = {
 };
 
 export async function loader({ context, params }: Route.LoaderArgs) {
-  const wordLower = decodeURIComponent(params.word).toLowerCase();
+  const decoded = decodeURIComponent(params.word);
+  if (decoded !== decoded.toUpperCase()) {
+    throw redirect(`/wort/${encodeURIComponent(decoded.toUpperCase())}`);
+  }
+  const wordLower = decoded.toLowerCase();
   const db = context.db;
 
   const wordRow = db
@@ -43,6 +48,16 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       "SELECT word, description, base, source, verified_by, in_list FROM words WHERE word = ?"
     )
     .get(wordLower) as WordRow | undefined;
+
+  if (!wordRow) {
+    const normalisedInput = normalise(wordLower);
+    const normalisedMatch = db
+      .prepare("SELECT word FROM words WHERE normalised = ? LIMIT 1")
+      .get(normalisedInput) as { word: string } | undefined;
+    if (normalisedMatch) {
+      throw redirect(`/wort/${encodeURIComponent(normalisedMatch.word.toUpperCase())}`);
+    }
+  }
 
   const effectiveBase = wordRow?.base ?? wordLower;
   const relatedWords = db
@@ -201,12 +216,6 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
             </div>
           </Card>
         )}
-
-        <p className="mt-8 text-center">
-          <Link to="/" className="text-orange-600 hover:text-orange-700 font-medium">
-            ← Zurück zur Startseite
-          </Link>
-        </p>
       </div>
     </div>
   );

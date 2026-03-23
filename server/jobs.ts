@@ -1,4 +1,5 @@
 import { getDb } from "../lib/db.js";
+import { promoteEligibleDrafts } from "../lib/promotion.js";
 import { syncPull, syncPush } from "../lib/sync.js";
 import { sendDigestEmails } from "./mailgun.js";
 
@@ -9,15 +10,14 @@ export function startPromotionJob() {
   promotionJobStarted = true;
 
   const run = () => {
-    const result = getDb()
-      .prepare(
-        `UPDATE suggestions SET status = 'pending_review'
-         WHERE status = 'draft'
-         AND last_modified_at <= datetime('now', '-60 minutes')`
-      )
-      .run();
-    if (result.changes > 0) {
-      console.log(`[promotion] ${result.changes} draft(s) → pending_review`);
+    const { toModeratorApproved, toPendingReview } = promoteEligibleDrafts(getDb());
+    if (toModeratorApproved > 0) {
+      console.log(
+        `[promotion] ${toModeratorApproved} draft(s) → moderator_approved (moderator edits)`
+      );
+    }
+    if (toPendingReview > 0) {
+      console.log(`[promotion] ${toPendingReview} draft(s) → pending_review`);
     }
   };
 

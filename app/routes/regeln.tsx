@@ -5,7 +5,7 @@ const REGELN_SOURCE =
   "https://github.com/marekventur/spielwoerter/blob/main/REGELN.md";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Wortregeln – Spielwörter.de" }];
+  return [{ title: "Wortregeln – Spielwoerter.de" }];
 }
 
 export default function RegelnPage() {

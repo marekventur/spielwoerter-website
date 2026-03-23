@@ -174,7 +174,7 @@ function SuggestionMainCell({ s }: { s: Suggestion }) {
 }
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Meine Vorschläge – Spielwörter.de" }];
+  return [{ title: "Meine Vorschläge – Spielwoerter.de" }];
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

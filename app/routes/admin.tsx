@@ -13,7 +13,7 @@ type UserRow = {
 };
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Admin – Spielwörter.de" }];
+  return [{ title: "Admin – Spielwoerter.de" }];
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

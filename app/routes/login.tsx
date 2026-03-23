@@ -5,7 +5,7 @@ import { Button } from "~/components/ui/button";
 import type { Route } from "./+types/login";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Anmelden – Spielwörter.de" }];
+  return [{ title: "Anmelden – Spielwoerter.de" }];
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

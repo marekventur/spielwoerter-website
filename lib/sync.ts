@@ -1,4 +1,5 @@
 import Database from "better-sqlite3";
+import { normalise } from "./normalise.js";
 
 const GITHUB_RAW = "https://raw.githubusercontent.com";
 const GITHUB_API = "https://api.github.com";
@@ -99,8 +100,8 @@ export async function syncPull(
   );
 
   const insert = db.prepare(
-    `INSERT OR REPLACE INTO words (word, description, base, source, verified_by, in_list)
-     VALUES (@word, @description, @base, @source, @verified_by, @in_list)`
+    `INSERT OR REPLACE INTO words (word, description, base, source, verified_by, in_list, normalised)
+     VALUES (@word, @description, @base, @source, @verified_by, @in_list, @normalised)`
   );
 
   const insertRejectedWord = db.prepare(
@@ -111,10 +112,10 @@ export async function syncPull(
     db.prepare("DELETE FROM words").run();
     db.prepare("DELETE FROM rejected_words").run();
 
-    for (const w of accepted) insert.run({ ...w, in_list: "accepted" });
-    for (const w of uncertain) insert.run({ ...w, in_list: "uncertain" });
+    for (const w of accepted) insert.run({ ...w, in_list: "accepted", normalised: normalise(w.word) });
+    for (const w of uncertain) insert.run({ ...w, in_list: "uncertain", normalised: normalise(w.word) });
     for (const w of rejected) {
-      insert.run({ ...w, in_list: "rejected" });
+      insert.run({ ...w, in_list: "rejected", normalised: normalise(w.word) });
       insertRejectedWord.run(w.word);
     }
   })();

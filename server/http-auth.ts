@@ -8,11 +8,13 @@ export function requireUser(
 ): User | null {
   const sessionId = req.cookies?.session as string | undefined;
   if (!sessionId) {
+    console.warn("[auth] unauthenticated request", { ip: req.ip, path: req.path });
     res.status(401).json({ error: "Nicht angemeldet" });
     return null;
   }
   const user = getUserFromSession(getDb(), sessionId);
   if (!user) {
+    console.warn("[auth] invalid/expired session", { ip: req.ip, path: req.path });
     res.status(401).json({ error: "Nicht angemeldet" });
     return null;
   }
@@ -26,6 +28,7 @@ export function requireModerator(
   const user = requireUser(req, res);
   if (!user) return null;
   if (!user.isModerator) {
+    console.warn("[auth] moderator access denied", { ip: req.ip, path: req.path, userId: user.id });
     res.status(403).json({ error: "Keine Berechtigung" });
     return null;
   }
@@ -39,6 +42,7 @@ export function requireAdmin(
   const user = requireUser(req, res);
   if (!user) return null;
   if (!user.isAdmin) {
+    console.warn("[auth] admin access denied", { ip: req.ip, path: req.path, userId: user.id });
     res.status(403).json({ error: "Keine Berechtigung" });
     return null;
   }

@@ -1,19 +1,37 @@
 import { Router } from "express";
 import crypto from "crypto";
+import rateLimit from "express-rate-limit";
 import { getDb } from "../../lib/db.js";
 import { sendOtpEmail } from "../mailgun.js";
 
 export const authRouter = Router();
 
-authRouter.post("/request-code", async (req, res) => {
+const requestCodeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Zu viele Anfragen, bitte später versuchen" },
+});
+
+const verifyCodeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Zu viele Anfragen, bitte später versuchen" },
+});
+
+authRouter.post("/request-code", requestCodeLimiter, async (req, res) => {
   const { email } = (req.body ?? {}) as { email?: string };
-  if (!email || !email.includes("@")) {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    console.warn("[auth] invalid email in request-code", { ip: req.ip, email });
     res.status(400).json({ error: "Ungültige E-Mail-Adresse" });
     return;
   }
 
   const db = getDb();
-  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const code = String(crypto.randomInt(100000, 1000000));
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
   db.prepare("DELETE FROM otp_codes WHERE email = ?").run(email);
@@ -37,7 +55,7 @@ authRouter.post("/request-code", async (req, res) => {
   res.json({ ok: true });
 });
 
-authRouter.post("/verify-code", (req, res) => {
+authRouter.post("/verify-code", verifyCodeLimiter, (req, res) => {
   const { email, code } = (req.body ?? {}) as { email?: string; code?: string };
   if (!email || !code) {
     res.status(400).json({ error: "Fehlende Felder" });
@@ -52,6 +70,7 @@ authRouter.post("/verify-code", (req, res) => {
     .get(email, code) as { id: number } | undefined;
 
   if (!otpRow) {
+    console.warn("[auth] failed OTP verification", { ip: req.ip, email });
     res.status(401).json({ error: "Ungültiger oder abgelaufener Code" });
     return;
   }
@@ -90,7 +109,7 @@ authRouter.post("/verify-code", (req, res) => {
   res.cookie("session", sessionId, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "strict",
     expires: new Date(expiresAt),
   });
 

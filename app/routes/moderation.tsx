@@ -29,7 +29,7 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Moderation – Spielwörter.de" }];
+  return [{ title: "Moderation – Spielwoerter.de" }];
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

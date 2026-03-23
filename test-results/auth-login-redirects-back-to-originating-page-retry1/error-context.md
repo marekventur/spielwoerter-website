@@ -1,0 +1,106 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link "Spielwoerter.de" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]:
+            - generic [ref=e8]: S
+            - generic [ref=e9]: W
+          - generic [ref=e10]: Spielwoerter.de
+        - generic [ref=e11]:
+          - link "Regeln" [ref=e12] [cursor=pointer]:
+            - /url: /regeln
+          - link "Warum" [ref=e13] [cursor=pointer]:
+            - /url: /warum
+          - link "Entstehung" [ref=e14] [cursor=pointer]:
+            - /url: /entstehung
+          - link "Mitmachen" [ref=e15] [cursor=pointer]:
+            - /url: /mitmachen
+      - button "testuser@example.test" [ref=e18]:
+        - img [ref=e19]
+        - generic [ref=e22]: testuser@example.test
+        - img [ref=e23]
+  - main [ref=e25]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - img [ref=e32]
+            - generic [ref=e34]: Im Wörterbuch enthalten
+          - generic [ref=e35]: HUND
+        - paragraph [ref=e36]: ein Haustier
+        - generic [ref=e39]:
+          - button "Beschreibung oder Grundform verbessern" [ref=e40]:
+            - img [ref=e41]
+            - text: Beschreibung oder Grundform verbessern
+          - button "Melde dieses Wort als fehlerhaft" [ref=e44]:
+            - img [ref=e45]
+            - text: Melde dieses Wort als fehlerhaft
+      - generic [ref=e47]:
+        - heading "Externe Wörterbücher" [level=2] [ref=e48]
+        - generic [ref=e49]:
+          - link "Wiktionary" [ref=e50] [cursor=pointer]:
+            - /url: https://de.wiktionary.org/wiki/hund
+            - img [ref=e51]
+            - generic [ref=e55]: Wiktionary
+          - link "Duden" [ref=e56] [cursor=pointer]:
+            - /url: https://www.duden.de/suchen/dudenonline/hund
+            - img [ref=e57]
+            - generic [ref=e61]: Duden
+          - link "DWDS" [ref=e62] [cursor=pointer]:
+            - /url: https://www.dwds.de/wb/hund
+            - img [ref=e63]
+            - generic [ref=e67]: DWDS
+          - link "Wahrig" [ref=e68] [cursor=pointer]:
+            - /url: https://www.wahrig.de/search?q=hund
+            - img [ref=e69]
+            - generic [ref=e73]: Wahrig
+      - generic [ref=e74]:
+        - heading "Verwandte Wörter" [level=2] [ref=e75]
+        - generic [ref=e76]:
+          - link "HUNDE" [ref=e77] [cursor=pointer]:
+            - /url: /wort/HUNDE
+            - generic [ref=e78]:
+              - img [ref=e79]
+              - generic [ref=e81]: HUNDE
+          - link "HUNDES" [ref=e82] [cursor=pointer]:
+            - /url: /wort/HUNDES
+            - generic [ref=e83]:
+              - img [ref=e84]
+              - generic [ref=e86]: HUNDES
+      - paragraph [ref=e87]:
+        - link "← Zurück zur Startseite" [ref=e88] [cursor=pointer]:
+          - /url: /
+  - contentinfo [ref=e89]:
+    - paragraph [ref=e91]:
+      - link "Spielwoerter.de" [ref=e92] [cursor=pointer]:
+        - /url: /
+      - text: ·
+      - link "Wortregeln" [ref=e93] [cursor=pointer]:
+        - /url: /regeln
+      - text: ·
+      - link "Warum" [ref=e94] [cursor=pointer]:
+        - /url: /warum
+      - text: ·
+      - link "Entstehung" [ref=e95] [cursor=pointer]:
+        - /url: /entstehung
+      - text: ·
+      - link "Mitmachen" [ref=e96] [cursor=pointer]:
+        - /url: /mitmachen
+      - text: ·
+      - link "CC0 Public Domain" [ref=e97] [cursor=pointer]:
+        - /url: https://github.com/marekventur/spielwoerter/blob/main/LICENSE
+      - text: ·
+      - link "GitHub" [ref=e98] [cursor=pointer]:
+        - /url: https://github.com/marekventur/spielwoerter
+      - text: ·
+      - link "Problem melden" [ref=e99] [cursor=pointer]:
+        - /url: https://github.com/marekventur/spielwoerter/issues
+      - text: ·
+      - link "Kontakt" [ref=e100] [cursor=pointer]:
+        - /url: mailto:mail@wortopia.de
+```

@@ -1,4 +1,4 @@
-# Spielwörter.de (Website)
+# Spielwoerter.de (Website)
 
 Web frontend and API for **[Spielwörter](https://github.com/marekventur/spielwoerter)** — the open German word list. Built with **React Router v7** (framework mode), **Express**, **Tailwind CSS v4**, **SQLite**, **TypeScript**.
 

@@ -1,4 +1,5 @@
 import type Database from "better-sqlite3";
+import { normalise } from "./normalise.js";
 
 export function initSchema(db: Database.Database): void {
   db.exec(`
@@ -30,8 +31,11 @@ export function initSchema(db: Database.Database): void {
       base TEXT,
       source TEXT,
       verified_by TEXT,
-      in_list TEXT NOT NULL
+      in_list TEXT NOT NULL,
+      normalised TEXT
     );
+
+    CREATE INDEX IF NOT EXISTS idx_words_normalised ON words(normalised);
 
     CREATE TABLE IF NOT EXISTS suggestions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,6 +56,20 @@ export function initSchema(db: Database.Database): void {
   `);
 
   // Migrations: add columns if missing
+  const wordCols = (
+    db.prepare("SELECT name FROM pragma_table_info('words')").all() as { name: string }[]
+  ).map((r) => r.name);
+  if (!wordCols.includes("normalised")) {
+    db.prepare("ALTER TABLE words ADD COLUMN normalised TEXT").run();
+    db.exec("CREATE INDEX IF NOT EXISTS idx_words_normalised ON words(normalised)");
+    // Back-fill existing rows
+    const rows = db.prepare("SELECT word FROM words").all() as { word: string }[];
+    const update = db.prepare("UPDATE words SET normalised = ? WHERE word = ?");
+    db.transaction(() => {
+      for (const { word } of rows) update.run(normalise(word), word);
+    })();
+  }
+
   const userCols = (
     db.prepare("SELECT name FROM pragma_table_info('users')").all() as { name: string }[]
   ).map((r) => r.name);
@@ -70,5 +88,10 @@ export function initSchema(db: Database.Database): void {
   }
   if (!suggCols.includes("notified_at")) {
     db.prepare("ALTER TABLE suggestions ADD COLUMN notified_at TEXT").run();
+  }
+  if (!suggCols.includes("moderator_fast_track")) {
+    db.prepare(
+      "ALTER TABLE suggestions ADD COLUMN moderator_fast_track INTEGER NOT NULL DEFAULT 0"
+    ).run();
   }
 }

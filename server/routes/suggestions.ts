@@ -49,6 +49,18 @@ suggestionsRouter.post("/", (req, res) => {
     res.status(400).json({ error: "Fehlende Felder" });
     return;
   }
+  if (word.length > 100) {
+    res.status(400).json({ error: "Wort zu lang" });
+    return;
+  }
+  if (payload?.description && payload.description.length > 500) {
+    res.status(400).json({ error: "Beschreibung zu lang" });
+    return;
+  }
+  if (payload?.base && payload.base.length > 100) {
+    res.status(400).json({ error: "Grundform zu lang" });
+    return;
+  }
   if (!["add", "remove", "change_description"].includes(action)) {
     res.status(400).json({ error: "Ungültige Aktion" });
     return;
@@ -121,8 +133,15 @@ suggestionsRouter.post("/", (req, res) => {
       : payload ?? null;
 
   db.prepare(
-    "INSERT INTO suggestions (user_id, word, action, payload) VALUES (?, ?, ?, ?)"
-  ).run(user.id, wordLower, action, payloadToStore ? JSON.stringify(payloadToStore) : null);
+    `INSERT INTO suggestions (user_id, word, action, payload, moderator_fast_track)
+     VALUES (?, ?, ?, ?, ?)`
+  ).run(
+    user.id,
+    wordLower,
+    action,
+    payloadToStore ? JSON.stringify(payloadToStore) : null,
+    user.isModerator ? 1 : 0
+  );
 
   res.json({ ok: true });
 });
@@ -170,13 +189,24 @@ suggestionsRouter.patch("/:id", (req, res) => {
   const db = getDb();
   const row = db
     .prepare(
-      "SELECT id, word, action, payload, status FROM suggestions WHERE id = ? AND user_id = ?"
+      "SELECT id, word, action, payload, status, user_id FROM suggestions WHERE id = ?"
     )
-    .get(id, user.id) as
-    | { id: number; word: string; action: string; payload: string | null; status: string }
+    .get(id) as
+    | {
+        id: number;
+        word: string;
+        action: string;
+        payload: string | null;
+        status: string;
+        user_id: number;
+      }
     | undefined;
 
   if (!row) {
+    res.status(404).json({ error: "Nicht gefunden" });
+    return;
+  }
+  if (row.user_id !== user.id && !user.isModerator) {
     res.status(404).json({ error: "Nicht gefunden" });
     return;
   }
@@ -185,6 +215,8 @@ suggestionsRouter.patch("/:id", (req, res) => {
     return;
   }
 
+  const moderatorFastTrack = user.isModerator ? 1 : 0;
+
   const existing = row.payload
     ? (JSON.parse(row.payload) as Record<string, string>)
     : {};
@@ -192,12 +224,18 @@ suggestionsRouter.patch("/:id", (req, res) => {
   if (row.action === "add") {
     const normalized = normalizeAddPayloadBase(row.word.toLowerCase(), merged);
     db.prepare(
-      `UPDATE suggestions SET payload = ?, last_modified_at = datetime('now') WHERE id = ?`
-    ).run(normalized === null ? null : JSON.stringify(normalized), id);
+      `UPDATE suggestions SET payload = ?, last_modified_at = datetime('now'), moderator_fast_track = ?
+       WHERE id = ?`
+    ).run(
+      normalized === null ? null : JSON.stringify(normalized),
+      moderatorFastTrack,
+      id
+    );
   } else {
     db.prepare(
-      `UPDATE suggestions SET payload = ?, last_modified_at = datetime('now') WHERE id = ?`
-    ).run(JSON.stringify(merged), id);
+      `UPDATE suggestions SET payload = ?, last_modified_at = datetime('now'), moderator_fast_track = ?
+       WHERE id = ?`
+    ).run(JSON.stringify(merged), moderatorFastTrack, id);
   }
 
   res.json({ ok: true });

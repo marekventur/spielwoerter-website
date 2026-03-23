@@ -1,4 +1,4 @@
-# Agent notes — Spielwörter.de website
+# Agent notes — Spielwoerter.de website
 
 Context for AI coding agents working in this repository.
 

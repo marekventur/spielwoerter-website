@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import type { Route } from "./+types/mitmachen";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Mitmachen – Spielwörter.de" }];
+  return [{ title: "Mitmachen – Spielwoerter.de" }];
 }
 
 export default function MitmachenPage() {
@@ -12,7 +12,7 @@ export default function MitmachenPage() {
         Vorschläge einreichen
       </h1>
       <p className="text-sm text-gray-500 mb-8">
-        Die Datenbank auf Spielwörter.de wird aus dem gleichen öffentlichen
+        Die Datenbank auf Spielwoerter.de wird aus dem gleichen öffentlichen
         Datenstand wie das GitHub-Projekt gespeist. Über die Website kann die
         Community fehlende oder falsche Einträge melden und Beschreibungen
         verbessern — mit klarem Prüf- und Freigabeprozess.

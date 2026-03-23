@@ -10,7 +10,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Spielwörter.de – Das offene deutsche Wortspiel-Wörterbuch" }];
+  return [{ title: "Spielwoerter.de – Das offene deutsche Wortspiel-Wörterbuch" }];
 }
 
 export default function Home({}: Route.ComponentProps) {

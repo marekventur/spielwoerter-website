@@ -13,6 +13,11 @@ import { SiteFooter } from "~/components/SiteFooter";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
+  { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+  { rel: "icon", href: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
+  { rel: "icon", href: "/favicon.png", type: "image/png", sizes: "128x128" },
+  { rel: "icon", href: "/favicon.ico" },
+  { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",

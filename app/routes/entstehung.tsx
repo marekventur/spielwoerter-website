@@ -5,7 +5,7 @@ const README =
   "https://github.com/marekventur/spielwoerter/blob/main/README.md";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Entstehung der Liste – Spielwörter.de" }];
+  return [{ title: "Entstehung der Liste – Spielwoerter.de" }];
 }
 
 export default function EntstehungPage() {

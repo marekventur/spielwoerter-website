@@ -1,0 +1,124 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link "Spielwoerter.de" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]:
+            - generic [ref=e8]: S
+            - generic [ref=e9]: W
+          - generic [ref=e10]: Spielwoerter.de
+        - generic [ref=e11]:
+          - link "Regeln" [ref=e12] [cursor=pointer]:
+            - /url: /regeln
+          - link "Warum" [ref=e13] [cursor=pointer]:
+            - /url: /warum
+          - link "Entstehung" [ref=e14] [cursor=pointer]:
+            - /url: /entstehung
+          - link "Mitmachen" [ref=e15] [cursor=pointer]:
+            - /url: /mitmachen
+      - button "testuser@example.test" [ref=e18]:
+        - img [ref=e19]
+        - generic [ref=e22]: testuser@example.test
+        - img [ref=e23]
+  - main [ref=e25]:
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - heading "Das freie Wortspiel-Wörterbuch" [level=1] [ref=e28]
+        - paragraph [ref=e29]:
+          - link "Offen lizenzierte" [ref=e30] [cursor=pointer]:
+            - /url: https://creativecommons.org/public-domain/cc0/
+          - text: ", kostenlos und ohne Einschränkungen verfügbar"
+        - generic [ref=e32]:
+          - textbox "Wort nachschlagen..." [ref=e33]
+          - button [ref=e34]:
+            - img [ref=e35]
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - generic [ref=e40]: O
+            - generic [ref=e41]: "1"
+          - generic [ref=e42]:
+            - generic [ref=e43]: F
+            - generic [ref=e44]: "4"
+          - generic [ref=e45]:
+            - generic [ref=e46]: F
+            - generic [ref=e47]: "4"
+          - generic [ref=e48]:
+            - generic [ref=e49]: E
+            - generic [ref=e50]: "1"
+          - generic [ref=e51]:
+            - generic [ref=e52]: "N"
+            - generic [ref=e53]: "1"
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - img [ref=e59]
+          - heading "Open Source" [level=3] [ref=e61]
+          - paragraph [ref=e62]: Frei verfügbar unter offener Lizenz. Keine Einschränkungen, keine Gebühren.
+        - generic [ref=e63]:
+          - img [ref=e65]
+          - heading "Community-getrieben" [level=3] [ref=e67]
+          - paragraph [ref=e68]: Jeder kann beitragen. Gemeinsam erstellen wir das beste Wortspiel-Wörterbuch.
+        - generic [ref=e69]:
+          - img [ref=e71]
+          - heading "Geprüfte Qualität" [level=3] [ref=e73]
+          - paragraph [ref=e74]: Alle Vorschläge werden automatisch überprüft und validiert.
+      - generic [ref=e76]:
+        - generic [ref=e77]:
+          - generic [ref=e78]: "1"
+          - generic [ref=e79]:
+            - heading "Warum nicht einfach ein Wörterbuch verwenden?" [level=3] [ref=e80]
+            - paragraph [ref=e81]: Duden und Co. sind prima, aber für non-kommerzielle Wortspiele gibt es keine guten Wortlisten unter einer offenen Lizenz.
+        - generic [ref=e82]:
+          - generic [ref=e83]: "2"
+          - generic [ref=e84]:
+            - heading "Wie kann ich einen Fehler korrigieren?" [level=3] [ref=e85]
+            - paragraph [ref=e86]: Melde dich an und korrigiere den Fehler auf der entsprechenden Wortseite. Sobald deine Entfehlung akzeptiert wurde, schicken wir dir eine E-Mail.
+        - generic [ref=e87]:
+          - generic [ref=e88]: "3"
+          - generic [ref=e89]:
+            - heading "Was sind die Wortregeln?" [level=3] [ref=e90]
+            - paragraph [ref=e91]:
+              - text: Wir haben eine eigene
+              - link "Wortregel-Liste" [ref=e92] [cursor=pointer]:
+                - /url: /regeln
+              - text: ", die im größtenteils an die offiziellen ORZ-Regeln von Scrabble Deutschland e.V. angelehnt ist."
+      - generic [ref=e94]:
+        - heading "Bereit mitzumachen?" [level=2] [ref=e95]
+        - paragraph [ref=e96]: Hilf uns, das beste deutsche Wortspiel-Wörterbuch aufzubauen.
+        - generic [ref=e97]:
+          - link "Jetzt beitragen" [ref=e98] [cursor=pointer]:
+            - /url: /login
+          - link "Mehr erfahren" [ref=e99] [cursor=pointer]:
+            - /url: /warum
+  - contentinfo [ref=e100]:
+    - paragraph [ref=e102]:
+      - link "Spielwoerter.de" [ref=e103] [cursor=pointer]:
+        - /url: /
+      - text: ·
+      - link "Wortregeln" [ref=e104] [cursor=pointer]:
+        - /url: /regeln
+      - text: ·
+      - link "Warum" [ref=e105] [cursor=pointer]:
+        - /url: /warum
+      - text: ·
+      - link "Entstehung" [ref=e106] [cursor=pointer]:
+        - /url: /entstehung
+      - text: ·
+      - link "Mitmachen" [ref=e107] [cursor=pointer]:
+        - /url: /mitmachen
+      - text: ·
+      - link "CC0 Public Domain" [ref=e108] [cursor=pointer]:
+        - /url: https://github.com/marekventur/spielwoerter/blob/main/LICENSE
+      - text: ·
+      - link "GitHub" [ref=e109] [cursor=pointer]:
+        - /url: https://github.com/marekventur/spielwoerter
+      - text: ·
+      - link "Problem melden" [ref=e110] [cursor=pointer]:
+        - /url: https://github.com/marekventur/spielwoerter/issues
+      - text: ·
+      - link "Kontakt" [ref=e111] [cursor=pointer]:
+        - /url: mailto:mail@wortopia.de
+```
