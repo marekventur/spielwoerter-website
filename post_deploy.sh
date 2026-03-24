@@ -21,13 +21,30 @@ echo "=== Post-deploy: $NAME (port $PORT) ==="
 npm ci
 npm run build
 
-if npx pm2 describe "$NAME" &>/dev/null; then
-  echo "Restarting existing PM2 app: $NAME"
-  npx pm2 restart "$NAME" --update-env
+# Run PM2 as the app owner, not root
+APP_USER=$(stat -c '%U' "$SCRIPT_DIR")
+if [[ "$EUID" -eq 0 && "$APP_USER" != "root" ]]; then
+  sudo -u "$APP_USER" bash -c "
+    cd '$SCRIPT_DIR'
+    export NAME='$NAME' PORT='$PORT'
+    if npx pm2 describe '$NAME' &>/dev/null; then
+      echo 'Restarting existing PM2 app: $NAME'
+      npx pm2 restart '$NAME' --update-env
+    else
+      echo 'Starting PM2 app: $NAME'
+      npx pm2 start ecosystem.config.cjs
+    fi
+    npx pm2 save
+  "
 else
-  echo "Starting PM2 app: $NAME"
-  npx pm2 start ecosystem.config.cjs
+  if npx pm2 describe "$NAME" &>/dev/null; then
+    echo "Restarting existing PM2 app: $NAME"
+    npx pm2 restart "$NAME" --update-env
+  else
+    echo "Starting PM2 app: $NAME"
+    npx pm2 start ecosystem.config.cjs
+  fi
+  npx pm2 save
 fi
 
-npx pm2 save
 echo "=== Done ==="
