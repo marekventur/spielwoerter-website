@@ -11,6 +11,7 @@ import { moderationRouter } from "./routes/moderation.js";
 import { adminRouter } from "./routes/admin.js";
 import { syncPushRouter } from "./routes/sync-push.js";
 import { wordRouter } from "./routes/word.js";
+import { sitemapRouter } from "./routes/sitemap.js";
 
 declare module "react-router" {
   interface AppLoadContext {
@@ -25,6 +26,7 @@ app.set("trust proxy", 1);
 app.use(cookieParser());
 app.use(express.json());
 
+app.use(sitemapRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/suggestions", suggestionsRouter);
 app.use("/api/moderation", moderationRouter);
