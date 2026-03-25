@@ -2,9 +2,9 @@ import { Link, redirect } from "react-router";
 import { normalise } from "../../lib/normalise.js";
 import { ExternalLink } from "lucide-react";
 import { Card } from "~/components/ui/card";
-import { WordBadge } from "~/components/WordBadge";
 import { HeroWordBadge } from "~/components/HeroWordBadge";
 import { WortPageSuggestionPanel } from "~/components/WortPageSuggestionPanel";
+import { WordLemmaDescriptionTable } from "~/components/WordLemmaDescriptionTable";
 import type { Route } from "./+types/wort.$word";
 import type { WordBadgeStatus } from "~/components/WordBadge";
 
@@ -17,7 +17,7 @@ type WordRow = {
   in_list: string;
 };
 
-type RelatedRow = { word: string; in_list: string };
+type RelatedRow = { word: string; in_list: string; description: string | null };
 
 function toStatus(inList: string | undefined): WordBadgeStatus {
   if (inList === "accepted") return "accepted";
@@ -62,7 +62,8 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   const effectiveBase = wordRow?.base ?? wordLower;
   const relatedWords = db
     .prepare(
-      "SELECT word, in_list FROM words WHERE (base = ? OR word = ?) AND word != ? LIMIT 30"
+      `SELECT word, in_list, description FROM words
+       WHERE (base = ? OR word = ?) AND word != ? LIMIT 30`
     )
     .all(effectiveBase, effectiveBase, wordLower) as RelatedRow[];
 
@@ -124,7 +125,6 @@ const externalDictionaries = [
   { name: "Wiktionary", url: (w: string) => `https://de.wiktionary.org/wiki/${w}` },
   { name: "Duden", url: (w: string) => `https://www.duden.de/suchen/dudenonline/${w}` },
   { name: "DWDS", url: (w: string) => `https://www.dwds.de/wb/${w}` },
-  { name: "Wahrig", url: (w: string) => `https://www.wahrig.de/search?q=${w}` },
 ];
 
 export default function WortPage({ params, loaderData }: Route.ComponentProps) {
@@ -197,24 +197,16 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
         </div>
 
         {relatedWords.length > 0 && (
-          <Card className="p-6 mb-8">
+          <>
             <h2 className="text-lg font-bold mb-4 text-gray-800">Verwandte Wörter</h2>
-            <div className="flex flex-wrap gap-3">
-              {relatedWords.map((related) => (
-                <Link
-                  key={related.word}
-                  to={`/wort/${encodeURIComponent(related.word.toUpperCase())}`}
-                  className="inline-block transition-opacity hover:opacity-80"
-                >
-                  <WordBadge
-                    word={related.word.toUpperCase()}
-                    status={toStatus(related.in_list)}
-                    size="md"
-                  />
-                </Link>
-              ))}
-            </div>
-          </Card>
+            <WordLemmaDescriptionTable
+              rows={relatedWords.map((related) => ({
+                word: related.word,
+                description: related.description,
+                badgeStatus: toStatus(related.in_list),
+              }))}
+            />
+          </>
         )}
       </div>
     </div>

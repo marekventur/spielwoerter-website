@@ -1,19 +1,25 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Search } from "lucide-react";
+import { getRandomWordsCached } from "../../lib/random-words-cache.js";
+import { HomeRandomWords } from "~/components/HomeRandomWords";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import type { Route } from "./+types/home";
 
 export async function loader({ context }: Route.LoaderArgs) {
-  return { user: context.user };
+  return {
+    user: context.user,
+    randomWords: getRandomWordsCached(context.db),
+  };
 }
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Spielwoerter.de – Das offene deutsche Wortspiel-Wörterbuch" }];
 }
 
-export default function Home({}: Route.ComponentProps) {
+export default function Home({ loaderData }: Route.ComponentProps) {
+  const { randomWords } = loaderData;
   const [searchWord, setSearchWord] = useState("");
   const navigate = useNavigate();
 
@@ -60,7 +66,7 @@ export default function Home({}: Route.ComponentProps) {
         </form>
 
         {/* Scrabble Tiles Decoration */}
-        <div className="flex justify-center gap-2 mb-12">
+        <div className="flex justify-center gap-2 mb-8">
           {["O", "F", "F", "E", "N"].map((letter, i) => (
             <div
               key={i}
@@ -73,6 +79,8 @@ export default function Home({}: Route.ComponentProps) {
             </div>
           ))}
         </div>
+
+        <HomeRandomWords entries={randomWords} />
       </div>
 
       {/* Features Section */}

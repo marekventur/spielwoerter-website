@@ -77,7 +77,7 @@ export function WordBadge({
 
   return (
     <div
-      className={`inline-flex items-center gap-2 rounded-lg border-2 font-bold ${config.bg} ${config.text} ${sizeClasses[size]} ${onClick ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}`}
+      className={`inline-flex items-baseline gap-2 rounded-lg border-2 font-bold ${config.bg} ${config.text} ${sizeClasses[size]} ${onClick ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}`}
       onClick={onClick}
       role={onClick ? "button" : undefined}
     >

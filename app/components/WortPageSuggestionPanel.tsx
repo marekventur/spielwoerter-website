@@ -13,7 +13,7 @@ type WordRow = {
   in_list: string;
 };
 
-type RelatedRow = { word: string; in_list: string };
+type RelatedRow = { word: string; in_list: string; description: string | null };
 
 type SuggestionRow = {
   id: number;
@@ -313,12 +313,10 @@ export function WortPageSuggestionPanel({
         <div className="flex flex-col items-center gap-3 max-w-lg w-full">
           {removeInReviewByOthers ? (
             <p className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full text-center">
-              Ein Entfernen-Vorschlag für{" "}
-              <span className="font-mono font-bold text-gray-900">{word}</span> liegt bereits in Prüfung – du
-              kannst derzeit keinen weiteren melden.
+              Eine Entfernung wird bereits geprüft
             </p>
           ) : null}
-          <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex flex-col items-center gap-3">
             <Button
               variant="outline"
               className="border-sky-500 text-sky-700 hover:bg-sky-50"
@@ -326,7 +324,7 @@ export function WortPageSuggestionPanel({
               onClick={openEditForm}
             >
               <Pencil className="w-4 h-4 mr-2" />
-              Beschreibung oder Grundform verbessern
+              Eintrag verbessern
             </Button>
             <Button
               variant="outline"
@@ -342,7 +340,7 @@ export function WortPageSuggestionPanel({
       ) : (
         <Button className="bg-orange-500 hover:bg-orange-600" onClick={() => void openAddForm()}>
           <Plus className="w-4 h-4 mr-2" />
-          Hinzufügen vorschlagen
+          Wort hinzufügen
         </Button>
       )}
       {actionState === "error" && <p className="text-sm text-red-600">{actionError}</p>}
