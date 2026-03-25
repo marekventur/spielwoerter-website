@@ -93,12 +93,11 @@ sitemapRouter.get("/sitemap-:letter.xml", (req, res) => {
   }
 
   const base = siteUrl();
-  const today = todayW3C();
 
   const urls = words
     .map((w) => {
       const loc = `${base}/wort/${encodeURIComponent(w.toUpperCase())}`;
-      return `  <url>\n    <loc>${xmlEscape(loc)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>`;
+      return `  <url>\n    <loc>${xmlEscape(loc)}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>`;
     })
     .join("\n");
 
