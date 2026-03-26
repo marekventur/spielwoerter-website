@@ -1,8 +1,11 @@
 import Database from "better-sqlite3";
+import { execSync } from "child_process";
+import fs from "fs";
+import os from "os";
+import path from "path";
 import { normalise } from "./normalise.js";
 
 const GITHUB_RAW = "https://raw.githubusercontent.com";
-const GITHUB_API = "https://api.github.com";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,29 +58,6 @@ function insertSorted(list: JsonlWord[], entry: JsonlWord): JsonlWord[] {
   return result;
 }
 
-async function ghApi(
-  method: string,
-  path: string,
-  token: string,
-  body?: unknown
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<any> {
-  const res = await fetch(`${GITHUB_API}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-      "Content-Type": "application/json",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`GitHub ${method} ${path}: ${res.status} ${text}`);
-  }
-  return res.json();
-}
 
 // ── syncPull ─────────────────────────────────────────────────────────────────
 
@@ -130,7 +110,8 @@ export async function syncPull(
 export async function syncPush(
   db: Database.Database,
   githubRepo: string,
-  githubToken: string
+  githubToken: string,
+  branch = "main"
 ): Promise<{ pushed: number; digestUsers: DigestUser[] }> {
   const unsynced = db
     .prepare(
@@ -210,66 +191,41 @@ export async function syncPush(
       }
     }
 
-    // Commit changed files via GitHub Git Data API
-    const [owner, repo] = githubRepo.split("/");
-    const refData = await ghApi(
-      "GET",
-      `/repos/${owner}/${repo}/git/ref/heads/main`,
-      githubToken
-    );
-    const latestSha: string = refData.object.sha;
-    const commitData = await ghApi(
-      "GET",
-      `/repos/${owner}/${repo}/git/commits/${latestSha}`,
-      githubToken
-    );
-    const baseTreeSha: string = commitData.tree.sha;
+    // Commit changed files via local git clone + push
+    const cloneUrl = `https://x-access-token:${githubToken}@github.com/${githubRepo}.git`;
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "spielwoerter-push-"));
+    try {
+      const git = (cmd: string) =>
+        execSync(`git ${cmd}`, { cwd: tmpDir, stdio: "pipe" });
 
-    const filesToUpdate = [
-      { path: "wordlist_accepted.jsonl", content: toJsonl(accepted) },
-      { path: "wordlist_uncertain.jsonl", content: toJsonl(uncertain) },
-      { path: "wordlist_rejected.jsonl", content: toJsonl(rejected) },
-    ];
+      git(`clone --depth 1 ${cloneUrl} .`);
+      if (branch !== "main") {
+        git(`checkout -b ${branch}`);
+      }
+      git(`config user.email "bot@spielwoerter.de"`);
+      git(`config user.name "Spielwoerter Bot"`);
 
-    const treeItems = await Promise.all(
-      filesToUpdate.map(async (f) => {
-        const blob = await ghApi(
-          "POST",
-          `/repos/${owner}/${repo}/git/blobs`,
-          githubToken,
-          {
-            content: Buffer.from(f.content).toString("base64"),
-            encoding: "base64",
-          }
-        );
-        return { path: f.path, mode: "100644", type: "blob", sha: blob.sha };
-      })
-    );
+      fs.writeFileSync(path.join(tmpDir, "wordlist_accepted.jsonl"), toJsonl(accepted));
+      fs.writeFileSync(path.join(tmpDir, "wordlist_uncertain.jsonl"), toJsonl(uncertain));
+      fs.writeFileSync(path.join(tmpDir, "wordlist_rejected.jsonl"), toJsonl(rejected));
 
-    const newTree = await ghApi(
-      "POST",
-      `/repos/${owner}/${repo}/git/trees`,
-      githubToken,
-      { base_tree: baseTreeSha, tree: treeItems }
-    );
+      const added = unsynced.filter((s) => s.action === "add").length;
+      const removed = unsynced.filter((s) => s.action === "remove").length;
+      const changed = unsynced.filter((s) => s.action === "change_description").length;
+      const parts = [
+        added > 0 ? `${added} added` : "",
+        removed > 0 ? `${removed} removed` : "",
+        changed > 0 ? `${changed} updated` : "",
+      ].filter(Boolean).join(", ");
+      const msg = `community: ${parts}`;
+      git(`add wordlist_accepted.jsonl wordlist_uncertain.jsonl wordlist_rejected.jsonl`);
+      git(`commit -m ${JSON.stringify(msg)}`);
+      git(`push origin HEAD:${branch}`);
 
-    const wordList = unsynced.map((s) => s.word).join(", ");
-    const msg = `community: ${unsynced.length} suggestion(s) applied\n\n${wordList}`;
-    const newCommit = await ghApi(
-      "POST",
-      `/repos/${owner}/${repo}/git/commits`,
-      githubToken,
-      { message: msg, tree: newTree.sha, parents: [latestSha] }
-    );
-
-    await ghApi(
-      "PATCH",
-      `/repos/${owner}/${repo}/git/refs/heads/main`,
-      githubToken,
-      { sha: newCommit.sha }
-    );
-
-    console.log(`[sync push] Committed ${unsynced.length} change(s).`);
+      console.log(`[sync push] Committed ${unsynced.length} change(s).`);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
 
     // Mark as synced
     const now = new Date().toISOString();

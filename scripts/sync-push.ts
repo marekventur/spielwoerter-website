@@ -14,13 +14,16 @@ if (!githubToken) {
   process.exit(1);
 }
 
+const branch = process.argv[2] ?? "main";
+console.log(`Target branch: ${branch}`);
+
 const db = getDb();
-const { pushed, digestUsers } = await syncPush(db, githubRepo, githubToken);
+const { pushed, digestUsers } = await syncPush(db, githubRepo, githubToken, branch);
 console.log(`Pushed: ${pushed}`);
 if (digestUsers.length > 0) {
   console.log("Digest users:", JSON.stringify(digestUsers, null, 2));
 }
-if (pushed > 0) {
+if (pushed > 0 && branch === "main") {
   console.log("Pulling back to sync local DB…");
   await syncPull(db, githubRepo);
 }

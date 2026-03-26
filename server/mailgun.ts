@@ -50,13 +50,6 @@ export async function sendDigestEmails(users: DigestUser[]): Promise<void> {
     process.env.MAILGUN_FROM || `Spielwörter <noreply@${domain}>`;
 
   for (const u of users) {
-    const approved = u.approved.map(
-      (s) => `${s.word.toUpperCase()} (${ACTION_LABELS[s.action] ?? s.action})`
-    );
-    const rejected = u.rejected.map(
-      (s) => `${s.word.toUpperCase()} (${ACTION_LABELS[s.action] ?? s.action})`
-    );
-
     const form = new FormData();
     form.append("from", from);
     form.append("to", u.email);
@@ -65,8 +58,14 @@ export async function sendDigestEmails(users: DigestUser[]): Promise<void> {
     form.append(
       "t:variables",
       JSON.stringify({
-        approved: approved.map((w) => ({ word: w, action: "" })),
-        rejected: rejected.map((w) => ({ word: w, action: "" })),
+        approved: u.approved.map((s) => ({
+          word: s.word.toUpperCase(),
+          action: ACTION_LABELS[s.action] ?? s.action,
+        })),
+        rejected: u.rejected.map((s) => ({
+          word: s.word.toUpperCase(),
+          action: ACTION_LABELS[s.action] ?? s.action,
+        })),
         site_url: siteUrl,
       })
     );
