@@ -80,3 +80,22 @@ test("public API returns 404 for unknown word", async ({ request }) => {
   const res = await request.get("/api/words/zzznichtdrin");
   expect(res.status()).toBe(404);
 });
+
+test("words CSV streams accepted and uncertain rows, not rejected", async ({
+  request,
+}) => {
+  const res = await request.get("/api/words.csv");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toMatch(/text\/csv/);
+  const text = await res.text();
+  const lines = text.trim().split("\n");
+  expect(lines[0]).toBe("word,base,description");
+  expect(text).toContain("hund,");
+  expect(text).toContain("xyz,");
+  expect(text).not.toContain("falsch");
+});
+
+test("words CSV rejects unknown column", async ({ request }) => {
+  const res = await request.get("/api/words.csv?columns=word,in_list");
+  expect(res.status()).toBe(400);
+});

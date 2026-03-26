@@ -49,6 +49,7 @@ export function startSyncJob() {
     }
   };
 
+  run();
   setInterval(run, 60 * 60 * 1000);
 }
 
