@@ -57,11 +57,7 @@ export function AddWordSuggestionDoneState({
             disabled={selectedMorph.size === 0 || morphState === "loading"}
             onClick={onMorphSubmit}
           >
-            {morphState === "loading"
-              ? "Wird gespeichert…"
-              : `${selectedMorph.size > 0 ? selectedMorph.size + " " : ""}Entwurf${
-                  selectedMorph.size !== 1 ? "würfe" : ""
-                } hinzufügen`}
+            {morphState === "loading" ? "Wird gespeichert…" : "Wörter entfernen"}
           </Button>
         </div>
       )}
