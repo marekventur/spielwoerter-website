@@ -245,7 +245,7 @@ export function WortPageSuggestionPanel({
             einreichen.
           </p>
           {!user ? (
-            <Link to={loginHref}>
+            <Link to={loginHref} rel="nofollow">
               <Button
                 variant="outline"
                 className="border-orange-500 text-orange-600 hover:bg-orange-50"
@@ -256,7 +256,7 @@ export function WortPageSuggestionPanel({
           ) : null}
         </div>
       ) : !user ? (
-        <Link to={loginHref}>
+        <Link to={loginHref} rel="nofollow">
           <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50">
             Fehler gefunden? Anmelden und beheben!
           </Button>
