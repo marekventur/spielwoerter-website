@@ -40,10 +40,10 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   if (decoded !== decoded.toUpperCase()) {
     throw redirect(`/wort/${encodeURIComponent(decoded.toUpperCase())}`);
   }
-  const wordLower = decoded.toLowerCase();
+  let wordLower = decoded.toLowerCase();
   const db = context.db;
 
-  const wordRow = db
+  let wordRow = db
     .prepare(
       "SELECT word, description, base, source, verified_by, in_list FROM words WHERE word = ?"
     )
@@ -55,7 +55,19 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       .prepare("SELECT word FROM words WHERE normalised = ? LIMIT 1")
       .get(normalisedInput) as { word: string } | undefined;
     if (normalisedMatch) {
-      throw redirect(`/wort/${encodeURIComponent(normalisedMatch.word.toUpperCase())}`);
+      // ß.toUpperCase() === 'SS' in JS, so words with ß in the DB produce a canonical
+      // uppercase URL containing SS. When a user lands on that SS URL, lowercasing gives
+      // 'ss' (not 'ß'), the direct lookup fails, and the normalise redirect would point
+      // back to the same SS URL — an infinite loop. Detect this and serve directly instead.
+      if (normalisedMatch.word.toUpperCase() !== decoded) {
+        throw redirect(`/wort/${encodeURIComponent(normalisedMatch.word.toUpperCase())}`);
+      }
+      wordLower = normalisedMatch.word;
+      wordRow = db
+        .prepare(
+          "SELECT word, description, base, source, verified_by, in_list FROM words WHERE word = ?"
+        )
+        .get(wordLower) as WordRow | undefined;
     }
   }
 
