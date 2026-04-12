@@ -5,7 +5,11 @@ import { Button } from "~/components/ui/button";
 import type { Route } from "./+types/login";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Anmelden – Spielwoerter.de" }];
+  return [
+    { title: "Anmelden – Spielwoerter.de" },
+    { tagName: "link", rel: "canonical", href: "https://spielwoerter.de/login" },
+    { name: "robots", content: "noindex, follow" },
+  ];
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {
