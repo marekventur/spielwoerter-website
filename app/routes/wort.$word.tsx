@@ -25,8 +25,16 @@ function toStatus(inList: string | undefined): WordBadgeStatus {
   return "not-accepted";
 }
 
-export function meta({ params }: Route.MetaArgs) {
-  return [{ title: `${params.word} – Spielwoerter.de` }];
+export function meta({ params, data }: Route.MetaArgs) {
+  const word = params.word;
+  const description = data?.wordRow?.description;
+  const metaDescription = description
+    ? `${word} – ${description} – Das offene, deutsche Wortspiel-Wörterbuch`
+    : `${word} – Das offene, deutsche Wortspiel-Wörterbuch`;
+  return [
+    { title: `${word} – Spielwoerter.de` },
+    { name: "description", content: metaDescription },
+  ];
 }
 
 type SuggestionRow = {

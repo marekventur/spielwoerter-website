@@ -2,7 +2,10 @@ import { Link } from "react-router";
 import type { Route } from "./+types/mitmachen";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Mitmachen – Spielwoerter.de" }];
+  return [
+    { title: "Mitmachen – Spielwoerter.de" },
+    { name: "description", content: "Fehler gefunden oder ein Wort vermisst? Melde dich an und verbessere das offene deutsche Wortspiel-Wörterbuch." },
+  ];
 }
 
 export default function MitmachenPage() {

@@ -5,7 +5,10 @@ const REGELN_SOURCE =
   "https://github.com/marekventur/spielwoerter/blob/main/REGELN.md";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Wortregeln – Spielwoerter.de" }];
+  return [
+    { title: "Wortregeln – Spielwoerter.de" },
+    { name: "description", content: "Welche Wörter sind in deutschen Wortspielen zulässig? Die Regeln auf Spielwoerter.de, angelehnt an die offiziellen ORZ-Regeln von Scrabble Deutschland e.V." },
+  ];
 }
 
 export default function RegelnPage() {

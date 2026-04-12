@@ -6,7 +6,10 @@ const LICENSE =
 const CC0 = "https://creativecommons.org/publicdomain/zero/1.0/";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Warum Spielwörter? – Spielwoerter.de" }];
+  return [
+    { title: "Warum Spielwörter? – Spielwoerter.de" },
+    { name: "description", content: "Warum es Spielwörter gibt: eine freie, gepflegte deutsche Wortliste für Wortspiele – mit klarer CC0-Lizenz und offener Community." },
+  ];
 }
 
 export default function WarumPage() {

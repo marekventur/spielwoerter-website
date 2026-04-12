@@ -5,7 +5,10 @@ const README =
   "https://github.com/marekventur/spielwoerter/blob/main/README.md";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Entstehung der Liste – Spielwoerter.de" }];
+  return [
+    { title: "Entstehung der Liste – Spielwoerter.de" },
+    { name: "description", content: "Wie die Spielwoerter-Wortliste mit über 200.000 Einträgen technisch entstand – von Rohkandidaten bis zur fertigen, offen lizenzierten JSONL-Datei." },
+  ];
 }
 
 export default function EntstehungPage() {

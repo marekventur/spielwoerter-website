@@ -15,7 +15,10 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Spielwoerter.de – Das offene deutsche Wortspiel-Wörterbuch" }];
+  return [
+    { title: "Spielwoerter.de – Das offene deutsche Wortspiel-Wörterbuch" },
+    { name: "description", content: "Das freie, community-gepflegte Wörterbuch für deutsche Wortspiele – offen lizenziert (CC0) und kostenlos verfügbar." },
+  ];
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
