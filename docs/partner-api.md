@@ -189,6 +189,61 @@ These are returned when the entire request fails (rather than individual suggest
 
 ---
 
+## CORS
+
+All `/api/partner/*` endpoints set `Access-Control-Allow-Origin: *`, so they can be called directly from browser JavaScript on any origin, as long as a valid `X-API-Key` header is included.
+
+---
+
+## Endpoint: Enrich word (LLM)
+
+```
+GET https://spielwoerter.de/api/partner/enrich/:word
+X-API-Key: <your-key>
+```
+
+Calls the same LLM pipeline used in the Spielwoerter.de suggestion flow to generate a base form, description, and inflected variants for a given word. Useful for pre-populating suggestion forms on your site.
+
+### Path parameter
+
+| Parameter | Description |
+|---|---|
+| `word` | The word to enrich. Case-insensitive — processed lowercase. Max 100 chars. |
+
+### Response
+
+```json
+{
+  "base": "hund",
+  "description": "Subst., m. — domestiziertes Haustier aus der Familie der Wölfe",
+  "variants": [
+    { "word": "hunde",  "description": "Pl. von Hund",      "base": "hund" },
+    { "word": "hundes", "description": "Gen. Sg. von Hund", "base": "hund" },
+    { "word": "hunden", "description": "Dat. Pl. von Hund", "base": "hund" }
+  ],
+  "variantNotices": []
+}
+```
+
+| Field | Description |
+|---|---|
+| `base` | Lemma/base form. `null` if the input word is itself the base. |
+| `description` | Description of the input word. `null` if the LLM didn't recognise it. |
+| `variants` | Inflected forms that are not yet in the list — candidates for `upsert` submissions. |
+| `variantNotices` | Inflected forms that already exist or were rejected, for informational display. |
+
+`variantNotices[].reason` values:
+
+| Value | Meaning |
+|---|---|
+| `in_list` | Already accepted/uncertain in the wordlist. |
+| `rejected` | Previously rejected. |
+| `in_review` | Currently in the moderation pipeline. |
+
+If the LLM is unavailable or doesn't recognise the word, `description` and `variants` will be empty and `base` will fall back to an algorithmic guess.
+
+---
+
 ## Example: curl
 
 ```bash

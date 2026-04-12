@@ -1,8 +1,38 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
 import { requirePartnerKey } from "../partner-auth.js";
+import { enrichWord } from "../../lib/enrich.js";
 
 export const partnerRouter = Router();
+
+// CORS: allow cross-origin requests from any partner site that holds a valid key.
+partnerRouter.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-API-Key");
+  if (req.method === "OPTIONS") {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
+
+// GET /api/partner/enrich/:word
+// Returns LLM-generated base, description, and inflected variants for a word.
+// Same data as the internal /api/word-enrich/:word endpoint, exposed with CORS for partner frontends.
+partnerRouter.get("/enrich/:word", async (req, res) => {
+  const keyLabel = requirePartnerKey(req, res);
+  if (!keyLabel) return;
+
+  const word = req.params.word.toLowerCase();
+  if (!word || word.length > 100) {
+    res.status(400).json({ error: "word must be 1–100 characters" });
+    return;
+  }
+
+  const result = await enrichWord(word);
+  res.json(result);
+});
 
 const PIPELINE_STATUSES =
   "('draft', 'pending_review', 'ai_approved', 'needs_moderator', 'moderator_approved')";
