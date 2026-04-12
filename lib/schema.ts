@@ -92,6 +92,15 @@ export function initSchema(db: Database.Database): void {
       "ALTER TABLE suggestions ADD COLUMN moderator_fast_track INTEGER NOT NULL DEFAULT 0"
     ).run();
   }
+  if (!suggCols.includes("supporters")) {
+    db.prepare("ALTER TABLE suggestions ADD COLUMN supporters TEXT").run();
+  }
+  if (!suggCols.includes("opposers")) {
+    db.prepare("ALTER TABLE suggestions ADD COLUMN opposers TEXT").run();
+  }
+  if (!suggCols.includes("partner_key_label")) {
+    db.prepare("ALTER TABLE suggestions ADD COLUMN partner_key_label TEXT").run();
+  }
 
   // Ensure bootstrap admin always has full privileges
   db.prepare(

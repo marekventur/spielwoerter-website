@@ -12,6 +12,7 @@ import { adminRouter } from "./routes/admin.js";
 import { syncPushRouter } from "./routes/sync-push.js";
 import { wordRouter } from "./routes/word.js";
 import { sitemapRouter } from "./routes/sitemap.js";
+import { partnerRouter } from "./routes/partner.js";
 
 declare module "react-router" {
   interface AppLoadContext {
@@ -33,6 +34,7 @@ app.use("/api/moderation", moderationRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/sync", syncPushRouter);
 app.use("/api", wordRouter);
+app.use("/api/partner", partnerRouter);
 
 startPromotionJob();
 startSyncJob();
