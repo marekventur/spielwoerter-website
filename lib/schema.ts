@@ -51,6 +51,14 @@ export function initSchema(db: Database.Database): void {
       action TEXT NOT NULL,
       PRIMARY KEY (word, action)
     );
+
+    CREATE TABLE IF NOT EXISTS mcp_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      token TEXT NOT NULL UNIQUE,
+      label TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
   // Migrations: add columns if missing

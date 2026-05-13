@@ -13,6 +13,7 @@ import { syncPushRouter } from "./routes/sync-push.js";
 import { wordRouter } from "./routes/word.js";
 import { sitemapRouter } from "./routes/sitemap.js";
 import { partnerRouter } from "./routes/partner.js";
+import { mcpRouter } from "./routes/mcp.js";
 
 declare module "react-router" {
   interface AppLoadContext {
@@ -28,6 +29,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.use(sitemapRouter);
+app.use("/mcp", mcpRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/suggestions", suggestionsRouter);
 app.use("/api/moderation", moderationRouter);
