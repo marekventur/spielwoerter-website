@@ -15,6 +15,7 @@ type ModerationItem = {
   current_description: string | null;
   in_list: string | null;
   base: string | null;
+  requester_email: string | null;
 };
 
 type Group = {
@@ -39,9 +40,11 @@ export async function loader({ context }: Route.LoaderArgs) {
   const items = context.db
     .prepare(
       `SELECT s.id, s.word, s.action, s.payload, s.status, s.created_at,
-              w.description AS current_description, w.in_list, w.base
+              w.description AS current_description, w.in_list, w.base,
+              u.email AS requester_email
        FROM suggestions s
        LEFT JOIN words w ON w.word = s.word
+       LEFT JOIN users u ON u.id = s.user_id
        WHERE s.status IN ('pending_review', 'needs_moderator')
        ORDER BY COALESCE(w.base, s.word), s.word, s.created_at`
     )
@@ -212,29 +215,49 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                               )}
                             </div>
 
-                            {item.current_description && (
-                              <p className="text-sm text-gray-500 mb-1">
-                                <span className="font-medium text-gray-600">Aktuell:</span>{" "}
-                                {item.current_description}
-                              </p>
+                            {item.action === "change_description" ? (
+                              <div className="text-sm mb-2 space-y-1">
+                                <div className="flex gap-2">
+                                  <span className="shrink-0 text-xs font-medium text-red-500 w-14 pt-0.5">Vorher:</span>
+                                  <span className="text-gray-500 line-through">{item.current_description ?? "–"}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <span className="shrink-0 text-xs font-medium text-green-600 w-14 pt-0.5">Nachher:</span>
+                                  <span className="text-gray-800">{payload?.description ?? "–"}</span>
+                                </div>
+                                {payload?.base && (
+                                  <p className="text-gray-500 mt-1">
+                                    <span className="font-medium text-gray-600">Grundform (neu):</span>{" "}
+                                    <span className="font-mono">{payload.base}</span>
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <>
+                                {item.current_description && (
+                                  <p className="text-sm text-gray-500 mb-1">
+                                    <span className="font-medium text-gray-600">Aktuell:</span>{" "}
+                                    {item.current_description}
+                                  </p>
+                                )}
+                                {payload?.description && (
+                                  <p className="text-sm text-gray-700 mb-1">
+                                    <span className="font-medium">Beschreibung:</span>{" "}
+                                    {payload.description}
+                                  </p>
+                                )}
+                                {payload?.base && (
+                                  <p className="text-sm text-gray-500 mb-1">
+                                    <span className="font-medium text-gray-600">Grundform:</span>{" "}
+                                    <span className="font-mono">{payload.base}</span>
+                                  </p>
+                                )}
+                              </>
                             )}
 
-                            {payload?.description && (
-                              <p className="text-sm text-gray-700 mb-1">
-                                <span className="font-medium">Beschreibung:</span>{" "}
-                                {payload.description}
-                              </p>
-                            )}
-                            {item.action === "add" && payload?.base && (
-                              <p className="text-sm text-gray-500 mb-1">
-                                <span className="font-medium text-gray-600">Grundform:</span>{" "}
-                                <span className="font-mono">{payload.base}</span>
-                              </p>
-                            )}
-                            {item.action === "change_description" && payload?.base && (
-                              <p className="text-sm text-gray-500 mb-1">
-                                <span className="font-medium text-gray-600">Grundform (neu):</span>{" "}
-                                <span className="font-mono">{payload.base}</span>
+                            {item.requester_email && (
+                              <p className="text-xs text-gray-400 mb-1">
+                                {item.requester_email}
                               </p>
                             )}
 
