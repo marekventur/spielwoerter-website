@@ -146,7 +146,7 @@ export function WortPageSuggestionPanel({
       body: JSON.stringify({
         word: wordLower,
         action: "change_description",
-        payload: { description: d, base: b },
+        payload: { description: d, base: b.toLowerCase() },
       }),
     });
     const data = await res.json() as { error?: string };
@@ -284,8 +284,8 @@ export function WortPageSuggestionPanel({
               <input
                 type="text"
                 value={editBase}
-                onChange={(e) => setEditBase(e.target.value.toLowerCase())}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-400"
+                onChange={(e) => setEditBase(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-400 uppercase"
               />
             </div>
             <div className="flex gap-2 pt-1">
