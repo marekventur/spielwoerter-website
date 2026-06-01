@@ -1,6 +1,12 @@
 import { Router, type Response } from "express";
 import { getDb } from "../../lib/db.js";
 import { detectAlgorithmicBase, enrichWord } from "../../lib/enrich.js";
+import { requireUser } from "../http-auth.js";
+
+const SEARCH_FIELDS = ["word", "base", "description"] as const;
+type SearchField = (typeof SEARCH_FIELDS)[number];
+const SEARCH_FIELD_SET = new Set<string>(SEARCH_FIELDS);
+const SEARCH_LIMIT = 1000;
 
 const CSV_COLUMNS = ["word", "base", "description", "verified_by"] as const;
 type CsvColumn = (typeof CSV_COLUMNS)[number];
@@ -38,6 +44,80 @@ function writeChunk(res: Response, chunk: string): Promise<void> {
 
 
 export const wordRouter = Router();
+
+/**
+ * GET /api/words/search?q=...&mode=partial|start|end&fields=word,base,description&regex=0
+ * Power-search the accepted wordlist. Returns up to 1000 rows + has_more flag.
+ */
+wordRouter.get("/words/search", (req, res) => {
+  const user = requireUser(req, res);
+  if (!user) return;
+
+  const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
+  if (!q) {
+    res.json({ words: [], hasMore: false });
+    return;
+  }
+
+  const rawMode = typeof req.query.mode === "string" ? req.query.mode : "partial";
+  const mode = ["partial", "start", "end", "exact"].includes(rawMode) ? rawMode : "partial";
+
+  const rawFields = typeof req.query.fields === "string" ? req.query.fields : "";
+  const fields: SearchField[] = rawFields
+    ? (rawFields.split(",").filter((f) => SEARCH_FIELD_SET.has(f)) as SearchField[])
+    : [...SEARCH_FIELDS];
+  if (fields.length === 0) {
+    res.status(400).json({ error: "Ungültige Felder" });
+    return;
+  }
+
+  const isRegex = req.query.regex === "1";
+
+  const db = getDb();
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (isRegex) {
+    for (const field of fields) {
+      conditions.push(`${field} REGEXP ?`);
+      params.push(q);
+    }
+  } else {
+    const terms = q.split(/[,\s]+/).filter(Boolean).slice(0, 20);
+    for (const term of terms) {
+      for (const field of fields) {
+        if (mode === "exact") {
+          conditions.push(`LOWER(${field}) = LOWER(?)`);
+          params.push(term);
+        } else {
+          const pattern =
+            mode === "start" ? `${term}%` : mode === "end" ? `%${term}` : `%${term}%`;
+          conditions.push(`LOWER(${field}) LIKE LOWER(?)`);
+          params.push(pattern);
+        }
+      }
+    }
+  }
+
+  if (conditions.length === 0) {
+    res.json({ words: [], hasMore: false });
+    return;
+  }
+
+  const rows = db
+    .prepare(
+      `SELECT word, base, description
+       FROM words
+       WHERE in_list IN ('accepted', 'uncertain')
+       AND (${conditions.join(" OR ")})
+       ORDER BY word
+       LIMIT ${SEARCH_LIMIT + 1}`
+    )
+    .all(...params) as { word: string; base: string | null; description: string | null }[];
+
+  const hasMore = rows.length > SEARCH_LIMIT;
+  res.json({ words: rows.slice(0, SEARCH_LIMIT), hasMore });
+});
 
 /**
  * GET /api/words.csv?columns=word,base,description

@@ -65,6 +65,8 @@ type PendingRow = {
   current_description: string | null;
   base: string | null;
   requester_email: string | null;
+  batch_id: number | null;
+  batch_message: string | null;
 };
 
 type SuggRow = { id: number; word: string; action: string; status: string };
@@ -80,10 +82,12 @@ function handleToolCall(
       .prepare(
         `SELECT s.id, s.word, s.action, s.payload, s.status, s.created_at,
                 w.description AS current_description, w.base,
-                u.email AS requester_email
+                u.email AS requester_email,
+                s.batch_id, b.message AS batch_message
          FROM suggestions s
          LEFT JOIN words w ON w.word = s.word
          LEFT JOIN users u ON u.id = s.user_id
+         LEFT JOIN batches b ON b.id = s.batch_id
          WHERE s.status IN ('pending_review', 'needs_moderator')
          ORDER BY COALESCE(w.base, s.word), s.word, s.created_at`
       )
@@ -113,6 +117,10 @@ function handleToolCall(
       }
       const base = payload?.base ?? item.base;
       if (base) parts.push(`Base form: ${base}`);
+      if (item.batch_id) {
+        parts.push(`Batch ID: ${item.batch_id}`);
+        if (item.batch_message) parts.push(`Batch message: ${item.batch_message}`);
+      }
       return parts.join("\n");
     });
 

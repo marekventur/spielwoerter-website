@@ -59,6 +59,13 @@ export function initSchema(db: Database.Database): void {
       label TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS batches (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      message TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
   // Migrations: add columns if missing
@@ -108,6 +115,9 @@ export function initSchema(db: Database.Database): void {
   }
   if (!suggCols.includes("partner_key_label")) {
     db.prepare("ALTER TABLE suggestions ADD COLUMN partner_key_label TEXT").run();
+  }
+  if (!suggCols.includes("batch_id")) {
+    db.prepare("ALTER TABLE suggestions ADD COLUMN batch_id INTEGER REFERENCES batches(id)").run();
   }
 
   // Ensure bootstrap admin always has full privileges

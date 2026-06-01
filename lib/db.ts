@@ -12,6 +12,14 @@ export function getDb(): Database.Database {
     fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
     db = new Database(DB_PATH);
     db.pragma("journal_mode = WAL");
+    db.function("regexp", { deterministic: true }, (pattern: unknown, value: unknown) => {
+      if (value == null || typeof pattern !== "string") return 0;
+      try {
+        return new RegExp(pattern, "i").test(String(value)) ? 1 : 0;
+      } catch {
+        return 0;
+      }
+    });
     initSchema(db);
   }
   return db;
