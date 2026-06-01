@@ -6,7 +6,7 @@ import { requireUser } from "../http-auth.js";
 const SEARCH_FIELDS = ["word", "base", "description"] as const;
 type SearchField = (typeof SEARCH_FIELDS)[number];
 const SEARCH_FIELD_SET = new Set<string>(SEARCH_FIELDS);
-const SEARCH_LIMIT = 1000;
+const SEARCH_LIMIT = 200;
 
 const CSV_COLUMNS = ["word", "base", "description", "verified_by"] as const;
 type CsvColumn = (typeof CSV_COLUMNS)[number];
@@ -44,6 +44,49 @@ function writeChunk(res: Response, chunk: string): Promise<void> {
 
 
 export const wordRouter = Router();
+
+/**
+ * GET /api/words/all
+ * Full accepted wordlist for client-side search. 1hr private browser cache + ETag.
+ * On refresh Chrome revalidates via If-None-Match; 304 avoids re-downloading the body.
+ */
+wordRouter.get("/words/all", (req, res) => {
+  const user = requireUser(req, res);
+  if (!user) return;
+
+  const db = getDb();
+
+  // Cheap fingerprint: row count + total byte length of all content fields.
+  // Changes whenever any word, base, or description is added/modified/removed.
+  const { etag } = db
+    .prepare(
+      `SELECT COUNT(*) || '-' ||
+              CAST(SUM(LENGTH(word) + LENGTH(COALESCE(base,'')) + LENGTH(COALESCE(description,''))) AS TEXT)
+              AS etag
+       FROM words WHERE in_list IN ('accepted', 'uncertain')`
+    )
+    .get() as { etag: string };
+
+  const etagValue = `"${etag}"`;
+  res.setHeader("Cache-Control", "private, max-age=3600");
+  res.setHeader("ETag", etagValue);
+
+  if (req.headers["if-none-match"] === etagValue) {
+    res.status(304).end();
+    return;
+  }
+
+  const words = db
+    .prepare(
+      `SELECT word, base, description
+       FROM words
+       WHERE in_list IN ('accepted', 'uncertain')
+       ORDER BY word`
+    )
+    .all() as { word: string; base: string | null; description: string | null }[];
+
+  res.json({ words });
+});
 
 /**
  * GET /api/words/search?q=...&mode=partial|start|end&fields=word,base,description&regex=0

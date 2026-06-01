@@ -33,11 +33,18 @@ function readFromStorage(): Changeset {
   }
 }
 
-export function useLocalStorageChangeset(): [
-  Changeset,
-  (updater: (prev: Changeset) => Changeset) => void,
-  () => void,
-] {
+const LIMIT_USER = 100;
+const LIMIT_MODERATOR = 500;
+
+type UseLocalStorageChangesetResult = {
+  changeset: Changeset;
+  setChangeset: (updater: (prev: Changeset) => Changeset) => void;
+  clearChangeset: () => void;
+  limit: number;
+  limitReached: boolean;
+};
+
+export function useLocalStorageChangeset(isModerator: boolean): UseLocalStorageChangesetResult {
   const [changeset, setChangeset] = useState<Changeset>(readFromStorage);
 
   useEffect(() => {
@@ -49,6 +56,8 @@ export function useLocalStorageChangeset(): [
   }, [changeset]);
 
   const clearChangeset = () => setChangeset(new Map());
+  const limit = isModerator ? LIMIT_MODERATOR : LIMIT_USER;
+  const limitReached = changeset.size >= limit;
 
-  return [changeset, setChangeset, clearChangeset];
+  return { changeset, setChangeset, clearChangeset, limit, limitReached };
 }

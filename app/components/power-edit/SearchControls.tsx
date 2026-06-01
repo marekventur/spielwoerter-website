@@ -26,6 +26,7 @@ type Props = {
   onFieldsChange: (v: SearchField[]) => void;
   regex: boolean;
   onRegexChange: (v: boolean) => void;
+  hasMore?: boolean;
 };
 
 export function SearchControls({
@@ -37,6 +38,7 @@ export function SearchControls({
   onFieldsChange,
   regex,
   onRegexChange,
+  hasMore = false,
 }: Props) {
   function toggleField(f: SearchField) {
     onFieldsChange(
@@ -47,7 +49,7 @@ export function SearchControls({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4 space-y-3">
+    <div className="sticky top-[70px] z-10 bg-white rounded-lg border border-gray-200 p-4 mb-4 space-y-3 shadow-[2px_3px_6px_rgba(0,0,0,0.07)]">
       <div className="flex">
         <input
           type="text"
@@ -76,38 +78,43 @@ export function SearchControls({
           </svg>
         </div>
       </div>
-      <div className="flex flex-wrap gap-3 items-center">
-        
-          
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex">
+            {ALL_FIELDS.map((f, i) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => toggleField(f)}
+                className={`px-2 py-1 text-xs font-medium border-y border-r transition-colors
+                  ${i === 0 ? "rounded-l border-l" : ""}
+                  ${i === ALL_FIELDS.length - 1 ? "rounded-r" : ""}
+                  ${fields.includes(f)
+                    ? "bg-sky-100 text-sky-800 border-sky-400"
+                    : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                  }`}
+              >
+                {FIELD_LABELS[f]}
+              </button>
+            ))}
+          </div>
 
-        <div className="flex">
-          {ALL_FIELDS.map((f, i) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => toggleField(f)}
-              className={`px-2 py-1 text-xs font-medium border-y border-r transition-colors
-                ${i === 0 ? "rounded-l border-l" : ""}
-                ${i === ALL_FIELDS.length - 1 ? "rounded-r" : ""}
-                ${fields.includes(f)
-                  ? "bg-sky-100 text-sky-800 border-sky-400"
-                  : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
-                }`}
-            >
-              {FIELD_LABELS[f]}
-            </button>
-          ))}
+          <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={regex}
+              onChange={(e) => onRegexChange(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            Regex
+          </label>
         </div>
 
-        <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={regex}
-            onChange={(e) => onRegexChange(e.target.checked)}
-            className="rounded border-gray-300"
-          />
-          Regex
-        </label>
+        {hasMore && (
+          <span className="text-xs text-amber-600 whitespace-nowrap">
+            Zu viele Ergebnisse – bitte Suche verfeinern.
+          </span>
+        )}
       </div>
     </div>
   );

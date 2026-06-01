@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { redirect } from "react-router";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { WordEditTable, type WordRow } from "~/components/power-edit/WordEditTable";
 import { SearchControls, ALL_FIELDS, type SearchMode, type SearchField } from "~/components/power-edit/SearchControls";
 import { useLocalStorageChangeset } from "~/hooks/useLocalStorageChangeset";
+import { usePowerSearch } from "~/hooks/usePowerSearch";
 import type { Route } from "./+types/power-edit";
 
 export function meta({}: Route.MetaArgs) {
@@ -18,9 +19,8 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
   const { user } = loaderData;
-  const limit = user.isModerator ? 500 : 100;
 
-  const [changeset, setChangeset, clearChangeset] = useLocalStorageChangeset();
+  const { changeset, setChangeset, clearChangeset, limit, limitReached } = useLocalStorageChangeset(user.isModerator);
   const [activeTab, setActiveTab] = useState<"search" | "checkout">("search");
 
   // Search state
@@ -28,10 +28,7 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
   const [mode, setMode] = useState<SearchMode>("partial");
   const [fields, setFields] = useState<SearchField[]>(["word", "base"]);
   const [regex, setRegex] = useState(false);
-  const [results, setResults] = useState<WordRow[] | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
+  const { results, hasMore, isLoading: searching, error: searchError } = usePowerSearch(query, mode, fields, regex);
 
   // Checkout state
   const [batchMessage, setBatchMessage] = useState("");
@@ -39,57 +36,12 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // Auto-switch away from checkout if changeset becomes empty
   useEffect(() => {
     if (activeTab === "checkout" && changeset.size === 0) {
       setActiveTab("search");
     }
   }, [activeTab, changeset.size]);
-
-  // Debounced search
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!query.trim()) {
-      setResults(null);
-      setHasMore(false);
-      return;
-    }
-    debounceRef.current = setTimeout(() => {
-      void runSearch();
-    }, 300);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, mode, fields, regex]);
-
-  async function runSearch() {
-    setSearching(true);
-    setSearchError(null);
-    try {
-      const params = new URLSearchParams({
-        q: query,
-        mode,
-        fields: fields.join(","),
-        regex: regex ? "1" : "0",
-      });
-      const res = await fetch(`/api/words/search?${params.toString()}`);
-      if (!res.ok) {
-        const data = (await res.json()) as { error?: string };
-        setSearchError(data.error ?? "Fehler bei der Suche");
-        return;
-      }
-      const data = (await res.json()) as { words: WordRow[]; hasMore: boolean };
-      setResults(data.words);
-      setHasMore(data.hasMore);
-    } catch {
-      setSearchError("Netzwerkfehler");
-    } finally {
-      setSearching(false);
-    }
-  }
 
   async function submitBatch() {
     if (changeset.size === 0) return;
@@ -129,8 +81,6 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
     }
   }
 
-  const limitReached = changeset.size >= limit;
-
   // Rows for checkout tab derived from changeset
   const checkoutRows: WordRow[] = Array.from(changeset.entries()).map(([word, entry]) => ({
     word,
@@ -143,7 +93,6 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Wörterbuch bearbeiten</h1>
 
         {/* Limit warning banner */}
         {limitReached && (
@@ -198,6 +147,7 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
               onFieldsChange={setFields}
               regex={regex}
               onRegexChange={setRegex}
+              hasMore={hasMore}
             />
 
             {/* Results */}
@@ -210,11 +160,6 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
               )}
               {!searching && results !== null && (
                 <>
-                  {hasMore && (
-                    <p className="text-xs text-amber-700 mb-3">
-                      Zu viele Ergebnisse – bitte Suche verfeinern.
-                    </p>
-                  )}
                   <WordEditTable
                     rows={results}
                     changeset={changeset}
