@@ -1,4 +1,4 @@
-type SearchMode = "partial" | "start" | "end" | "exact";
+type SearchMode = "partial" | "start" | "end" | "exact" | "regex";
 type SearchField = "word" | "base" | "description";
 
 const MODE_LABELS: Record<SearchMode, string> = {
@@ -6,6 +6,7 @@ const MODE_LABELS: Record<SearchMode, string> = {
   start: "Wortanfang",
   end: "Wortende",
   exact: "Ganzes Wort",
+  regex: "Regex",
 };
 
 const FIELD_LABELS: Record<SearchField, string> = {
@@ -24,8 +25,6 @@ type Props = {
   onModeChange: (v: SearchMode) => void;
   fields: SearchField[];
   onFieldsChange: (v: SearchField[]) => void;
-  regex: boolean;
-  onRegexChange: (v: boolean) => void;
   hasMore?: boolean;
 };
 
@@ -36,8 +35,6 @@ export function SearchControls({
   onModeChange,
   fields,
   onFieldsChange,
-  regex,
-  onRegexChange,
   hasMore = false,
 }: Props) {
   function toggleField(f: SearchField) {
@@ -79,35 +76,23 @@ export function SearchControls({
         </div>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex">
-            {ALL_FIELDS.map((f, i) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => toggleField(f)}
-                className={`px-2 py-1 text-xs font-medium border-y border-r transition-colors
-                  ${i === 0 ? "rounded-l border-l" : ""}
-                  ${i === ALL_FIELDS.length - 1 ? "rounded-r" : ""}
-                  ${fields.includes(f)
-                    ? "bg-sky-100 text-sky-800 border-sky-400"
-                    : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
-                  }`}
-              >
-                {FIELD_LABELS[f]}
-              </button>
-            ))}
-          </div>
-
-          <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={regex}
-              onChange={(e) => onRegexChange(e.target.checked)}
-              className="rounded border-gray-300"
-            />
-            Regex
-          </label>
+        <div className="flex">
+          {ALL_FIELDS.map((f, i) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => toggleField(f)}
+              className={`px-2 py-1 text-xs font-medium border-y border-r transition-colors
+                ${i === 0 ? "rounded-l border-l" : ""}
+                ${i === ALL_FIELDS.length - 1 ? "rounded-r" : ""}
+                ${fields.includes(f)
+                  ? "bg-sky-100 text-sky-800 border-sky-400"
+                  : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                }`}
+            >
+              {FIELD_LABELS[f]}
+            </button>
+          ))}
         </div>
 
         {hasMore && (

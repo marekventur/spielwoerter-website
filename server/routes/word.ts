@@ -103,7 +103,7 @@ wordRouter.get("/words/search", (req, res) => {
   }
 
   const rawMode = typeof req.query.mode === "string" ? req.query.mode : "partial";
-  const mode = ["partial", "start", "end", "exact"].includes(rawMode) ? rawMode : "partial";
+  const mode = ["partial", "start", "end", "exact", "regex"].includes(rawMode) ? rawMode : "partial";
 
   const rawFields = typeof req.query.fields === "string" ? req.query.fields : "";
   const fields: SearchField[] = rawFields
@@ -114,7 +114,7 @@ wordRouter.get("/words/search", (req, res) => {
     return;
   }
 
-  const isRegex = req.query.regex === "1";
+  const isRegex = mode === "regex";
 
   const db = getDb();
   const conditions: string[] = [];

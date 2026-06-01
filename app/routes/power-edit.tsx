@@ -27,8 +27,7 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<SearchMode>("partial");
   const [fields, setFields] = useState<SearchField[]>(["word", "base"]);
-  const [regex, setRegex] = useState(false);
-  const { results, hasMore, isLoading: searching, error: searchError } = usePowerSearch(query, mode, fields, regex);
+  const { results, hasMore, isLoading: searching, error: searchError } = usePowerSearch(query, mode, fields);
 
   // Checkout state
   const [batchMessage, setBatchMessage] = useState("");
@@ -145,8 +144,6 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
               onModeChange={setMode}
               fields={fields}
               onFieldsChange={setFields}
-              regex={regex}
-              onRegexChange={setRegex}
               hasMore={hasMore}
             />
 

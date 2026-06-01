@@ -80,8 +80,8 @@ export function usePowerSearch(
   query: string,
   mode: SearchMode,
   fields: SearchField[],
-  regex: boolean,
 ): UsePowerSearchResult {
+  const regex = mode === "regex";
   const [dictionary, setDictionary] = useState<WordRow[] | null>(dictCache);
   const [results, setResults] = useState<WordRow[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
@@ -156,7 +156,7 @@ export function usePowerSearch(
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query, mode, fields, regex, dictionary]);
+  }, [query, mode, fields, dictionary]);
 
   return { results, hasMore, isLoading, error, isLocalSearch: dictionary !== null };
 }
