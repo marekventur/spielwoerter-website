@@ -1,4 +1,4 @@
-import { Link, redirect } from "react-router";
+import { data, Link, redirect } from "react-router";
 import { normalise } from "../../lib/normalise.js";
 import { ExternalLink } from "lucide-react";
 import { Card } from "~/components/ui/card";
@@ -138,7 +138,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       )
     : false;
 
-  return {
+  const loaderData = {
     user: context.user,
     wordRow,
     relatedWords,
@@ -147,6 +147,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     removeInReviewByOthers,
     siteUrl: (process.env.SITE_URL ?? "https://spielwoerter.de").replace(/\/$/, ""),
   };
+  return data(loaderData, { status: wordRow ? 200 : 404 });
 }
 
 const externalDictionaries = [
