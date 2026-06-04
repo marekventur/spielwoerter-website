@@ -3,6 +3,7 @@ import { redirect } from "react-router";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { WordEditTable, type WordRow } from "~/components/power-edit/WordEditTable";
+import { SelectionActions } from "~/components/power-edit/SelectionActions";
 import { SearchControls, ALL_FIELDS, type SearchMode, type SearchField } from "~/components/power-edit/SearchControls";
 import { useLocalStorageChangeset } from "~/hooks/useLocalStorageChangeset";
 import { usePowerSearch } from "~/hooks/usePowerSearch";
@@ -27,6 +28,11 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<SearchMode>("partial");
   const [fields, setFields] = useState<SearchField[]>(["word", "base"]);
+
+  // Selection state — reset when search criteria or tab changes
+  const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
+  useEffect(() => { setSelectedWords(new Set()); }, [query, mode, fields]);
+  useEffect(() => { setSelectedWords(new Set()); }, [activeTab]);
   const { results, hasMore, isLoading: searching, error: searchError } = usePowerSearch(query, mode, fields);
 
   // Checkout state
@@ -156,14 +162,14 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
                 <p className="text-sm text-red-600 py-4 text-center">{searchError}</p>
               )}
               {!searching && results !== null && (
-                <>
-                  <WordEditTable
-                    rows={results}
-                    changeset={changeset}
-                    onChangesetChange={setChangeset}
-                    limitReached={limitReached}
-                  />
-                </>
+                <WordEditTable
+                  rows={results}
+                  changeset={changeset}
+                  onChangesetChange={setChangeset}
+                  limitReached={limitReached}
+                  selectedWords={selectedWords}
+                  onSelectionChange={setSelectedWords}
+                />
               )}
               {!searching && results === null && !searchError && (
                 <p className="text-sm text-gray-400 py-4 text-center">
@@ -171,6 +177,12 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
                 </p>
               )}
             </div>
+            <SelectionActions
+              selectedWords={selectedWords}
+              rows={results ?? []}
+              changeset={changeset}
+              onChangesetChange={setChangeset}
+            />
           </div>
         )}
 
@@ -226,8 +238,16 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
                 onChangesetChange={setChangeset}
                 limitReached={false}
                 showOriginal
+                selectedWords={selectedWords}
+                onSelectionChange={setSelectedWords}
               />
             </div>
+            <SelectionActions
+              selectedWords={selectedWords}
+              rows={checkoutRows}
+              changeset={changeset}
+              onChangesetChange={setChangeset}
+            />
           </div>
         )}
       </div>

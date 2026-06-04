@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { Trash2, RotateCcw } from "lucide-react";
 import type { Changeset } from "~/hooks/useLocalStorageChangeset";
+import { Checkbox } from "~/components/ui/checkbox";
 import type { WordRow } from "./WordEditTable";
 
 type RowProps = {
@@ -9,6 +10,8 @@ type RowProps = {
   onChangesetChange: (updater: (prev: Changeset) => Changeset) => void;
   limitReached: boolean;
   showOriginal?: boolean;
+  selected?: boolean;
+  onToggleSelected?: () => void;
 };
 
 function updateField(
@@ -44,7 +47,7 @@ function updateField(
   return next;
 }
 
-export function WordEditRow({ row, changeset, onChangesetChange, limitReached, showOriginal }: RowProps) {
+export function WordEditRow({ row, changeset, onChangesetChange, limitReached, showOriginal, selected, onToggleSelected }: RowProps) {
   const entry = changeset.get(row.word);
   const isDeleted = entry !== undefined && entry.pending === null;
   const isInChangeset = entry !== undefined;
@@ -69,6 +72,11 @@ export function WordEditRow({ row, changeset, onChangesetChange, limitReached, s
     <tr
       className={`border-b border-gray-100 ${isDeleted ? "bg-red-50" : ""} ${isInChangeset && !isDeleted ? "bg-amber-50" : ""}`}
     >
+      {onToggleSelected && (
+        <td className="py-1.5 pr-3 w-8">
+          <Checkbox checked={selected ?? false} onChange={onToggleSelected} label={`${row.word} auswählen`} />
+        </td>
+      )}
       <td className="py-1.5 pr-3">
         <Link
           to={`/wort/${encodeURIComponent(row.word.toUpperCase())}`}
