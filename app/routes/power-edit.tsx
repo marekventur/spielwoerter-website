@@ -4,6 +4,7 @@ import { AlertTriangle } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { WordEditTable, type WordRow } from "~/components/power-edit/WordEditTable";
 import { SelectionActions } from "~/components/power-edit/SelectionActions";
+import { ExportImportTab } from "~/components/power-edit/ExportImportTab";
 import { SearchControls, ALL_FIELDS, type SearchMode, type SearchField } from "~/components/power-edit/SearchControls";
 import { useLocalStorageChangeset } from "~/hooks/useLocalStorageChangeset";
 import { usePowerSearch } from "~/hooks/usePowerSearch";
@@ -21,8 +22,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
   const { user } = loaderData;
 
-  const { changeset, setChangeset, clearChangeset, limit, limitReached } = useLocalStorageChangeset(user.isModerator);
-  const [activeTab, setActiveTab] = useState<"search" | "checkout">("search");
+  const [activeTab, setActiveTab] = useState<"search" | "checkout" | "export-import">("search");
 
   // Search state
   const [query, setQuery] = useState("");
@@ -34,6 +34,7 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
   useEffect(() => { setSelectedWords(new Set()); }, [query, mode, fields]);
   useEffect(() => { setSelectedWords(new Set()); }, [activeTab]);
   const { results, hasMore, isLoading: searching, error: searchError } = usePowerSearch(query, mode, fields);
+  const { changeset, setChangeset, clearChangeset, limit, limitReached } = useLocalStorageChangeset(user.isModerator);
 
   // Checkout state
   const [batchMessage, setBatchMessage] = useState("");
@@ -138,6 +139,11 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
               </span>
             </TabButton>
           )}
+          <div className="ml-auto">
+            <TabButton active={activeTab === "export-import"} onClick={() => setActiveTab("export-import")}>
+              Export / Import
+            </TabButton>
+          </div>
         </div>
 
         {/* Search tab */}
@@ -184,6 +190,15 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
               onChangesetChange={setChangeset}
             />
           </div>
+        )}
+
+        {/* Export / Import tab */}
+        {activeTab === "export-import" && (
+          <ExportImportTab
+            changeset={changeset}
+            onChangesetChange={setChangeset}
+            active={activeTab === "export-import"}
+          />
         )}
 
         {/* Checkout tab */}

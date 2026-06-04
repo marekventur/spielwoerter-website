@@ -8,7 +8,7 @@ const LIMIT = 200;
 let dictCache: WordRow[] | null = null;
 let dictPromise: Promise<WordRow[]> | null = null;
 
-function loadDictionary(): Promise<WordRow[]> {
+export function loadDictionary(): Promise<WordRow[]> {
   if (dictCache) return Promise.resolve(dictCache);
   if (!dictPromise) {
     dictPromise = fetch("/api/words/all")
