@@ -225,6 +225,7 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
                 changeset={changeset}
                 onChangesetChange={setChangeset}
                 limitReached={false}
+                showOriginal
               />
             </div>
           </div>
