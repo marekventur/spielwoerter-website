@@ -165,6 +165,13 @@ export function NavBar({ user }: Props) {
                   >
                     Meine Vorschläge
                   </Link>
+                  <Link
+                    to="/power-edit"
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                    onClick={() => setOpen(false)}
+                  >
+                    Power Edit
+                  </Link>
                   {user.isModerator && (
                     <Link
                       to="/moderation"
