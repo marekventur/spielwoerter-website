@@ -32,12 +32,13 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="light">
+    <html lang="de" data-theme="light">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Links />
         <Meta />
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="22e3f2c2-1cec-43b7-a740-07ceb2b03c2a"></script>
       </head>
       <body className="font-sans antialiased">
         {children}

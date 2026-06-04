@@ -31,10 +31,17 @@ export function meta({ params, data }: Route.MetaArgs) {
   const metaDescription = description
     ? `${word} – ${description} – Das offene, deutsche Wortspiel-Wörterbuch`
     : `${word} – Das offene, deutsche Wortspiel-Wörterbuch`;
-  return [
+  const siteUrl = data?.siteUrl ?? "https://spielwoerter.de";
+  const canonical = `${siteUrl}/wort/${encodeURIComponent(word ?? "")}`;
+  const tags: ReturnType<Route.MetaFunction> = [
     { title: `${word} – Spielwoerter.de` },
     { name: "description", content: metaDescription },
+    { tagName: "link", rel: "canonical", href: canonical },
   ];
+  if (!data?.wordRow) {
+    tags.push({ name: "robots", content: "noindex, follow" });
+  }
+  return tags;
 }
 
 type SuggestionRow = {
@@ -138,6 +145,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     userSuggestions,
     addInReviewByOthers,
     removeInReviewByOthers,
+    siteUrl: (process.env.SITE_URL ?? "https://spielwoerter.de").replace(/\/$/, ""),
   };
 }
 
