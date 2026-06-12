@@ -1,10 +1,5 @@
 import type { DigestUser } from "../lib/sync.js";
-
-const ACTION_LABELS: Record<string, string> = {
-  add: "Hinzufügen",
-  remove: "Entfernen",
-  change_description: "Beschreibung ändern",
-};
+import { renderDigestHtml } from "./email-templates/digest.js";
 
 async function mailgunSend(
   to: string,
@@ -54,21 +49,7 @@ export async function sendDigestEmails(users: DigestUser[]): Promise<void> {
     form.append("from", from);
     form.append("to", u.email);
     form.append("subject", "Deine Spielwörter-Updates");
-    form.append("template", "digest");
-    form.append(
-      "t:variables",
-      JSON.stringify({
-        approved: u.approved.map((s) => ({
-          word: s.word.toUpperCase(),
-          action: ACTION_LABELS[s.action] ?? s.action,
-        })),
-        rejected: u.rejected.map((s) => ({
-          word: s.word.toUpperCase(),
-          action: ACTION_LABELS[s.action] ?? s.action,
-        })),
-        site_url: siteUrl,
-      })
-    );
+    form.append("html", renderDigestHtml(u, siteUrl));
 
     try {
       await mailgunSend(u.email, "Deine Spielwörter-Updates", form);

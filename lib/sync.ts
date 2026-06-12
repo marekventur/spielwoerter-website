@@ -29,8 +29,16 @@ type PushSuggestion = {
 
 export type DigestUser = {
   email: string;
-  approved: { word: string; action: string }[];
-  rejected: { word: string; action: string }[];
+  approved: {
+    word: string;
+    action: string;
+    /** True when a moderator corrected the submission before approving. */
+    changed: boolean;
+    /** Final (possibly corrected) description, present when changed. */
+    description: string | null;
+    base: string | null;
+  }[];
+  rejected: { word: string; action: string; comment: string | null }[];
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -242,7 +250,8 @@ export async function syncPush(
   // Collect unnotified decided suggestions for digest
   const unnotified = db
     .prepare(
-      `SELECT s.id, s.word, s.action, s.status, u.email AS user_email
+      `SELECT s.id, s.word, s.action, s.status, s.payload, u.email AS user_email,
+              s.moderation_comment, s.original_payload
        FROM suggestions s
        JOIN users u ON u.id = s.user_id
        WHERE s.status IN ('moderator_approved', 'moderator_rejected')
@@ -253,7 +262,10 @@ export async function syncPush(
     word: string;
     action: string;
     status: string;
+    payload: string | null;
     user_email: string;
+    moderation_comment: string | null;
+    original_payload: string | null;
   }[];
 
   const byUser = new Map<string, DigestUser>();
@@ -262,9 +274,25 @@ export async function syncPush(
       byUser.set(s.user_email, { email: s.user_email, approved: [], rejected: [] });
     }
     const u = byUser.get(s.user_email)!;
-    const entry = { word: s.word, action: s.action };
-    if (s.status === "moderator_approved") u.approved.push(entry);
-    else u.rejected.push(entry);
+    if (s.status === "moderator_approved") {
+      const changed = s.original_payload !== null;
+      const payload = s.payload
+        ? (JSON.parse(s.payload) as Record<string, string>)
+        : null;
+      u.approved.push({
+        word: s.word,
+        action: s.action,
+        changed,
+        description: changed ? (payload?.description ?? null) : null,
+        base: changed ? (payload?.base ?? null) : null,
+      });
+    } else {
+      u.rejected.push({
+        word: s.word,
+        action: s.action,
+        comment: s.moderation_comment,
+      });
+    }
   }
 
   if (unnotified.length > 0) {

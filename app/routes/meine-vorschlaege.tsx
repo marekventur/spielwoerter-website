@@ -15,6 +15,13 @@ type Suggestion = {
   last_modified_at: string;
   word_description: string | null;
   word_base: string | null;
+  moderation_comment: string | null;
+  original_payload: string | null;
+};
+
+type OriginalPayload = {
+  word: string;
+  payload: Record<string, string> | null;
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -173,6 +180,63 @@ function SuggestionMainCell({ s }: { s: Suggestion }) {
   );
 }
 
+/** Moderator feedback: rejection reason and/or "approved with corrections" diff. */
+function ModerationNotes({ s }: { s: Suggestion }) {
+  let original: OriginalPayload | null = null;
+  if (s.original_payload && s.status === "moderator_approved") {
+    try {
+      original = JSON.parse(s.original_payload) as OriginalPayload;
+    } catch {
+      /* ignore invalid JSON */
+    }
+  }
+
+  const payload = parsePayload(s);
+  const diffs: { label: string; from: string; to: string }[] = [];
+  if (original) {
+    if (original.word !== s.word) {
+      diffs.push({ label: "Wort", from: original.word, to: s.word });
+    }
+    const origDesc = (original.payload?.description ?? "").trim();
+    const newDesc = (payload?.description ?? "").trim();
+    if (origDesc !== newDesc) {
+      diffs.push({ label: "Beschreibung", from: origDesc || "–", to: newDesc || "–" });
+    }
+    const origBase = (original.payload?.base ?? "").trim();
+    const newBase = (payload?.base ?? "").trim();
+    if (origBase !== newBase) {
+      diffs.push({ label: "Grundform", from: origBase || "–", to: newBase || "–" });
+    }
+  }
+
+  if (!s.moderation_comment && diffs.length === 0) return null;
+
+  return (
+    <div className="mt-2 space-y-2">
+      {diffs.length > 0 && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <p className="font-medium mb-1">Mit Anpassungen angenommen:</p>
+          <ul className="space-y-0.5">
+            {diffs.map((d) => (
+              <li key={d.label}>
+                {d.label}:{" "}
+                <span className="line-through text-amber-700/70">{d.from}</span>{" "}
+                → <span className="font-medium">{d.to}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {s.moderation_comment && (
+        <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700">
+          <span className="font-medium">Kommentar der Moderation:</span>{" "}
+          {s.moderation_comment}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Meine Vorschläge – Spielwoerter.de" }];
 }
@@ -186,7 +250,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     .prepare(
       `SELECT s.id, s.word, s.action, s.payload, s.status,
               s.created_at, s.last_modified_at, w.description AS word_description,
-              w.base AS word_base
+              w.base AS word_base, s.moderation_comment, s.original_payload
        FROM suggestions s
        LEFT JOIN words w ON w.word = s.word
        WHERE s.user_id = ?
@@ -483,6 +547,7 @@ export default function MeineVorschlaege({ loaderData }: Route.ComponentProps) {
                             {STATUS_LABELS[s.status] ?? s.status}
                           </span>
                         </p>
+                        <ModerationNotes s={s} />
                       </td>
                     </tr>
                   ))}

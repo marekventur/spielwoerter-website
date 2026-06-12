@@ -65,20 +65,100 @@ test("reject single suggestion updates DB and adds to rejected_words", async ({
   await loginAs(page, TEST_MOD_EMAIL);
   await page.goto("/moderation");
 
-  await page.getByRole("button", { name: "Ablehnen" }).first().click();
+  // Two-step: first click opens the comment prompt, second confirms
+  await page.getByRole("button", { name: "Ablehnen", exact: true }).first().click();
+  await expect(page.getByText("Grund der Ablehnung")).toBeVisible();
+  await page.getByRole("button", { name: "Ablehnen", exact: true }).last().click();
 
   await expect(page.getByRole("link", { name: "REJECTWORD" })).toHaveCount(0);
 
   const db = getTestDb();
   const row = db
-    .prepare("SELECT status FROM suggestions WHERE id = ?")
-    .get(suggId) as { status: string };
+    .prepare("SELECT status, moderation_comment FROM suggestions WHERE id = ?")
+    .get(suggId) as { status: string; moderation_comment: string | null };
   expect(row.status).toBe("moderator_rejected");
+  expect(row.moderation_comment).toBeNull();
 
   const blocked = db
     .prepare("SELECT 1 FROM rejected_words WHERE word = ? AND action = ?")
     .get("rejectword", "add");
   expect(blocked).toBeTruthy();
+});
+
+test("reject with comment stores reason and shows it to the submitter", async ({
+  page,
+}) => {
+  seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const userId = seedUser(TEST_USER_EMAIL);
+  const suggId = seedSuggestion(userId, "kommentarwort", "add", "pending_review");
+
+  await loginAs(page, TEST_MOD_EMAIL);
+  await page.goto("/moderation");
+
+  await page.getByRole("button", { name: "Ablehnen", exact: true }).first().click();
+  await page
+    .getByPlaceholder("z. B. Eigenname, kein Duden-Eintrag …")
+    .fill("Kein Duden-Eintrag gefunden");
+  await page.getByRole("button", { name: "Ablehnen", exact: true }).last().click();
+
+  await expect(page.getByRole("link", { name: "KOMMENTARWORT" })).toHaveCount(0);
+
+  const row = getTestDb()
+    .prepare("SELECT status, moderation_comment FROM suggestions WHERE id = ?")
+    .get(suggId) as { status: string; moderation_comment: string | null };
+  expect(row.status).toBe("moderator_rejected");
+  expect(row.moderation_comment).toBe("Kein Duden-Eintrag gefunden");
+
+  // Submitter sees the comment on their suggestions page
+  await loginAs(page, TEST_USER_EMAIL);
+  await page.goto("/meine-vorschlaege");
+  await expect(page.getByText("Kommentar der Moderation:")).toBeVisible();
+  await expect(page.getByText("Kein Duden-Eintrag gefunden")).toBeVisible();
+});
+
+test("approve with changes corrects the suggestion and records the original", async ({
+  page,
+}) => {
+  seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const userId = seedUser(TEST_USER_EMAIL);
+  const suggId = seedSuggestion(userId, "tippfeler", "add", "pending_review", {
+    description: "ein Fehler beim Tippen",
+  });
+
+  await loginAs(page, TEST_MOD_EMAIL);
+  await page.goto("/moderation");
+
+  await page.getByRole("button", { name: "Bearbeiten und genehmigen" }).click();
+  await page.locator(`#mod-word-${suggId}`).fill("tippfehler");
+  await page.locator(`#mod-desc-${suggId}`).fill("ein Fehler beim Tippen, korrigiert");
+  await page.getByRole("button", { name: "Mit Änderungen genehmigen" }).click();
+
+  await expect(page.getByRole("link", { name: "TIPPFELER" })).toHaveCount(0);
+
+  const row = getTestDb()
+    .prepare(
+      "SELECT status, word, payload, original_payload FROM suggestions WHERE id = ?"
+    )
+    .get(suggId) as {
+    status: string;
+    word: string;
+    payload: string;
+    original_payload: string;
+  };
+  expect(row.status).toBe("moderator_approved");
+  expect(row.word).toBe("tippfehler");
+  expect(JSON.parse(row.payload).description).toBe(
+    "ein Fehler beim Tippen, korrigiert"
+  );
+  const original = JSON.parse(row.original_payload);
+  expect(original.word).toBe("tippfeler");
+  expect(original.payload.description).toBe("ein Fehler beim Tippen");
+
+  // Submitter sees the corrections
+  await loginAs(page, TEST_USER_EMAIL);
+  await page.goto("/meine-vorschlaege");
+  await expect(page.getByText("Mit Anpassungen angenommen:")).toBeVisible();
+  await expect(page.getByText("tippfeler", { exact: false }).first()).toBeVisible();
 });
 
 test("batch approve entire group", async ({ page }) => {

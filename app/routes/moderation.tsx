@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, redirect } from "react-router";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Pencil } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
 import type { Route } from "./+types/moderation";
 
 type ModerationItem = {
@@ -84,6 +85,12 @@ function groupByBase(items: ModerationItem[]): Group[] {
   return Array.from(map.entries()).map(([base, items]) => ({ base, items }));
 }
 
+type ModerationChanges = {
+  word?: string;
+  description?: string;
+  base?: string;
+};
+
 export default function ModerationPage({ loaderData }: Route.ComponentProps) {
   const { items: initialItems } = loaderData;
   const [decided, setDecided] = useState<Map<number, "approved" | "rejected">>(
@@ -91,8 +98,21 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
   );
   const [loading, setLoading] = useState<Set<number>>(new Set());
 
+  // Inline editor for "approve with changes"
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editWord, setEditWord] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editBase, setEditBase] = useState("");
 
-  const decide = async (ids: number[], action: "approve" | "reject") => {
+  // Inline comment prompt for rejections
+  const [rejectingId, setRejectingId] = useState<number | null>(null);
+  const [rejectComment, setRejectComment] = useState("");
+
+  const decide = async (
+    ids: number[],
+    action: "approve" | "reject",
+    opts: { changes?: ModerationChanges; comment?: string } = {}
+  ) => {
     setLoading((prev) => {
       const next = new Set(prev);
       ids.forEach((id) => next.add(id));
@@ -106,14 +126,26 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
 
     const body =
       ids.length === 1
-        ? undefined
-        : JSON.stringify({ ids, action });
+        ? { changes: opts.changes, comment: opts.comment }
+        : { ids, action, comment: opts.comment };
 
-    await fetch(endpoint, {
+    const res = await fetch(endpoint, {
       method: "POST",
-      headers: body ? { "Content-Type": "application/json" } : undefined,
-      body,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
+
+    setLoading((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.delete(id));
+      return next;
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      window.alert(data.error ?? "Aktion fehlgeschlagen.");
+      return;
+    }
 
     setDecided((prev) => {
       const next = new Map(prev);
@@ -122,11 +154,41 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
       );
       return next;
     });
-    setLoading((prev) => {
-      const next = new Set(prev);
-      ids.forEach((id) => next.delete(id));
-      return next;
+    if (ids.length === 1) {
+      if (editingId === ids[0]) setEditingId(null);
+      if (rejectingId === ids[0]) setRejectingId(null);
+    }
+  };
+
+  const openEditor = (item: ModerationItem) => {
+    const payload = item.payload
+      ? (JSON.parse(item.payload) as Record<string, string>)
+      : null;
+    setRejectingId(null);
+    setEditingId(item.id);
+    setEditWord(item.word);
+    setEditDescription(
+      item.action === "change_description"
+        ? (payload?.description ?? item.current_description ?? "")
+        : (payload?.description ?? "")
+    );
+    setEditBase(payload?.base ?? item.base ?? "");
+  };
+
+  const approveWithChanges = (item: ModerationItem) => {
+    void decide([item.id], "approve", {
+      changes: {
+        word: editWord,
+        description: editDescription,
+        base: editBase,
+      },
     });
+  };
+
+  const openRejectPrompt = (id: number) => {
+    setEditingId(null);
+    setRejectingId(id);
+    setRejectComment("");
   };
 
   const pending = initialItems.filter((i) => !decided.has(i.id));
@@ -196,7 +258,8 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                         : null;
 
                       return (
-                        <div key={item.id} className="px-5 py-4 flex gap-4">
+                        <div key={item.id} className="px-5 py-4">
+                          <div className="flex gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <Link
@@ -273,12 +336,24 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
+                            {item.action !== "remove" && (
+                              <button
+                                type="button"
+                                aria-label="Bearbeiten und genehmigen"
+                                title="Bearbeiten und genehmigen"
+                                disabled={isLoading || editingId === item.id}
+                                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                                onClick={() => openEditor(item)}
+                              >
+                                <Pencil className="h-4 w-4" strokeWidth={2} />
+                              </button>
+                            )}
                             <Button
                               size="default"
                               variant="outline"
                               className="text-red-600 border-red-200 hover:bg-red-50"
-                              disabled={isLoading}
-                              onClick={() => decide([item.id], "reject")}
+                              disabled={isLoading || rejectingId === item.id}
+                              onClick={() => openRejectPrompt(item.id)}
                             >
                               Ablehnen
                             </Button>
@@ -291,6 +366,120 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                               Genehmigen
                             </Button>
                           </div>
+                          </div>
+
+                          {editingId === item.id && (
+                            <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                              <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+                                <div className="w-40 shrink-0">
+                                  <label
+                                    htmlFor={`mod-word-${item.id}`}
+                                    className="mb-1 block text-xs font-medium text-gray-600"
+                                  >
+                                    Wort
+                                  </label>
+                                  <Input
+                                    id={`mod-word-${item.id}`}
+                                    value={editWord}
+                                    onChange={(e) => setEditWord(e.target.value)}
+                                    disabled={isLoading}
+                                    className="w-full min-w-0 py-1.5 font-mono text-sm"
+                                  />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <label
+                                    htmlFor={`mod-desc-${item.id}`}
+                                    className="mb-1 block text-xs font-medium text-gray-600"
+                                  >
+                                    Beschreibung
+                                  </label>
+                                  <Input
+                                    id={`mod-desc-${item.id}`}
+                                    value={editDescription}
+                                    onChange={(e) => setEditDescription(e.target.value)}
+                                    disabled={isLoading}
+                                    className="w-full min-w-0 py-1.5 text-sm"
+                                  />
+                                </div>
+                                <div className="w-36 shrink-0">
+                                  <label
+                                    htmlFor={`mod-base-${item.id}`}
+                                    className="mb-1 block text-xs font-medium text-gray-600"
+                                  >
+                                    Grundform
+                                  </label>
+                                  <Input
+                                    id={`mod-base-${item.id}`}
+                                    value={editBase}
+                                    onChange={(e) => setEditBase(e.target.value)}
+                                    disabled={isLoading}
+                                    className="w-full min-w-0 py-1.5 font-mono text-sm"
+                                  />
+                                </div>
+                              </div>
+                              <div className="mt-3 flex justify-end gap-2">
+                                <Button
+                                  size="default"
+                                  variant="outline"
+                                  disabled={isLoading}
+                                  onClick={() => setEditingId(null)}
+                                >
+                                  Abbrechen
+                                </Button>
+                                <Button
+                                  size="default"
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                  disabled={isLoading}
+                                  onClick={() => approveWithChanges(item)}
+                                >
+                                  Mit Änderungen genehmigen
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {rejectingId === item.id && (
+                            <div className="mt-3 rounded-lg border border-red-100 bg-red-50/50 p-3">
+                              <label
+                                htmlFor={`mod-reject-${item.id}`}
+                                className="mb-1 block text-xs font-medium text-gray-600"
+                              >
+                                Grund der Ablehnung (optional, nur für die einreichende Person sichtbar)
+                              </label>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Input
+                                  id={`mod-reject-${item.id}`}
+                                  value={rejectComment}
+                                  onChange={(e) => setRejectComment(e.target.value)}
+                                  disabled={isLoading}
+                                  placeholder="z. B. Eigenname, kein Duden-Eintrag …"
+                                  className="w-full min-w-0 flex-1 py-1.5 text-sm"
+                                />
+                                <div className="flex shrink-0 gap-2">
+                                  <Button
+                                    size="default"
+                                    variant="outline"
+                                    disabled={isLoading}
+                                    onClick={() => setRejectingId(null)}
+                                  >
+                                    Abbrechen
+                                  </Button>
+                                  <Button
+                                    size="default"
+                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                    disabled={isLoading}
+                                    onClick={() =>
+                                      void decide([item.id], "reject", {
+                                        comment: rejectComment,
+                                      })
+                                    }
+                                  >
+                                    Ablehnen
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}

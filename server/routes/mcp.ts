@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
+import { moderateOne, type ModerationChanges } from "../../lib/moderate.js";
+import { normalise } from "../../lib/normalise.js";
 
 type JsonRpcRequest = {
   jsonrpc: "2.0";
@@ -24,7 +26,7 @@ const TOOLS = [
   },
   {
     name: "approve",
-    description: "Approve one or more pending suggestions by their numeric ID.",
+    description: "Approve one or more pending suggestions by their numeric ID, as submitted. To fix a typo or other small mistake in a submission before approving it, use approve_with_changes instead.",
     inputSchema: {
       type: "object",
       required: ["ids"],
@@ -38,9 +40,31 @@ const TOOLS = [
     },
   },
   {
+    name: "approve_with_changes",
+    description:
+      "Approve a single pending suggestion after correcting it, e.g. to fix a typo in the word, description, or base form. Only pass the fields that should change; omitted fields keep the submitted values. The submitter will see the corrected version.",
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "integer", description: "Suggestion ID to approve" },
+        word: { type: "string", description: "Corrected word (replaces the submitted word)" },
+        description: { type: "string", description: "Corrected description" },
+        base: {
+          type: "string",
+          description: "Corrected base form (lemma). Pass an empty string to clear it.",
+        },
+        comment: {
+          type: "string",
+          description: "Optional note for the submitter, only visible to them",
+        },
+      },
+    },
+  },
+  {
     name: "reject",
     description:
-      "Reject one or more pending suggestions by their numeric ID. Rejected words are blocklisted to prevent re-submission.",
+      "Reject one or more pending suggestions by their numeric ID. Rejected words are blocklisted to prevent re-submission. An optional comment explaining the rejection is stored and shown only to the submitter (and included in their notification email).",
     inputSchema: {
       type: "object",
       required: ["ids"],
@@ -50,6 +74,53 @@ const TOOLS = [
           items: { type: "integer" },
           description: "Suggestion IDs to reject",
         },
+        comment: {
+          type: "string",
+          description:
+            "Optional reason for the rejection, applied to all given IDs. Visible only to the submitter. Write it in German.",
+        },
+      },
+    },
+  },
+  {
+    name: "search_words",
+    description:
+      "Search the dictionary. Matches the query against word, base form, and description (case-insensitive substring; umlaut-insensitive for exact word matches). Returns word, description, base, list membership, and source.",
+    inputSchema: {
+      type: "object",
+      required: ["query"],
+      properties: {
+        query: { type: "string", description: "Search text" },
+        limit: {
+          type: "integer",
+          description: "Maximum number of results (default 20, max 100)",
+        },
+      },
+    },
+  },
+  {
+    name: "edit_word",
+    description:
+      "Edit a dictionary entry directly: change its description and/or base form. The change is applied immediately and synced to the wordlist repository. Only pass the fields that should change; pass an empty string to clear a field.",
+    inputSchema: {
+      type: "object",
+      required: ["word"],
+      properties: {
+        word: { type: "string", description: "The word to edit (exact match)" },
+        description: { type: "string", description: "New description" },
+        base: { type: "string", description: "New base form (lemma)" },
+      },
+    },
+  },
+  {
+    name: "delete_word",
+    description:
+      "Delete a word from the dictionary. The word is moved to the rejected list (blocking re-submission) immediately and the removal is synced to the wordlist repository.",
+    inputSchema: {
+      type: "object",
+      required: ["word"],
+      properties: {
+        word: { type: "string", description: "The word to delete (exact match)" },
       },
     },
   },
@@ -69,11 +140,23 @@ type PendingRow = {
   batch_message: string | null;
 };
 
-type SuggRow = { id: number; word: string; action: string; status: string };
+type WordRow = {
+  word: string;
+  description: string | null;
+  base: string | null;
+  source: string | null;
+  verified_by: string | null;
+  in_list: string;
+};
+
+function textResult(text: string, isError = false) {
+  return { content: [{ type: "text", text }], ...(isError ? { isError: true } : {}) };
+}
 
 function handleToolCall(
   toolName: string,
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
+  userId: number
 ): unknown {
   const db = getDb();
 
@@ -94,7 +177,7 @@ function handleToolCall(
       .all() as PendingRow[];
 
     if (items.length === 0) {
-      return { content: [{ type: "text", text: "No pending suggestions." }] };
+      return textResult("No pending suggestions.");
     }
 
     const lines = items.map((item) => {
@@ -124,58 +207,157 @@ function handleToolCall(
       return parts.join("\n");
     });
 
-    return {
-      content: [
-        {
-          type: "text",
-          text: `${items.length} pending suggestion(s):\n\n${lines.join("\n\n---\n\n")}`,
-        },
-      ],
-    };
+    return textResult(
+      `${items.length} pending suggestion(s):\n\n${lines.join("\n\n---\n\n")}`
+    );
   }
 
   if (toolName === "approve" || toolName === "reject") {
     const ids = args.ids as unknown[];
     if (!Array.isArray(ids) || ids.length === 0) {
-      return {
-        content: [{ type: "text", text: "Error: ids must be a non-empty array of integers" }],
-        isError: true,
-      };
+      return textResult("Error: ids must be a non-empty array of integers", true);
     }
+    const comment =
+      toolName === "reject" && typeof args.comment === "string"
+        ? args.comment
+        : undefined;
 
     const decision =
       toolName === "approve" ? "moderator_approved" : "moderator_rejected";
     let count = 0;
-
     for (const rawId of ids) {
-      const id = Number(rawId);
-      const row = db
-        .prepare("SELECT id, word, action, status FROM suggestions WHERE id = ?")
-        .get(id) as SuggRow | undefined;
-      if (!row) continue;
-      if (!["pending_review", "needs_moderator"].includes(row.status)) continue;
-
-      db.transaction(() => {
-        db.prepare("UPDATE suggestions SET status = ? WHERE id = ?").run(decision, id);
-        if (decision === "moderator_rejected") {
-          db.prepare(
-            "INSERT OR IGNORE INTO rejected_words (word, action) VALUES (?, ?)"
-          ).run(row.word, row.action);
-        }
-      })();
-      count++;
+      if (moderateOne(db, Number(rawId), decision, { comment }).ok) count++;
     }
 
     const verb = toolName === "approve" ? "Approved" : "Rejected";
-    return {
-      content: [{ type: "text", text: `${verb} ${count}/${ids.length} suggestion(s).` }],
-    };
+    return textResult(`${verb} ${count}/${ids.length} suggestion(s).`);
   }
 
-  return {
-    content: [{ type: "text", text: `Unknown tool: ${toolName}` }],
-    isError: true,
-  };
+  if (toolName === "approve_with_changes") {
+    const id = Number(args.id);
+    if (!Number.isFinite(id)) {
+      return textResult("Error: id must be an integer", true);
+    }
+    const changes: ModerationChanges = {};
+    if (typeof args.word === "string") changes.word = args.word;
+    if (typeof args.description === "string") changes.description = args.description;
+    if (typeof args.base === "string") changes.base = args.base;
+    const comment = typeof args.comment === "string" ? args.comment : undefined;
+
+    const result = moderateOne(db, id, "moderator_approved", { changes, comment });
+    if (!result.ok) {
+      return textResult(`Error: ${result.error}`, true);
+    }
+    return textResult(`Approved suggestion ${id} with changes.`);
+  }
+
+  if (toolName === "search_words") {
+    const query = typeof args.query === "string" ? args.query.trim() : "";
+    if (!query) {
+      return textResult("Error: query must be a non-empty string", true);
+    }
+    const rawLimit = Number(args.limit);
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 20;
+
+    const pattern = `%${query.toLowerCase()}%`;
+    const rows = db
+      .prepare(
+        `SELECT word, description, base, source, verified_by, in_list
+         FROM words
+         WHERE normalised = ?
+            OR LOWER(word) LIKE ?
+            OR LOWER(COALESCE(base, '')) LIKE ?
+            OR LOWER(COALESCE(description, '')) LIKE ?
+         ORDER BY (normalised = ?) DESC, word
+         LIMIT ?`
+      )
+      .all(normalise(query), pattern, pattern, pattern, normalise(query), limit + 1) as WordRow[];
+
+    if (rows.length === 0) {
+      return textResult(`No words found for "${query}".`);
+    }
+
+    const hasMore = rows.length > limit;
+    const lines = rows.slice(0, limit).map((row) => {
+      const parts = [`Word: ${row.word}`, `List: ${row.in_list}`];
+      if (row.description) parts.push(`Description: ${row.description}`);
+      if (row.base) parts.push(`Base form: ${row.base}`);
+      if (row.source) parts.push(`Source: ${row.source}`);
+      if (row.verified_by) parts.push(`Verified by: ${row.verified_by}`);
+      return parts.join("\n");
+    });
+
+    return textResult(
+      `${Math.min(rows.length, limit)} result(s)${hasMore ? " (more available, raise limit or refine query)" : ""}:\n\n${lines.join("\n\n---\n\n")}`
+    );
+  }
+
+  if (toolName === "edit_word" || toolName === "delete_word") {
+    const word = typeof args.word === "string" ? args.word.trim().toLowerCase() : "";
+    if (!word) {
+      return textResult("Error: word must be a non-empty string", true);
+    }
+    const row = db
+      .prepare("SELECT word, description, base, in_list FROM words WHERE word = ?")
+      .get(word) as WordRow | undefined;
+    if (!row || !["accepted", "uncertain"].includes(row.in_list)) {
+      return textResult(`Error: "${word}" is not in the dictionary.`, true);
+    }
+
+    if (toolName === "edit_word") {
+      const hasDesc = typeof args.description === "string";
+      const hasBase = typeof args.base === "string";
+      if (!hasDesc && !hasBase) {
+        return textResult("Error: pass description and/or base", true);
+      }
+      const payload: Record<string, string> = {};
+      if (hasDesc) payload.description = (args.description as string).trim();
+      if (hasBase) payload.base = (args.base as string).trim().toLowerCase();
+
+      // Record as a pre-approved suggestion so the regular sync job pushes it
+      // to the wordlist repo; apply locally right away for immediate visibility.
+      db.transaction(() => {
+        db.prepare(
+          `INSERT INTO suggestions (user_id, word, action, payload, status, moderator_fast_track, notified_at)
+           VALUES (?, ?, 'change_description', ?, 'moderator_approved', 1, datetime('now'))`
+        ).run(userId, word, JSON.stringify(payload));
+        if (hasDesc) {
+          db.prepare("UPDATE words SET description = ? WHERE word = ?").run(
+            payload.description === "" ? null : payload.description,
+            word
+          );
+        }
+        if (hasBase) {
+          db.prepare("UPDATE words SET base = ? WHERE word = ?").run(
+            payload.base === "" ? null : payload.base,
+            word
+          );
+        }
+      })();
+
+      return textResult(
+        `Updated "${word}". The change is live on the site and will be synced to the wordlist repository within the hour.`
+      );
+    }
+
+    // delete_word
+    db.transaction(() => {
+      db.prepare(
+        `INSERT INTO suggestions (user_id, word, action, payload, status, moderator_fast_track, notified_at)
+         VALUES (?, ?, 'remove', NULL, 'moderator_approved', 1, datetime('now'))`
+      ).run(userId, word);
+      db.prepare("UPDATE words SET in_list = 'rejected' WHERE word = ?").run(word);
+      db.prepare(
+        "INSERT OR IGNORE INTO rejected_words (word, action) VALUES (?, 'remove')"
+      ).run(word);
+    })();
+
+    return textResult(
+      `Deleted "${word}" from the dictionary. The removal is live on the site and will be synced to the wordlist repository within the hour.`
+    );
+  }
+
+  return textResult(`Unknown tool: ${toolName}`, true);
 }
 
 export const mcpRouter = Router();
@@ -185,10 +367,19 @@ mcpRouter.post("/:token", (req, res) => {
   const db = getDb();
 
   const mcpToken = db
-    .prepare("SELECT id FROM mcp_tokens WHERE token = ?")
-    .get(token);
+    .prepare(
+      `SELECT t.id, t.user_id, u.is_moderator
+       FROM mcp_tokens t
+       JOIN users u ON u.id = t.user_id
+       WHERE t.token = ?`
+    )
+    .get(token) as { id: number; user_id: number; is_moderator: number } | undefined;
   if (!mcpToken) {
     res.status(401).json({ error: "Invalid token" });
+    return;
+  }
+  if (!mcpToken.is_moderator) {
+    res.status(403).json({ error: "Token owner is not a moderator" });
     return;
   }
 
@@ -209,7 +400,7 @@ mcpRouter.post("/:token", (req, res) => {
       result = {
         protocolVersion: "2024-11-05",
         capabilities: { tools: {} },
-        serverInfo: { name: "spielwoerter-moderation", version: "1.0.0" },
+        serverInfo: { name: "spielwoerter-moderation", version: "1.1.0" },
       };
       break;
 
@@ -226,7 +417,7 @@ mcpRouter.post("/:token", (req, res) => {
         name: string;
         arguments?: Record<string, unknown>;
       };
-      result = handleToolCall(name, args);
+      result = handleToolCall(name, args, mcpToken.user_id);
       break;
     }
 

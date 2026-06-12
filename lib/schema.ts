@@ -119,6 +119,13 @@ export function initSchema(db: Database.Database): void {
   if (!suggCols.includes("batch_id")) {
     db.prepare("ALTER TABLE suggestions ADD COLUMN batch_id INTEGER REFERENCES batches(id)").run();
   }
+  if (!suggCols.includes("moderation_comment")) {
+    db.prepare("ALTER TABLE suggestions ADD COLUMN moderation_comment TEXT").run();
+  }
+  if (!suggCols.includes("original_payload")) {
+    // Set when a moderator approves with corrections; stores JSON {word, payload} as submitted.
+    db.prepare("ALTER TABLE suggestions ADD COLUMN original_payload TEXT").run();
+  }
 
   // Ensure bootstrap admin always has full privileges
   db.prepare(

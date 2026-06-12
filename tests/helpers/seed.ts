@@ -42,9 +42,11 @@ export function seedSuggestion(
   userId: number,
   word: string,
   action: string,
-  status = "draft"
+  status = "draft",
+  payload?: Record<string, string>
 ): number {
   const db = getTestDb();
+  const payloadJson = payload ? JSON.stringify(payload) : null;
   // Use SQLite datetime() so promotion / idle checks match server SQL.
   const backdated =
     status === "pending_review" ||
@@ -52,19 +54,26 @@ export function seedSuggestion(
     status === "moderator_rejected";
   if (backdated) {
     db.prepare(
-      `INSERT INTO suggestions (user_id, word, action, status, last_modified_at)
-       VALUES (?, ?, ?, ?, datetime('now', '-70 minutes'))`
-    ).run(userId, word, action, status);
+      `INSERT INTO suggestions (user_id, word, action, status, payload, last_modified_at)
+       VALUES (?, ?, ?, ?, ?, datetime('now', '-70 minutes'))`
+    ).run(userId, word, action, status, payloadJson);
   } else {
     db.prepare(
-      `INSERT INTO suggestions (user_id, word, action, status, last_modified_at)
-       VALUES (?, ?, ?, ?, datetime('now'))`
-    ).run(userId, word, action, status);
+      `INSERT INTO suggestions (user_id, word, action, status, payload, last_modified_at)
+       VALUES (?, ?, ?, ?, ?, datetime('now'))`
+    ).run(userId, word, action, status, payloadJson);
   }
   const row = db
     .prepare("SELECT last_insert_rowid() as id")
     .get() as { id: number };
   return row.id;
+}
+
+export function seedMcpToken(userId: number, token: string): void {
+  const db = getTestDb();
+  db.prepare(
+    "INSERT INTO mcp_tokens (user_id, token, label) VALUES (?, ?, 'test')"
+  ).run(userId, token);
 }
 
 /**
@@ -84,6 +93,7 @@ export function cleanDb(): void {
   // Ensure schema exists (server initializes lazily; tests may run before first request)
   initSchema(db);
   db.exec("DELETE FROM suggestions");
+  db.exec("DELETE FROM mcp_tokens");
   db.exec("DELETE FROM rejected_words");
   db.exec("DELETE FROM otp_codes");
   db.exec("DELETE FROM sessions");
