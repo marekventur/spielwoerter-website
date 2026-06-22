@@ -151,25 +151,6 @@ const TOOLS = [
     },
   },
   {
-    name: "approve",
-    description: "Approve one or more pending suggestions by their numeric ID, as submitted. To fix a typo or other small mistake in a submission before approving it, use approve_with_changes instead. Use override=true to re-moderate already-decided suggestions.",
-    inputSchema: {
-      type: "object",
-      required: ["ids"],
-      properties: {
-        ids: {
-          type: "array",
-          items: { type: "integer" },
-          description: "Suggestion IDs to approve",
-        },
-        override: {
-          type: "boolean",
-          description: "If true, allows re-moderating already-decided suggestions (bypass status check). Use when correcting a moderation mistake.",
-        },
-      },
-    },
-  },
-  {
     name: "approve_with_changes",
     description:
       "Approve a single pending suggestion after correcting it, e.g. to fix a typo in the word, description, or base form. Only pass the fields that should change; omitted fields keep the submitted values. The submitter will see the corrected version.",
@@ -187,31 +168,6 @@ const TOOLS = [
         comment: {
           type: "string",
           description: "Optional note for the submitter, only visible to them",
-        },
-      },
-    },
-  },
-  {
-    name: "reject",
-    description:
-      "Reject one or more pending suggestions by their numeric ID. Rejected words are blocklisted to prevent re-submission. An optional comment explaining the rejection is stored and shown only to the submitter (and included in their notification email). Use override=true to re-moderate already-decided suggestions.",
-    inputSchema: {
-      type: "object",
-      required: ["ids"],
-      properties: {
-        ids: {
-          type: "array",
-          items: { type: "integer" },
-          description: "Suggestion IDs to reject",
-        },
-        comment: {
-          type: "string",
-          description:
-            "Optional reason for the rejection, applied to all given IDs. Visible only to the submitter. Write it in German.",
-        },
-        override: {
-          type: "boolean",
-          description: "If true, allows re-moderating already-decided suggestions (bypass status check). Use when correcting a moderation mistake.",
         },
       },
     },
@@ -427,28 +383,6 @@ function handleToolCall(
     return textResult(`${summary}.`);
   }
 
-
-  if (toolName === "approve" || toolName === "reject") {
-    const ids = args.ids as unknown[];
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return textResult("Error: ids must be a non-empty array of integers", true);
-    }
-    const comment =
-      toolName === "reject" && typeof args.comment === "string"
-        ? args.comment
-        : undefined;
-    const override = args.override === true;
-
-    const decision =
-      toolName === "approve" ? "moderator_approved" : "moderator_rejected";
-    let count = 0;
-    for (const rawId of ids) {
-      if (moderateOne(db, Number(rawId), decision, { comment, override }).ok) count++;
-    }
-
-    const verb = toolName === "approve" ? "Approved" : "Rejected";
-    return textResult(`${verb} ${count}/${ids.length} suggestion(s).`);
-  }
 
   if (toolName === "approve_with_changes") {
     const id = Number(args.id);
