@@ -43,14 +43,14 @@ export function moderateOne(
   db: Database.Database,
   id: number,
   decision: "moderator_approved" | "moderator_rejected",
-  opts: { changes?: ModerationChanges; comment?: string } = {}
+  opts: { changes?: ModerationChanges; comment?: string; override?: boolean } = {}
 ): ModerationResult {
   const suggestion = db
     .prepare("SELECT id, word, action, payload, status FROM suggestions WHERE id = ?")
     .get(id) as SuggRow | undefined;
 
   if (!suggestion) return { ok: false, error: "Nicht gefunden" };
-  if (!MODERATABLE_STATUSES.includes(suggestion.status))
+  if (!opts.override && !MODERATABLE_STATUSES.includes(suggestion.status))
     return { ok: false, error: "Vorschlag ist nicht in Prüfung" };
 
   const comment = opts.comment?.trim() || null;

@@ -26,7 +26,7 @@ const TOOLS = [
   },
   {
     name: "approve",
-    description: "Approve one or more pending suggestions by their numeric ID, as submitted. To fix a typo or other small mistake in a submission before approving it, use approve_with_changes instead.",
+    description: "Approve one or more pending suggestions by their numeric ID, as submitted. To fix a typo or other small mistake in a submission before approving it, use approve_with_changes instead. Use override=true to re-moderate already-decided suggestions.",
     inputSchema: {
       type: "object",
       required: ["ids"],
@@ -35,6 +35,10 @@ const TOOLS = [
           type: "array",
           items: { type: "integer" },
           description: "Suggestion IDs to approve",
+        },
+        override: {
+          type: "boolean",
+          description: "If true, allows re-moderating already-decided suggestions (bypass status check). Use when correcting a moderation mistake.",
         },
       },
     },
@@ -64,7 +68,7 @@ const TOOLS = [
   {
     name: "reject",
     description:
-      "Reject one or more pending suggestions by their numeric ID. Rejected words are blocklisted to prevent re-submission. An optional comment explaining the rejection is stored and shown only to the submitter (and included in their notification email).",
+      "Reject one or more pending suggestions by their numeric ID. Rejected words are blocklisted to prevent re-submission. An optional comment explaining the rejection is stored and shown only to the submitter (and included in their notification email). Use override=true to re-moderate already-decided suggestions.",
     inputSchema: {
       type: "object",
       required: ["ids"],
@@ -78,6 +82,10 @@ const TOOLS = [
           type: "string",
           description:
             "Optional reason for the rejection, applied to all given IDs. Visible only to the submitter. Write it in German.",
+        },
+        override: {
+          type: "boolean",
+          description: "If true, allows re-moderating already-decided suggestions (bypass status check). Use when correcting a moderation mistake.",
         },
       },
     },
@@ -221,12 +229,13 @@ function handleToolCall(
       toolName === "reject" && typeof args.comment === "string"
         ? args.comment
         : undefined;
+    const override = args.override === true;
 
     const decision =
       toolName === "approve" ? "moderator_approved" : "moderator_rejected";
     let count = 0;
     for (const rawId of ids) {
-      if (moderateOne(db, Number(rawId), decision, { comment }).ok) count++;
+      if (moderateOne(db, Number(rawId), decision, { comment, override }).ok) count++;
     }
 
     const verb = toolName === "approve" ? "Approved" : "Rejected";
