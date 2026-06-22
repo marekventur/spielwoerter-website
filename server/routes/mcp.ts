@@ -25,6 +25,132 @@ const TOOLS = [
     inputSchema: { type: "object", properties: {} },
   },
   {
+    name: "approve_addition",
+    description: "Accept suggestions to ADD words to the dictionary. The suggestion's action must be 'add'. Use override=true to re-moderate already-decided suggestions.",
+    inputSchema: {
+      type: "object",
+      required: ["ids"],
+      properties: {
+        ids: {
+          type: "array",
+          items: { type: "integer" },
+          description: "Suggestion IDs to approve (action: add)",
+        },
+        override: {
+          type: "boolean",
+          description: "If true, allows re-moderating already-decided suggestions.",
+        },
+      },
+    },
+  },
+  {
+    name: "approve_removal",
+    description: "Accept suggestions to REMOVE words from the dictionary. The suggestion's action must be 'remove'. This executes the removal. Use override=true to re-moderate already-decided suggestions.",
+    inputSchema: {
+      type: "object",
+      required: ["ids"],
+      properties: {
+        ids: {
+          type: "array",
+          items: { type: "integer" },
+          description: "Suggestion IDs to approve (action: remove)",
+        },
+        override: {
+          type: "boolean",
+          description: "If true, allows re-moderating already-decided suggestions.",
+        },
+      },
+    },
+  },
+  {
+    name: "approve_change",
+    description: "Accept suggestions to CHANGE word descriptions or base forms. The suggestion's action must be 'change_description'. Use override=true to re-moderate already-decided suggestions.",
+    inputSchema: {
+      type: "object",
+      required: ["ids"],
+      properties: {
+        ids: {
+          type: "array",
+          items: { type: "integer" },
+          description: "Suggestion IDs to approve (action: change_description)",
+        },
+        override: {
+          type: "boolean",
+          description: "If true, allows re-moderating already-decided suggestions.",
+        },
+      },
+    },
+  },
+  {
+    name: "reject_addition",
+    description: "Reject suggestions to add words. The suggestion's action must be 'add'. Rejected words are blocklisted. An optional comment is sent to the submitter.",
+    inputSchema: {
+      type: "object",
+      required: ["ids"],
+      properties: {
+        ids: {
+          type: "array",
+          items: { type: "integer" },
+          description: "Suggestion IDs to reject (action: add)",
+        },
+        comment: {
+          type: "string",
+          description: "Optional reason for rejection, visible only to the submitter (write in German).",
+        },
+        override: {
+          type: "boolean",
+          description: "If true, allows re-moderating already-decided suggestions.",
+        },
+      },
+    },
+  },
+  {
+    name: "reject_removal",
+    description: "Reject suggestions to remove words. The suggestion's action must be 'remove'. This means the words STAY in the dictionary. An optional comment is sent to the submitter.",
+    inputSchema: {
+      type: "object",
+      required: ["ids"],
+      properties: {
+        ids: {
+          type: "array",
+          items: { type: "integer" },
+          description: "Suggestion IDs to reject (action: remove)",
+        },
+        comment: {
+          type: "string",
+          description: "Optional reason for rejection, visible only to the submitter (write in German).",
+        },
+        override: {
+          type: "boolean",
+          description: "If true, allows re-moderating already-decided suggestions.",
+        },
+      },
+    },
+  },
+  {
+    name: "reject_change",
+    description: "Reject suggestions to change word descriptions or base forms. The suggestion's action must be 'change_description'. Changes will not be applied. An optional comment is sent to the submitter.",
+    inputSchema: {
+      type: "object",
+      required: ["ids"],
+      properties: {
+        ids: {
+          type: "array",
+          items: { type: "integer" },
+          description: "Suggestion IDs to reject (action: change_description)",
+        },
+        comment: {
+          type: "string",
+          description: "Optional reason for rejection, visible only to the submitter (write in German).",
+        },
+        override: {
+          type: "boolean",
+          description: "If true, allows re-moderating already-decided suggestions.",
+        },
+      },
+    },
+  },
+  {
     name: "approve",
     description: "Approve one or more pending suggestions by their numeric ID, as submitted. To fix a typo or other small mistake in a submission before approving it, use approve_with_changes instead. Use override=true to re-moderate already-decided suggestions.",
     inputSchema: {
@@ -219,6 +345,88 @@ function handleToolCall(
       `${items.length} pending suggestion(s):\n\n${lines.join("\n\n---\n\n")}`
     );
   }
+
+
+  // Action-specific approval/rejection tools
+  const actionSpecificTools = [
+    "approve_addition",
+    "approve_removal",
+    "approve_change",
+    "reject_addition",
+    "reject_removal",
+    "reject_change",
+  ];
+
+  if (actionSpecificTools.includes(toolName)) {
+    const ids = args.ids as unknown[];
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return textResult("Error: ids must be a non-empty array of integers", true);
+    }
+
+    const comment = (toolName.startsWith("reject") && typeof args.comment === "string")
+      ? args.comment
+      : undefined;
+    const override = args.override === true;
+
+    // Determine expected action and decision
+    let expectedAction: string;
+    let decision: "moderator_approved" | "moderator_rejected";
+
+    if (toolName === "approve_addition") {
+      expectedAction = "add";
+      decision = "moderator_approved";
+    } else if (toolName === "approve_removal") {
+      expectedAction = "remove";
+      decision = "moderator_approved";
+    } else if (toolName === "approve_change") {
+      expectedAction = "change_description";
+      decision = "moderator_approved";
+    } else if (toolName === "reject_addition") {
+      expectedAction = "add";
+      decision = "moderator_rejected";
+    } else if (toolName === "reject_removal") {
+      expectedAction = "remove";
+      decision = "moderator_rejected";
+    } else {
+      // reject_change
+      expectedAction = "change_description";
+      decision = "moderator_rejected";
+    }
+
+    let count = 0;
+    let errors = 0;
+    for (const rawId of ids) {
+      const id = Number(rawId);
+      const suggestion = db
+        .prepare("SELECT action FROM suggestions WHERE id = ?")
+        .get(id) as { action: string } | undefined;
+
+      if (!suggestion) {
+        errors++;
+        continue;
+      }
+
+      if (suggestion.action !== expectedAction) {
+        errors++;
+        continue;
+      }
+
+      if (moderateOne(db, id, decision, { comment, override }).ok) {
+        count++;
+      } else {
+        errors++;
+      }
+    }
+
+    const verb = decision === "moderator_approved" ? "Approved" : "Rejected";
+    const action = expectedAction.replace(/_/g, " ");
+    const summary = `${verb} ${count} ${action} request(s)`;
+    if (errors > 0) {
+      return textResult(`${summary}. ⚠️ ${errors} ID(s) failed (wrong action type or not found).`);
+    }
+    return textResult(`${summary}.`);
+  }
+
 
   if (toolName === "approve" || toolName === "reject") {
     const ids = args.ids as unknown[];
