@@ -7,6 +7,12 @@ import { promoteEligibleDrafts } from "../lib/promotion.js";
 import { syncPull, syncPush } from "../lib/sync.js";
 import { sendDigestEmails } from "./mailgun.js";
 
+// Jobs with external side effects (GitHub push, digest emails, GCS backup) must
+// only run on the production instance. A local `npm run dev` (NODE_ENV=development)
+// loads the same .env credentials, so without this guard it would clobber the
+// production backup and push community changes to the real repo.
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
 let promotionJobStarted = false;
 
 export function startPromotionJob() {
@@ -32,6 +38,10 @@ export function startPromotionJob() {
 let syncJobStarted = false;
 
 export function startSyncJob() {
+  if (!IS_PRODUCTION) {
+    console.log("[sync job] Skipped (not production).");
+    return;
+  }
   if (syncJobStarted) return;
   syncJobStarted = true;
 
@@ -56,6 +66,10 @@ export function startSyncJob() {
 let backupJobStarted = false;
 
 export async function startBackupJob() {
+  if (!IS_PRODUCTION) {
+    console.log("[backup] Skipped (not production).");
+    return;
+  }
   if (backupJobStarted) return;
   backupJobStarted = true;
 

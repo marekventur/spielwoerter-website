@@ -27,6 +27,12 @@ const statusConfig: Record<
     icon: <X className="w-6 h-6" />,
     message: "Noch nicht im Wörterbuch",
   },
+  rejected: {
+    bg: "bg-red-100 border-red-300",
+    text: "text-red-800",
+    icon: <X className="w-6 h-6" />,
+    message: "Nicht gültig",
+  },
   uncertain: {
     bg: "bg-amber-100 border-amber-300",
     text: "text-amber-800",

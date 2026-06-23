@@ -39,9 +39,15 @@ const PIPELINE_STATUSES =
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function findOrCreateUser(db: ReturnType<typeof getDb>, email: string): number {
+function findOrCreateUser(
+  db: ReturnType<typeof getDb>,
+  email: string
+): { id: number; isModerator: boolean } {
   db.prepare("INSERT OR IGNORE INTO users (email) VALUES (?)").run(email);
-  return (db.prepare("SELECT id FROM users WHERE email = ?").get(email) as { id: number }).id;
+  const row = db
+    .prepare("SELECT id, is_moderator FROM users WHERE email = ?")
+    .get(email) as { id: number; is_moderator: number };
+  return { id: row.id, isModerator: row.is_moderator === 1 };
 }
 
 type PartnerSuggestion = {
@@ -168,7 +174,7 @@ partnerRouter.post("/suggestions", (req, res) => {
     }
 
     // --- Find or create author user ---
-    const userId = findOrCreateUser(db, authorEmail);
+    const { id: userId, isModerator } = findOrCreateUser(db, authorEmail);
 
     // --- Check for conflicting in-flight suggestion ---
     const conflict = db
@@ -180,14 +186,16 @@ partnerRouter.post("/suggestions", (req, res) => {
       .get(word, internalAction, userId) as { id: number } | undefined;
 
     const netSupport = supporters.length - opposers.length;
-    const highConfidence = netSupport >= 2;
+    // Auto-approve when the community vote clears the threshold, or when the
+    // author is a moderator (their own bridge submissions need no further review).
+    const autoApprove = netSupport >= 2 || isModerator;
 
-    if (conflict && !highConfidence) {
+    if (conflict && !autoApprove) {
       results.push({ word, action, status: "skipped", reason: "conflict" });
       continue;
     }
 
-    if (conflict && highConfidence) {
+    if (conflict && autoApprove) {
       // High-confidence partner submission supersedes the existing in-flight suggestion
       db.prepare("DELETE FROM suggestions WHERE id = ?").run(conflict.id);
     }
@@ -201,7 +209,7 @@ partnerRouter.post("/suggestions", (req, res) => {
       payloadToStore = Object.keys(p).length > 0 ? JSON.stringify(p) : null;
     }
 
-    const status = highConfidence ? "moderator_approved" : "pending_review";
+    const status = autoApprove ? "moderator_approved" : "pending_review";
 
     const inserted = db
       .prepare(

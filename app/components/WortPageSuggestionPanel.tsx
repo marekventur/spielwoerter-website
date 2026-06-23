@@ -193,6 +193,8 @@ export function WortPageSuggestionPanel({
   );
 
   const inList = wordRow?.in_list === "accepted" || wordRow?.in_list === "uncertain";
+  // Explicitly removed/declined word: no re-admission, so we hide the add button entirely.
+  const isRejected = wordRow?.in_list === "rejected";
   const loginHref = `/login?from=/wort/${encodeURIComponent(word)}`;
 
   return (
@@ -237,6 +239,11 @@ export function WortPageSuggestionPanel({
           <Link to="/meine-vorschlaege" className="underline text-orange-600">
             Meine Vorschläge
           </Link>
+        </p>
+      ) : isRejected ? (
+        <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3 max-w-md text-center">
+          Dieses Wort wurde geprüft und als nicht gültig eingestuft. Es kann
+          nicht erneut vorgeschlagen werden.
         </p>
       ) : !inList && addInReviewByOthers ? (
         <div className="flex flex-col items-center gap-3 max-w-md text-center">

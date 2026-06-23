@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
-import { Link } from "react-router";
-import { ChevronDown, User } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { ChevronDown, Search, User } from "lucide-react";
 import { Button } from "~/components/ui/button";
 
 type NavUser = {
@@ -16,8 +16,18 @@ type Props = {
 export function NavBar({ user }: Props) {
   const [open, setOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const term = search.trim();
+    if (!term) return;
+    navigate(`/wort/${encodeURIComponent(term.toUpperCase())}`);
+    setSearch("");
+  };
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -137,6 +147,23 @@ export function NavBar({ user }: Props) {
             </div>
           </div>
         </div>
+
+        {/* Search — available on every page so you can look up another word directly */}
+        <form
+          onSubmit={handleSearch}
+          role="search"
+          className="relative min-w-0 flex-1 max-w-xs"
+        >
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value.toUpperCase())}
+            placeholder="Wort nachschlagen…"
+            aria-label="Wort nachschlagen"
+            className="h-9 w-full rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm leading-5 text-gray-800 transition-colors placeholder:text-gray-400 focus:border-orange-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-200"
+          />
+        </form>
 
         {/* Right side */}
         <div className="flex items-center gap-3 shrink-0">

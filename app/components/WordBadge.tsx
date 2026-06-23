@@ -3,6 +3,7 @@ import { Check, X } from "lucide-react";
 export type WordBadgeStatus =
   | "accepted"
   | "not-accepted"
+  | "rejected"
   | "uncertain"
   | "pending-add"
   | "pending-remove";
@@ -48,6 +49,17 @@ export function WordBadge({
     "not-accepted": {
       bg: "bg-gray-100 border-gray-300",
       text: "text-gray-700",
+      icon: (
+        <X
+          className={
+            size === "lg" ? "w-6 h-6" : size === "md" ? "w-4 h-4" : "w-3 h-3"
+          }
+        />
+      ),
+    },
+    rejected: {
+      bg: "bg-red-100 border-red-300",
+      text: "text-red-800",
       icon: (
         <X
           className={

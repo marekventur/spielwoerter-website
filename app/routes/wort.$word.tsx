@@ -22,6 +22,9 @@ type RelatedRow = { word: string; in_list: string; description: string | null };
 function toStatus(inList: string | undefined): WordBadgeStatus {
   if (inList === "accepted") return "accepted";
   if (inList === "uncertain") return "uncertain";
+  // A row that exists but is flagged `rejected` was explicitly removed/declined —
+  // distinct from a word that was never in the DB (no row → undefined).
+  if (inList === "rejected") return "rejected";
   return "not-accepted";
 }
 
