@@ -126,6 +126,13 @@ export function initSchema(db: Database.Database): void {
     // Set when a moderator approves with corrections; stores JSON {word, payload} as submitted.
     db.prepare("ALTER TABLE suggestions ADD COLUMN original_payload TEXT").run();
   }
+  if (!suggCols.includes("decided_by")) {
+    // Moderator who made the approve/reject decision (display/audit only).
+    db.prepare("ALTER TABLE suggestions ADD COLUMN decided_by INTEGER REFERENCES users(id)").run();
+  }
+  if (!suggCols.includes("decided_at")) {
+    db.prepare("ALTER TABLE suggestions ADD COLUMN decided_at TEXT").run();
+  }
 
   // Ensure bootstrap admin always has full privileges
   db.prepare(

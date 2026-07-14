@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
-import { moderateOne, type ModerationChanges } from "../../lib/moderate.js";
+import { moderateOne, undoModeration, type ModerationChanges } from "../../lib/moderate.js";
 import { requireModerator } from "../http-auth.js";
 
 export const moderationRouter = Router();
@@ -17,6 +17,7 @@ moderationRouter.post("/:id/approve", (req, res) => {
   const result = moderateOne(getDb(), Number(req.params.id), "moderator_approved", {
     changes,
     comment,
+    decidedBy: user.id,
   });
   result.ok
     ? res.json({ ok: true })
@@ -31,6 +32,7 @@ moderationRouter.post("/:id/reject", (req, res) => {
 
   const result = moderateOne(getDb(), Number(req.params.id), "moderator_rejected", {
     comment,
+    decidedBy: user.id,
   });
   result.ok
     ? res.json({ ok: true })
@@ -56,7 +58,17 @@ moderationRouter.post("/batch", (req, res) => {
   const db = getDb();
   let count = 0;
   for (const id of ids) {
-    if (moderateOne(db, id, decision, { comment }).ok) count++;
+    if (moderateOne(db, id, decision, { comment, decidedBy: user.id }).ok) count++;
   }
   res.json({ ok: true, count });
+});
+
+moderationRouter.post("/:id/undo", (req, res) => {
+  const user = requireModerator(req, res);
+  if (!user) return;
+
+  const result = undoModeration(getDb(), Number(req.params.id));
+  result.ok
+    ? res.json({ ok: true })
+    : res.status(400).json({ error: result.error });
 });

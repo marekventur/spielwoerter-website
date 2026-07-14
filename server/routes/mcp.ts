@@ -367,7 +367,7 @@ function handleToolCall(
         continue;
       }
 
-      if (moderateOne(db, id, decision, { comment, override }).ok) {
+      if (moderateOne(db, id, decision, { comment, override, decidedBy: userId }).ok) {
         count++;
       } else {
         errors++;
@@ -395,7 +395,11 @@ function handleToolCall(
     if (typeof args.base === "string") changes.base = args.base;
     const comment = typeof args.comment === "string" ? args.comment : undefined;
 
-    const result = moderateOne(db, id, "moderator_approved", { changes, comment });
+    const result = moderateOne(db, id, "moderator_approved", {
+      changes,
+      comment,
+      decidedBy: userId,
+    });
     if (!result.ok) {
       return textResult(`Error: ${result.error}`, true);
     }

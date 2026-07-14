@@ -43,7 +43,12 @@ export function moderateOne(
   db: Database.Database,
   id: number,
   decision: "moderator_approved" | "moderator_rejected",
-  opts: { changes?: ModerationChanges; comment?: string; override?: boolean } = {}
+  opts: {
+    changes?: ModerationChanges;
+    comment?: string;
+    override?: boolean;
+    decidedBy?: number;
+  } = {}
 ): ModerationResult {
   const suggestion = db
     .prepare("SELECT id, word, action, payload, status FROM suggestions WHERE id = ?")
@@ -96,13 +101,77 @@ export function moderateOne(
     db.prepare(
       `UPDATE suggestions
        SET status = ?, word = ?, payload = ?, moderation_comment = ?,
-           original_payload = COALESCE(?, original_payload)
+           original_payload = COALESCE(?, original_payload),
+           decided_by = ?, decided_at = datetime('now')
        WHERE id = ?`
-    ).run(decision, newWord, newPayload, comment, originalPayload, id);
+    ).run(decision, newWord, newPayload, comment, originalPayload, opts.decidedBy ?? null, id);
     if (decision === "moderator_rejected") {
       db.prepare(
         "INSERT OR IGNORE INTO rejected_words (word, action) VALUES (?, ?)"
       ).run(suggestion.word, suggestion.action);
+    } else {
+      // Approval clears any blocklist entry from an earlier (possibly
+      // overridden) rejection, so the word can be suggested again.
+      db.prepare("DELETE FROM rejected_words WHERE word = ? AND action = ?").run(
+        suggestion.word,
+        suggestion.action
+      );
+    }
+  })();
+
+  return { ok: true };
+}
+
+/**
+ * Revert a moderator decision: the suggestion goes back into the review queue
+ * (`needs_moderator`), any approve-with-changes edits are rolled back to the
+ * original submission, and a rejection's blocklist entry is removed so the
+ * word can be submitted again. Approvals that were already pushed to the
+ * public wordlists cannot be undone; the fix there is a counter-suggestion.
+ */
+export function undoModeration(db: Database.Database, id: number): ModerationResult {
+  type DecidedRow = SuggRow & { synced_at: string | null; original_payload: string | null };
+  const suggestion = db
+    .prepare(
+      `SELECT id, word, action, payload, status, synced_at, original_payload
+       FROM suggestions WHERE id = ?`
+    )
+    .get(id) as DecidedRow | undefined;
+
+  if (!suggestion) return { ok: false, error: "Nicht gefunden" };
+  if (!["moderator_approved", "moderator_rejected"].includes(suggestion.status))
+    return { ok: false, error: "Vorschlag ist nicht entschieden" };
+  if (suggestion.status === "moderator_approved" && suggestion.synced_at !== null)
+    return {
+      ok: false,
+      error:
+        "Bereits veröffentlicht: Diese Genehmigung wurde schon in die Wortlisten übernommen. Bitte reiche stattdessen einen Gegenvorschlag ein (z. B. das Wort wieder entfernen).",
+    };
+
+  let word = suggestion.word;
+  let payload = suggestion.payload;
+  if (suggestion.original_payload) {
+    const original = JSON.parse(suggestion.original_payload) as {
+      word: string;
+      payload: Record<string, string> | null;
+    };
+    word = original.word;
+    payload = original.payload ? JSON.stringify(original.payload) : null;
+  }
+
+  db.transaction(() => {
+    db.prepare(
+      `UPDATE suggestions
+       SET status = 'needs_moderator', word = ?, payload = ?,
+           original_payload = NULL, moderation_comment = NULL,
+           notified_at = NULL, decided_by = NULL, decided_at = NULL
+       WHERE id = ?`
+    ).run(word, payload, id);
+    if (suggestion.status === "moderator_rejected") {
+      db.prepare("DELETE FROM rejected_words WHERE word = ? AND action = ?").run(
+        suggestion.word,
+        suggestion.action
+      );
     }
   })();
 

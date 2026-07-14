@@ -27,6 +27,7 @@ type OriginalPayload = {
 const STATUS_LABELS: Record<string, string> = {
   draft: "Entwurf",
   pending_review: "In Prüfung",
+  needs_moderator: "In Prüfung",
   ai_approved: "KI-genehmigt",
   ai_rejected: "Abgelehnt (KI)",
   moderator_approved: "Genehmigt",
@@ -36,6 +37,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-gray-100 text-gray-700",
   pending_review: "bg-blue-100 text-blue-700",
+  needs_moderator: "bg-blue-100 text-blue-700",
   ai_approved: "bg-green-100 text-green-700",
   ai_rejected: "bg-red-100 text-red-700",
   moderator_approved: "bg-green-100 text-green-700",
