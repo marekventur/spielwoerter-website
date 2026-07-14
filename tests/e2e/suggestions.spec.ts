@@ -5,6 +5,7 @@ import { getTestDb } from "../helpers/db";
 import {
   TEST_USER_EMAIL,
   TEST_USER2_EMAIL,
+  TEST_MOD_EMAIL,
   BASE_URL,
 } from "../helpers/test-config";
 
@@ -18,7 +19,7 @@ test("create add-suggestion without license gate", async ({ page }) => {
   await loginAs(page, TEST_USER_EMAIL);
 
   await page.goto("/wort/ZZZNEU");
-  await page.getByRole("button", { name: "Hinzufügen vorschlagen" }).click();
+  await page.getByRole("button", { name: "Wort hinzufügen" }).click();
   await page.getByRole("button", { name: "Vorschlag einreichen" }).click();
   await expect(page.getByText("Entwurf gespeichert")).toBeVisible();
 
@@ -37,7 +38,7 @@ test("create add-suggestion for word not in list", async ({ page }) => {
   await loginAs(page, TEST_USER_EMAIL);
 
   await page.goto("/wort/NEUESWORT");
-  await page.getByRole("button", { name: "Hinzufügen vorschlagen" }).click();
+  await page.getByRole("button", { name: "Wort hinzufügen" }).click();
   await page.getByRole("button", { name: "Vorschlag einreichen" }).click();
   await expect(page.getByText("Entwurf gespeichert")).toBeVisible();
 });
@@ -127,7 +128,7 @@ test("morphology suggestions appear after draft creation", async ({ page }) => {
 
   // Select one and submit
   await page.getByRole("checkbox", { name: "HUNDE", exact: true }).check();
-  await page.getByRole("button", { name: /Entwurf/ }).click();
+  await page.getByRole("button", { name: "Wörter entfernen" }).click();
 
   await expect(page.getByText("Weitere Entwürfe gespeichert")).toBeVisible();
 });
@@ -165,4 +166,41 @@ test("POST /api/suggestions as authenticated user creates draft", async ({
   expect(res.status()).toBe(200);
   const body = await res.json();
   expect(body.ok).toBe(true);
+});
+
+test("moderator can re-add a rejected word via Wort wieder aufnehmen", async ({ page }) => {
+  seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const db = getTestDb();
+  // Mirror the state a synced removal leaves behind (word in rejected list + blocklist row)
+  db.prepare(
+    "INSERT OR IGNORE INTO rejected_words (word, action) VALUES ('falsch', 'remove')"
+  ).run();
+
+  await loginAs(page, TEST_MOD_EMAIL);
+  await page.goto("/wort/FALSCH");
+  await expect(page.getByText("als nicht gültig eingestuft")).toBeVisible();
+  await page.getByRole("button", { name: "Wort wieder aufnehmen" }).click();
+  await page.getByRole("button", { name: "Vorschlag einreichen" }).click();
+  await expect(page.getByText("Entwurf gespeichert")).toBeVisible();
+
+  const sugg = db
+    .prepare(
+      "SELECT status, moderator_fast_track FROM suggestions WHERE word = 'falsch' AND action = 'add'"
+    )
+    .get() as { status: string; moderator_fast_track: number } | undefined;
+  expect(sugg?.status).toBe("draft");
+  expect(sugg?.moderator_fast_track).toBe(1);
+});
+
+test("regular user cannot re-add a rejected word", async ({ page }) => {
+  seedUser(TEST_USER_EMAIL);
+  await loginAs(page, TEST_USER_EMAIL);
+
+  await page.goto("/wort/FALSCH");
+  await expect(
+    page.getByText("Es kann nicht erneut vorgeschlagen werden")
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Wort wieder aufnehmen" })
+  ).toHaveCount(0);
 });

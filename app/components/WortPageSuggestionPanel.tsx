@@ -193,7 +193,8 @@ export function WortPageSuggestionPanel({
   );
 
   const inList = wordRow?.in_list === "accepted" || wordRow?.in_list === "uncertain";
-  // Explicitly removed/declined word: no re-admission, so we hide the add button entirely.
+  // Explicitly removed/declined word: regular users can't re-suggest it,
+  // but moderators get a re-admission button (fast-tracked like their other drafts).
   const isRejected = wordRow?.in_list === "rejected";
   const loginHref = `/login?from=/wort/${encodeURIComponent(word)}`;
 
@@ -241,10 +242,23 @@ export function WortPageSuggestionPanel({
           </Link>
         </p>
       ) : isRejected ? (
-        <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3 max-w-md text-center">
-          Dieses Wort wurde geprüft und als nicht gültig eingestuft. Es kann
-          nicht erneut vorgeschlagen werden.
-        </p>
+        <div className="flex flex-col items-center gap-3 max-w-md text-center">
+          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3 w-full">
+            Dieses Wort wurde geprüft und als nicht gültig eingestuft.{" "}
+            {user?.isModerator
+              ? "Als Moderator kannst du es wieder in die Wortliste aufnehmen."
+              : "Es kann nicht erneut vorgeschlagen werden."}
+          </p>
+          {user?.isModerator ? (
+            <Button
+              className="bg-orange-500 hover:bg-orange-600"
+              onClick={() => void openAddForm()}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Wort wieder aufnehmen
+            </Button>
+          ) : null}
+        </div>
       ) : !inList && addInReviewByOthers ? (
         <div className="flex flex-col items-center gap-3 max-w-md text-center">
           <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-3 w-full">

@@ -98,7 +98,9 @@ export async function syncPull(
 
   db.transaction(() => {
     db.prepare("DELETE FROM words").run();
-    db.prepare("DELETE FROM rejected_words").run();
+    // Only 'remove' rows are re-derived from the rejected wordlist below;
+    // blocklist entries from rejected add/change suggestions must survive.
+    db.prepare("DELETE FROM rejected_words WHERE action = 'remove'").run();
 
     for (const w of accepted) insert.run({ ...w, in_list: "accepted", normalised: normalise(w.word) });
     for (const w of uncertain) insert.run({ ...w, in_list: "uncertain", normalised: normalise(w.word) });
@@ -147,11 +149,16 @@ export async function syncPush(
         : null;
 
       if (s.action === "add") {
+        // Re-admission of a previously removed word: drop it from the rejected
+        // list (which would otherwise win on the next pull) and keep its old
+        // description/base if the suggestion doesn't provide new ones.
+        const prior = rejected.find((w) => w.word === s.word);
+        rejected = rejected.filter((w) => w.word !== s.word);
         if (!accepted.find((w) => w.word === s.word)) {
           accepted = insertSorted(accepted, {
             word: s.word,
-            description: payload?.description ?? null,
-            base: payload?.base ?? null,
+            description: payload?.description ?? prior?.description ?? null,
+            base: payload?.base ?? prior?.base ?? null,
             source: "community",
             verified_by: "moderator",
           });
@@ -237,8 +244,10 @@ export async function syncPush(
 
     // Mark as synced
     const now = new Date().toISOString();
+    // Status guard: an undo landing mid-push must not leave a reverted
+    // suggestion marked as synced.
     const markSynced = db.prepare(
-      "UPDATE suggestions SET synced_at = ? WHERE id = ?"
+      "UPDATE suggestions SET synced_at = ? WHERE id = ? AND status = 'moderator_approved'"
     );
     db.transaction(() => {
       for (const s of unsynced) markSynced.run(now, s.id);
