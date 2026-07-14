@@ -22,9 +22,11 @@ test("admin page lists all users", async ({ page }) => {
   await page.goto("/admin");
 
   await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible();
-  await expect(page.getByText(TEST_USER_EMAIL)).toBeVisible();
-  await expect(page.getByText(TEST_MOD_EMAIL)).toBeVisible();
-  await expect(page.getByText(TEST_ADMIN_EMAIL)).toBeVisible();
+  // Scope to the user list — the nav user button also shows the admin's email
+  const userList = page.locator(".divide-y");
+  await expect(userList.getByText(TEST_USER_EMAIL)).toBeVisible();
+  await expect(userList.getByText(TEST_MOD_EMAIL)).toBeVisible();
+  await expect(userList.getByText(TEST_ADMIN_EMAIL)).toBeVisible();
 });
 
 test("moderator badge shown for moderator user", async ({ page }) => {

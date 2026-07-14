@@ -22,6 +22,9 @@ export async function loginAs(
   email: string,
   redirectTo = "/"
 ): Promise<void> {
+  // Drop any existing session — /login redirects logged-in users away,
+  // which would otherwise break switching users mid-test.
+  await page.context().clearCookies();
   await page.goto(`/login?from=${encodeURIComponent(redirectTo)}`);
   // Wait for React hydration before interacting — without this the click can hit
   // the pre-hydration DOM and trigger a native form submit (page reload) instead

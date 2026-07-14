@@ -10,17 +10,17 @@ test.beforeEach(() => {
 
 test("full OTP login flow via UI", async ({ page }) => {
   await loginAs(page, TEST_USER_EMAIL);
-  // After login, nav should show Abmelden, not Anmelden
+  // After login, nav shows the user dropdown (email button) instead of Anmelden;
+  // Abmelden lives inside the dropdown.
+  await expect(page.getByRole("button", { name: "Anmelden" })).not.toBeVisible();
+  await page.getByRole("button", { name: TEST_USER_EMAIL }).click();
   await expect(page.getByRole("button", { name: "Abmelden" })).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Anmelden" })
-  ).not.toBeVisible();
 });
 
 test("login redirects back to originating page", async ({ page }) => {
   await loginAs(page, TEST_USER_EMAIL, "/wort/HUND");
   await expect(page).toHaveURL(/\/wort\/HUND/);
-  await expect(page.getByRole("button", { name: "Abmelden" })).toBeVisible();
+  await expect(page.getByRole("button", { name: TEST_USER_EMAIL })).toBeVisible();
 });
 
 test("invalid OTP code shows error message", async ({ page }) => {
@@ -40,10 +40,11 @@ test("invalid OTP code shows error message", async ({ page }) => {
 
 test("logout clears session and shows Anmelden", async ({ page }) => {
   await loginAs(page, TEST_USER_EMAIL);
-  await expect(page.getByRole("button", { name: "Abmelden" })).toBeVisible();
+  // Abmelden is inside the nav user dropdown
+  await page.getByRole("button", { name: TEST_USER_EMAIL }).click();
   // window.location.reload() is used — wait for the nav button to reflect logged-out state
   await page.getByRole("button", { name: "Abmelden" }).click();
-  await expect(page.getByRole("button", { name: "Anmelden" })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("link", { name: "Anmelden" }).or(page.getByRole("button", { name: "Anmelden" }))).toBeVisible({ timeout: 10_000 });
 });
 
 test("already-logged-in user is redirected from /login", async ({ page }) => {

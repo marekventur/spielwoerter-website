@@ -60,11 +60,11 @@ test("reject with comment stores the reason", async ({ request }) => {
   const userId = seedUser(TEST_USER_EMAIL);
   const suggId = seedSuggestion(userId, "ablehnwort", "add", "pending_review");
 
-  const text = await callTool(request, MOD_TOKEN, "reject", {
+  const text = await callTool(request, MOD_TOKEN, "reject_addition", {
     ids: [suggId],
     comment: "Eigenname, gehört nicht in die Liste",
   });
-  expect(text).toContain("Rejected 1/1");
+  expect(text).toContain("Rejected 1 add request(s).");
 
   const row = getTestDb()
     .prepare("SELECT status, moderation_comment FROM suggestions WHERE id = ?")

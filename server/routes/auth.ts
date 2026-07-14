@@ -6,12 +6,17 @@ import { sendOtpEmail } from "../mailgun.js";
 
 export const authRouter = Router();
 
+// Rate limiting only in production: dev and e2e tests log in far more often
+// than any real user, and the in-memory counters span the whole process life.
+const skipOutsideProduction = () => process.env.NODE_ENV !== "production";
+
 const requestCodeLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 5,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Zu viele Anfragen, bitte später versuchen" },
+  skip: skipOutsideProduction,
 });
 
 const verifyCodeLimiter = rateLimit({
@@ -20,6 +25,7 @@ const verifyCodeLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Zu viele Anfragen, bitte später versuchen" },
+  skip: skipOutsideProduction,
 });
 
 authRouter.post("/request-code", requestCodeLimiter, async (req, res) => {

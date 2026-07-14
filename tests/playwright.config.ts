@@ -29,6 +29,9 @@ export default defineConfig({
       // Override to empty string so dotenv doesn't load the real key from .env
       // (empty string is falsy → server falls back to console.log for OTP codes)
       MAILGUN_API_KEY: "",
+      // Same for the enrichment LLM: tests must be offline/deterministic
+      // (empty key → enrichWord returns the algorithmic fallback, no variants)
+      DEEPSEEK_API_KEY_SUGGESTIONS: "",
     },
   },
 });

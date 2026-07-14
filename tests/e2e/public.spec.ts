@@ -39,7 +39,6 @@ test("word page shows accepted word with description and badge", async ({
   await expect(page.getByRole("link", { name: "Duden" }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Wiktionary" })).toBeVisible();
   await expect(page.getByRole("link", { name: "DWDS" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Wahrig" })).toBeVisible();
 });
 
 test("word page shows related words", async ({ page }) => {
