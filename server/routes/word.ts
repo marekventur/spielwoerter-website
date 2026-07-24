@@ -1,6 +1,7 @@
 import { Router, type Response } from "express";
 import { getDb } from "../../lib/db.js";
 import { detectAlgorithmicBase, enrichWord } from "../../lib/enrich.js";
+import { removalHints } from "../../lib/removal-hints.js";
 import { requireUser } from "../http-auth.js";
 
 const SEARCH_FIELDS = ["word", "base", "description"] as const;
@@ -44,6 +45,30 @@ function writeChunk(res: Response, chunk: string): Promise<void> {
 
 
 export const wordRouter = Router();
+
+/**
+ * GET /api/removal-hints?words=a,b,c
+ * Advisory special-form warnings for removal flows (see lib/removal-hints.ts).
+ */
+wordRouter.get("/removal-hints", (req, res) => {
+  const user = requireUser(req, res);
+  if (!user) return;
+
+  const raw = typeof req.query.words === "string" ? req.query.words : "";
+  const words = raw
+    .split(",")
+    .map((w) => w.trim().toLowerCase())
+    .filter(Boolean)
+    .slice(0, 500);
+
+  const db = getDb();
+  const hints: Record<string, string[]> = {};
+  for (const w of words) {
+    const h = removalHints(db, w);
+    if (h.length > 0) hints[w] = h;
+  }
+  res.json({ hints });
+});
 
 /**
  * GET /api/words/all

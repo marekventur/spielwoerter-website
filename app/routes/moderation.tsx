@@ -4,6 +4,7 @@ import { ExternalLink, Pencil } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
+import { screenName } from "../../lib/screen-name.js";
 import type { Route } from "./+types/moderation";
 
 type ModerationItem = {
@@ -16,7 +17,7 @@ type ModerationItem = {
   current_description: string | null;
   in_list: string | null;
   base: string | null;
-  requester_email: string | null;
+  requester_label: string | null;
 };
 
 type RecentItem = {
@@ -26,7 +27,12 @@ type RecentItem = {
   status: string;
   decided_at: string;
   synced_at: string | null;
-  decided_by_email: string | null;
+  decided_by_label: string | null;
+};
+
+type ModeratorEntry = {
+  id: number;
+  display_name: string | null;
 };
 
 type Group = {
@@ -90,35 +96,68 @@ export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user) return redirect("/login?from=/moderation");
   if (!context.user.isModerator) return redirect("/");
 
-  const items = context.db
+  const rawItems = context.db
     .prepare(
       `SELECT s.id, s.word, s.action, s.payload, s.status, s.created_at,
               w.description AS current_description, w.in_list, w.base,
-              u.email AS requester_email
+              u.id AS requester_id, u.display_name AS requester_name
        FROM suggestions s
        LEFT JOIN words w ON w.word = s.word
        LEFT JOIN users u ON u.id = s.user_id
        WHERE s.status IN ('pending_review', 'needs_moderator')
        ORDER BY COALESCE(w.base, s.word), s.word, s.created_at`
     )
-    .all() as ModerationItem[];
+    .all() as (Omit<ModerationItem, "requester_label"> & {
+    requester_id: number | null;
+    requester_name: string | null;
+  })[];
+  const items = rawItems.map(({ requester_id, requester_name, ...rest }) => ({
+    ...rest,
+    requester_label:
+      requester_id === null ? null : screenName(requester_name, requester_id),
+  }));
 
   // decided_at is NULL for decisions made before the column existed —
   // fall back to last_modified_at so old mistakes remain correctable too.
-  const recent = context.db
+  const rawRecent = context.db
     .prepare(
       `SELECT s.id, s.word, s.action, s.status, s.synced_at,
               COALESCE(s.decided_at, s.last_modified_at) AS decided_at,
-              d.email AS decided_by_email
+              d.id AS decided_by_id, d.display_name AS decided_by_name
        FROM suggestions s
        LEFT JOIN users d ON d.id = s.decided_by
        WHERE s.status IN ('moderator_approved', 'moderator_rejected')
        ORDER BY COALESCE(s.decided_at, s.last_modified_at) DESC
        LIMIT 50`
     )
-    .all() as RecentItem[];
+    .all() as (Omit<RecentItem, "decided_by_label"> & {
+    decided_by_id: number | null;
+    decided_by_name: string | null;
+  })[];
+  const recent = rawRecent.map(({ decided_by_id, decided_by_name, ...rest }) => ({
+    ...rest,
+    decided_by_label:
+      decided_by_id === null ? null : screenName(decided_by_name, decided_by_id),
+  }));
 
-  return { user: context.user, items, recent };
+  // Fast-track removals waiting out their 72h delay live on /aenderungen
+  // (status "geplant"), where moderators can confirm or object inline.
+  const scheduledCount = (
+    context.db
+      .prepare(
+        `SELECT count(*) AS n FROM suggestions
+         WHERE status = 'draft' AND moderator_fast_track = 1 AND action = 'remove'`
+      )
+      .get() as { n: number }
+  ).n;
+
+  const moderators = context.db
+    .prepare(
+      "SELECT id, display_name FROM users WHERE is_moderator = 1 ORDER BY id"
+    )
+    .all() as ModeratorEntry[];
+
+  return { user: context.user, items, recent, scheduledCount, moderators };
 }
 
 /** Base form for grouping: DB join only fills `base` when the suggested word already exists in `words`. */
@@ -159,7 +198,7 @@ type ModerationChanges = {
 };
 
 export default function ModerationPage({ loaderData }: Route.ComponentProps) {
-  const { items: initialItems, recent } = loaderData;
+  const { user, items: initialItems, recent, scheduledCount, moderators } = loaderData;
   const [decided, setDecided] = useState<Map<number, "approved" | "rejected">>(
     new Map()
   );
@@ -303,7 +342,20 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
               {pending.length} {pending.length === 1 ? "Vorschlag" : "Vorschläge"} ausstehend
             </p>
           </div>
+          <Link to="/aenderungen" className="text-sm text-orange-600 hover:underline shrink-0">
+            Alle Änderungen →
+          </Link>
         </div>
+
+        {scheduledCount > 0 && (
+          <p className="mb-8 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5">
+            {scheduledCount} geplante Löschung{scheduledCount !== 1 ? "en" : ""} wartet
+            {scheduledCount === 1 ? "" : "en"} auf ein zweites Augenpaar –{" "}
+            <Link to="/aenderungen?status=scheduled" className="underline font-medium">
+              Einspruch / Freigabe unter Änderungen
+            </Link>
+          </p>
+        )}
 
         {groups.length === 0 ? (
           <Card className="p-10 text-center text-gray-400">
@@ -486,9 +538,9 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                               </>
                             )}
 
-                            {item.requester_email && (
+                            {item.requester_label && (
                               <p className="text-xs text-gray-400 mb-1">
-                                {item.requester_email}
+                                von {item.requester_label}
                               </p>
                             )}
 
@@ -700,7 +752,7 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                       {approved ? "Genehmigt" : "Abgelehnt"}
                     </span>
                     <span className="text-xs text-gray-400 truncate">
-                      {r.decided_by_email ?? "–"}
+                      {r.decided_by_label ?? "automatisch"}
                       {" · "}
                       {new Date(r.decided_at).toLocaleDateString("de-DE")}
                     </span>
@@ -725,6 +777,29 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
             </Card>
           </div>
         )}
+
+        <div className="mt-12">
+          <h2 className="text-xl font-bold text-gray-900">Moderator:innen</h2>
+          <p className="text-sm text-gray-500 mt-1 mb-4">
+            Öffentlich erscheint nur der Anzeigename (änderbar unter{" "}
+            <Link to="/konto" className="underline">
+              Konto
+            </Link>
+            ).
+          </p>
+          <Card className="px-5 py-3">
+            <ul className="text-sm text-gray-700 space-y-1">
+              {moderators.map((m) => (
+                <li key={m.id} className="flex items-center gap-2">
+                  <span className="font-medium">{screenName(m.display_name, m.id)}</span>
+                  {m.id === user.id && (
+                    <span className="text-xs text-orange-600">– das bist du</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
       </div>
     </div>
   );

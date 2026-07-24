@@ -11,6 +11,8 @@ type AddWordSuggestionDoneStateProps = {
   selectedMorph: Set<string>;
   onToggleMorphWord: (word: string, checked: boolean) => void;
   onMorphSubmit: () => void | Promise<void>;
+  /** Advisory special-form warnings per candidate word (see lib/removal-hints). */
+  removalHints?: Record<string, string[]>;
 };
 
 export function AddWordSuggestionDoneState({
@@ -19,6 +21,7 @@ export function AddWordSuggestionDoneState({
   selectedMorph,
   onToggleMorphWord,
   onMorphSubmit,
+  removalHints = {},
 }: AddWordSuggestionDoneStateProps) {
   return (
     <div className="w-full max-w-md">
@@ -49,9 +52,27 @@ export function AddWordSuggestionDoneState({
                 <span className="text-sm font-mono font-bold text-gray-800">
                   {r.word.toUpperCase()}
                 </span>
+                {removalHints[r.word] && (
+                  <span
+                    className="text-amber-600 cursor-help"
+                    title={removalHints[r.word].join("\n")}
+                  >
+                    ⚠
+                  </span>
+                )}
               </label>
             ))}
           </div>
+          {morphCandidates.some((r) => removalHints[r.word]) && (
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+              ⚠ Markierte Wörter könnten laut Regeln gültige Sonderformen sein (z. B. Dativ-e,
+              e-Tilgung) – bitte vor dem Entfernen die{" "}
+              <Link to="/regeln" className="underline">
+                Regeln
+              </Link>{" "}
+              prüfen.
+            </p>
+          )}
           <Button
             className="bg-orange-500 hover:bg-orange-600 text-white text-sm"
             disabled={selectedMorph.size === 0 || morphState === "loading"}

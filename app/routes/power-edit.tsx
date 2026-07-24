@@ -66,12 +66,36 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
     });
 
     try {
-      const res = await fetch("/api/batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: batchMessage || undefined, changes }),
-      });
-      const data = (await res.json()) as { ok?: boolean; error?: string };
+      const send = (extra: Record<string, unknown> = {}) =>
+        fetch("/api/batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: batchMessage || undefined, changes, ...extra }),
+        });
+
+      let res = await send();
+      let data = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        requiresConfirmation?: boolean;
+        conflicts?: { word: string; message: string }[];
+      };
+      if (!res.ok && data.requiresConfirmation && data.conflicts) {
+        // Settled decisions stick: overriding earlier decisions needs a comment.
+        const list = data.conflicts
+          .map((c) => `• ${c.word.toUpperCase()}: ${c.message}`)
+          .join("\n");
+        const comment = window.prompt(
+          `Einige Löschungen widersprechen früheren Entscheidungen:\n\n${list}\n\n` +
+            "Trotzdem einreichen? Begründung (erscheint in der Wort-Historie):"
+        );
+        if (!comment?.trim()) {
+          setSubmitError("Einreichen abgebrochen.");
+          return;
+        }
+        res = await send({ force: true, confirmComment: comment.trim() });
+        data = (await res.json()) as { ok?: boolean; error?: string };
+      }
       if (!res.ok) {
         setSubmitError(data.error ?? "Fehler beim Einreichen");
         return;

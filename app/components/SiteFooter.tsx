@@ -15,6 +15,8 @@ export function SiteFooter() {
           {" · "}
           <Link to="/mitmachen">Mitmachen</Link>
           {" · "}
+          <Link to="/aenderungen">Änderungen</Link>
+          {" · "}
           <Link to="https://github.com/marekventur/spielwoerter/blob/main/LICENSE">CC0 Public Domain</Link>
           {" · "}
           <Link to="https://github.com/marekventur/spielwoerter">GitHub</Link>

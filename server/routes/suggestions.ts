@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
+import { priorDecision } from "../../lib/prior-decisions.js";
 import { requireUser } from "../http-auth.js";
 
 /** Lemma: if base equals the word, omit base (stored as null on sync). */
@@ -91,7 +92,27 @@ suggestionsRouter.post("/", (req, res) => {
   const blocked = db
     .prepare("SELECT 1 FROM rejected_words WHERE word = ? AND action = ?")
     .get(wordLower, action);
-  if (blocked) {
+
+  // Settled decisions stick: a moderator can override a rejection or revert a
+  // recent deliberate decision, but only knowingly — with a comment that lands
+  // in the word's history. Non-moderators stay hard-blocked on rejections.
+  const { force, comment } = req.body as { force?: boolean; comment?: string };
+  const confirmComment = typeof comment === "string" ? comment.trim() : "";
+  let confirmedPrior = false;
+  if (user.isModerator && (action === "add" || action === "remove")) {
+    const prior = priorDecision(db, wordLower, action);
+    if (blocked || prior) {
+      if (!(force === true && confirmComment)) {
+        res.status(409).json({
+          requiresConfirmation: true,
+          error: prior?.message ?? "Dieser Vorschlag wurde bereits abgelehnt.",
+          prior,
+        });
+        return;
+      }
+      confirmedPrior = true;
+    }
+  } else if (blocked) {
     res.status(409).json({ error: "Dieser Vorschlag wurde bereits abgelehnt." });
     return;
   }
@@ -132,16 +153,25 @@ suggestionsRouter.post("/", (req, res) => {
       ? normalizeAddPayloadBase(wordLower, payload ?? null)
       : payload ?? null;
 
-  db.prepare(
-    `INSERT INTO suggestions (user_id, word, action, payload, moderator_fast_track)
-     VALUES (?, ?, ?, ?, ?)`
-  ).run(
-    user.id,
-    wordLower,
-    action,
-    payloadToStore ? JSON.stringify(payloadToStore) : null,
-    user.isModerator ? 1 : 0
-  );
+  db.transaction(() => {
+    const { lastInsertRowid } = db
+      .prepare(
+        `INSERT INTO suggestions (user_id, word, action, payload, moderator_fast_track)
+         VALUES (?, ?, ?, ?, ?)`
+      )
+      .run(
+        user.id,
+        wordLower,
+        action,
+        payloadToStore ? JSON.stringify(payloadToStore) : null,
+        user.isModerator ? 1 : 0
+      );
+    if (confirmedPrior) {
+      db.prepare(
+        "INSERT INTO word_comments (word, user_id, suggestion_id, body) VALUES (?, ?, ?, ?)"
+      ).run(wordLower, user.id, Number(lastInsertRowid), confirmComment);
+    }
+  })();
 
   res.json({ ok: true });
 });

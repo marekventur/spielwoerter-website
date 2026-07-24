@@ -264,7 +264,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 
 export default function MeineVorschlaege({ loaderData }: Route.ComponentProps) {
-  const { suggestions } = loaderData;
+  const { user, suggestions } = loaderData;
   const [deleting, setDeleting] = useState<number | null>(null);
   const [patching, setPatching] = useState<number | null>(null);
   const [localDeleted, setLocalDeleted] = useState<Set<number>>(new Set());
@@ -390,6 +390,13 @@ export default function MeineVorschlaege({ loaderData }: Route.ComponentProps) {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Meine Vorschläge</h1>
         <p className="text-gray-500 mb-8 text-sm">
           Entwürfe gehen nach <strong>60 Minuten</strong> ohne Änderung automatisch in die Prüfung.
+          {user.isModerator && (
+            <>
+              {" "}
+              Löschungen von Moderator:innen werden erst nach <strong>72 Stunden</strong>{" "}
+              übernommen, damit ein zweites Augenpaar draufschauen kann.
+            </>
+          )}
         </p>
 
         {/* Entwürfe */}

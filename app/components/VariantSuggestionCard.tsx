@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { postSuggestion } from "~/components/suggestion-api";
 
 type VariantSuggestionCardProps = {
   word: string;
@@ -31,20 +32,15 @@ export function VariantSuggestionCard({
       payload.base = baseTrim;
     }
 
-    const res = await fetch("/api/suggestions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        word,
-        action: "add",
-        ...(Object.keys(payload).length > 0 ? { payload } : {}),
-      }),
+    const result = await postSuggestion({
+      word,
+      action: "add",
+      ...(Object.keys(payload).length > 0 ? { payload } : {}),
     });
 
-    if (!res.ok) {
-      const d = await res.json() as { error?: string };
+    if (!result.ok) {
       setStatus("error");
-      setError(d.error ?? "Fehler");
+      setError(result.error ?? "Fehler");
     } else {
       onDone(word, true);
     }

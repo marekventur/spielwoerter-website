@@ -5,6 +5,7 @@ import { Button } from "~/components/ui/button";
 import { VariantSuggestionCard } from "~/components/VariantSuggestionCard";
 import { LlmVariantNotices, type VariantNotice } from "~/components/LlmVariantNotices";
 import { AddWordSuggestionDoneState } from "~/components/AddWordSuggestionDoneState";
+import { postSuggestion } from "~/components/suggestion-api";
 import type { User } from "../../lib/auth";
 
 type WordRow = {
@@ -55,11 +56,35 @@ export function WortPageSuggestionPanel({
   const [editBase, setEditBase] = useState("");
 
   const [addFlow, setAddFlow] = useState<"idle" | "loading" | "cards" | "done">("idle");
+  const [removalHintMap, setRemovalHintMap] = useState<Record<string, string[]>>({});
   const [suggestionCards, setSuggestionCards] = useState<SuggestionCardData[]>([]);
   const [handledCards, setHandledCards] = useState<Map<string, "submitted" | "dismissed">>(
     new Map()
   );
   const [variantNotices, setVariantNotices] = useState<VariantNotice[]>([]);
+
+  // Advisory special-form warnings for this word and its removal candidates.
+  useEffect(() => {
+    if (!user) return;
+    const inListNow = wordRow?.in_list === "accepted" || wordRow?.in_list === "uncertain";
+    if (!inListNow) return;
+    const words = [
+      wordLower,
+      ...relatedWords
+        .filter((r) => r.in_list === "accepted" || r.in_list === "uncertain")
+        .map((r) => r.word),
+    ];
+    let cancelled = false;
+    void fetch(`/api/removal-hints?words=${encodeURIComponent(words.join(","))}`)
+      .then((r) => (r.ok ? r.json() : { hints: {} }))
+      .then((d: { hints?: Record<string, string[]> }) => {
+        if (!cancelled) setRemovalHintMap(d.hints ?? {});
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user, wordLower, wordRow?.in_list, relatedWords]);
 
   useEffect(() => {
     if (addFlow !== "cards" || suggestionCards.length === 0) return;
@@ -110,15 +135,10 @@ export function WortPageSuggestionPanel({
   const submitRemove = async () => {
     setActionState("loading");
     setActionError(null);
-    const res = await fetch("/api/suggestions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word: wordLower, action: "remove" }),
-    });
-    const data = await res.json() as { error?: string };
-    if (!res.ok) {
+    const result = await postSuggestion({ word: wordLower, action: "remove" });
+    if (!result.ok) {
       setActionState("error");
-      setActionError(data.error ?? "Fehler");
+      setActionError(result.error ?? "Fehler");
     } else {
       setLastAction("remove");
       setActionState("done");
@@ -163,15 +183,10 @@ export function WortPageSuggestionPanel({
   const handleMorphSubmit = async () => {
     if (selectedMorph.size === 0 || !lastAction) return;
     setMorphState("loading");
-    await Promise.all(
-      Array.from(selectedMorph).map((w) =>
-        fetch("/api/suggestions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ word: w, action: lastAction }),
-        })
-      )
-    );
+    // Sequential: a settled-decision conflict prompts for a comment per word.
+    for (const w of selectedMorph) {
+      await postSuggestion({ word: w, action: lastAction });
+    }
     setMorphState("done");
     setSelectedMorph(new Set());
   };
@@ -226,6 +241,7 @@ export function WortPageSuggestionPanel({
         <AddWordSuggestionDoneState
           morphCandidates={morphCandidates}
           morphState={morphState}
+          removalHints={removalHintMap}
           selectedMorph={selectedMorph}
           onToggleMorphWord={(w, checked) => {
             const next = new Set(selectedMorph);
@@ -332,6 +348,21 @@ export function WortPageSuggestionPanel({
         </div>
       ) : inList ? (
         <div className="flex flex-col items-center gap-3 max-w-lg w-full">
+          {removalHintMap[wordLower] && (
+            <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 w-full text-left">
+              <p className="font-medium mb-1">⚠ Hinweis vor dem Melden:</p>
+              {removalHintMap[wordLower].map((hint) => (
+                <p key={hint}>{hint}</p>
+              ))}
+              <p className="mt-1 text-xs">
+                Siehe{" "}
+                <Link to="/regeln" className="underline">
+                  Wortregeln
+                </Link>
+                .
+              </p>
+            </div>
+          )}
           {removeInReviewByOthers ? (
             <p className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full text-center">
               Eine Entfernung wird bereits geprüft

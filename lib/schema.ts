@@ -66,6 +66,18 @@ export function initSchema(db: Database.Database): void {
       message TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS word_comments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      word TEXT NOT NULL,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      suggestion_id INTEGER REFERENCES suggestions(id),
+      body TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      hidden_at TEXT,
+      hidden_by INTEGER REFERENCES users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_word_comments_word ON word_comments(word);
   `);
 
   // Migrations: add columns if missing
@@ -91,6 +103,10 @@ export function initSchema(db: Database.Database): void {
   }
   if (userCols.includes("license_approved")) {
     db.prepare("ALTER TABLE users DROP COLUMN license_approved").run();
+  }
+  if (!userCols.includes("display_name")) {
+    // Public screen name; NULL renders as the automatic "user-<id>".
+    db.prepare("ALTER TABLE users ADD COLUMN display_name TEXT").run();
   }
 
   const suggCols = (

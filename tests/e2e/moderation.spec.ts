@@ -365,7 +365,7 @@ test("undo an approve-with-changes restores the original submission", async ({
 test("recent decisions section shows decider and allows undo", async ({
   page,
 }) => {
-  seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const modId = seedUser(TEST_MOD_EMAIL, { isModerator: true });
   const userId = seedUser(TEST_USER_EMAIL);
   seedSuggestion(userId, "undowort", "add", "pending_review");
 
@@ -374,11 +374,11 @@ test("recent decisions section shows decider and allows undo", async ({
   await page.getByRole("button", { name: "Wort aufnehmen" }).first().click();
   await expect(page.getByText("Genehmigt", { exact: true })).toBeVisible();
 
-  // After a reload the decision appears in the recent list with the decider
+  // After a reload the decision appears in the recent list with the decider's
+  // screen name (emails never render, not even for moderators).
   await page.reload();
   await expect(page.getByText("Kürzlich entschieden")).toBeVisible();
-  // "email · date" text in the recent row (plain email would also match the nav)
-  await expect(page.getByText(`${TEST_MOD_EMAIL} ·`)).toBeVisible();
+  await expect(page.getByText(`Besucher-${modId} ·`)).toBeVisible();
   await expect(page.getByText("Genehmigt", { exact: true })).toBeVisible();
 
   // Undo from the recent list puts it back into the queue

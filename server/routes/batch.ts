@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
+import { priorDecision } from "../../lib/prior-decisions.js";
 import { requireUser } from "../http-auth.js";
 
 const LIMIT_USER = 100;
@@ -78,6 +79,32 @@ batchRouter.post("/", (req, res) => {
 
   const batchMessage = typeof message === "string" ? message.trim().slice(0, 200) || null : null;
 
+  // Settled decisions stick (moderator removals): earlier rejections or recent
+  // deliberate re-adds must be overridden knowingly, with a comment.
+  const { force, confirmComment } = req.body as { force?: boolean; confirmComment?: string };
+  const confirmText = typeof confirmComment === "string" ? confirmComment.trim() : "";
+  const conflicts: { word: string; message: string }[] = [];
+  if (user.isModerator) {
+    const isBlocked = db.prepare(
+      "SELECT 1 FROM rejected_words WHERE word = ? AND action = 'remove'"
+    );
+    for (const { word, type } of validated) {
+      if (type !== "remove") continue;
+      const prior = priorDecision(db, word, "remove");
+      if (prior) conflicts.push({ word, message: prior.message });
+      else if (isBlocked.get(word))
+        conflicts.push({ word, message: "Diese Löschung wurde bereits abgelehnt." });
+    }
+    if (conflicts.length > 0 && !(force === true && confirmText)) {
+      res.status(409).json({
+        requiresConfirmation: true,
+        error: "Einige Löschungen widersprechen früheren Entscheidungen.",
+        conflicts,
+      });
+      return;
+    }
+  }
+
   db.transaction(() => {
     const { lastInsertRowid } = db
       .prepare("INSERT INTO batches (user_id, message) VALUES (?, ?)")
@@ -96,6 +123,10 @@ batchRouter.post("/", (req, res) => {
     `);
 
     const fastTrack = user.isModerator ? 1 : 0;
+    const conflictWords = new Set(conflicts.map((c) => c.word));
+    const insertComment = db.prepare(
+      "INSERT INTO word_comments (word, user_id, body) VALUES (?, ?, ?)"
+    );
 
     for (const { word, type, payload } of validated) {
       const payloadJson = type === "change_description" && payload
@@ -105,6 +136,9 @@ batchRouter.post("/", (req, res) => {
       const updated = upsertDraft.run(payloadJson, batchId, fastTrack, user.id, word, type);
       if (updated.changes === 0) {
         insertSugg.run(user.id, word, type, payloadJson, batchId, fastTrack);
+      }
+      if (conflictWords.has(word)) {
+        insertComment.run(word, user.id, confirmText);
       }
     }
   })();

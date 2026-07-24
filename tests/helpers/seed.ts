@@ -78,12 +78,13 @@ export function seedMcpToken(userId: number, token: string): void {
 
 /**
  * Backdate a draft's last_modified_at and run promotion (pending_review or moderator_approved
- * depending on moderator_fast_track).
+ * depending on moderator_fast_track). Backdates past the 72h removal delay so it
+ * promotes drafts of any action.
  */
 export function promoteDraft(suggestionId: number): void {
   const db = getTestDb();
   db.prepare(
-    "UPDATE suggestions SET last_modified_at = datetime('now', '-70 minutes') WHERE id = ?"
+    "UPDATE suggestions SET last_modified_at = datetime('now', '-73 hours') WHERE id = ?"
   ).run(suggestionId);
   promoteEligibleDrafts(db);
 }
@@ -92,6 +93,7 @@ export function cleanDb(): void {
   const db = getTestDb();
   // Ensure schema exists (server initializes lazily; tests may run before first request)
   initSchema(db);
+  db.exec("DELETE FROM word_comments");
   db.exec("DELETE FROM suggestions");
   db.exec("DELETE FROM mcp_tokens");
   db.exec("DELETE FROM rejected_words");

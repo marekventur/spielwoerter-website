@@ -15,6 +15,8 @@ import { sitemapRouter } from "./routes/sitemap.js";
 import { partnerRouter } from "./routes/partner.js";
 import { mcpRouter } from "./routes/mcp.js";
 import { batchRouter } from "./routes/batch.js";
+import { commentsRouter } from "./routes/comments.js";
+import { profileRouter } from "./routes/profile.js";
 
 declare module "react-router" {
   interface AppLoadContext {
@@ -39,6 +41,8 @@ app.use("/api/sync", syncPushRouter);
 app.use("/api", wordRouter);
 app.use("/api/partner", partnerRouter);
 app.use("/api/batch", batchRouter);
+app.use("/api/word-comments", commentsRouter);
+app.use("/api/profile", profileRouter);
 
 startPromotionJob();
 startSyncJob();

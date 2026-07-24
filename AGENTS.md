@@ -1,6 +1,8 @@
 # Agent notes — Spielwoerter.de website
 
-Context for AI coding agents working in this repository.
+Context for AI coding agents working in this repository. A deeper architecture
+reference (suggestion lifecycle, sync pipeline, identity rules) lives in
+**[CLAUDE.md](./CLAUDE.md)**.
 
 ## What this repo is
 

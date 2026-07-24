@@ -1,10 +1,12 @@
 import { data, Link, redirect } from "react-router";
 import { normalise } from "../../lib/normalise.js";
+import { wordHistory } from "../../lib/history.js";
 import { ExternalLink } from "lucide-react";
 import { Card } from "~/components/ui/card";
 import { HeroWordBadge } from "~/components/HeroWordBadge";
 import { WortPageSuggestionPanel } from "~/components/WortPageSuggestionPanel";
 import { WordLemmaDescriptionTable } from "~/components/WordLemmaDescriptionTable";
+import { WordHistorySection } from "~/components/WordHistorySection";
 import type { Route } from "./+types/wort.$word";
 import type { WordBadgeStatus } from "~/components/WordBadge";
 
@@ -148,6 +150,9 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     userSuggestions,
     addInReviewByOthers,
     removeInReviewByOthers,
+    history: wordHistory(db, wordLower, {
+      forModerator: context.user?.isModerator ?? false,
+    }),
     siteUrl: (process.env.SITE_URL ?? "https://spielwoerter.de").replace(/\/$/, ""),
   };
   return data(loaderData, { status: wordRow ? 200 : 404 });
@@ -167,6 +172,7 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
     userSuggestions,
     addInReviewByOthers,
     removeInReviewByOthers,
+    history,
   } = loaderData;
   const word = decodeURIComponent(params.word).toUpperCase();
   const wordLower = word.toLowerCase();
@@ -240,6 +246,13 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
             />
           </>
         )}
+
+        <WordHistorySection
+          word={word}
+          wordLower={wordLower}
+          user={user}
+          history={history}
+        />
       </div>
     </div>
   );

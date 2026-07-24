@@ -44,7 +44,10 @@ export type DigestUser = {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function fetchJsonl(url: string): Promise<JsonlWord[]> {
-  const res = await fetch(url);
+  // raw.githubusercontent caches per file (~5 min); a pull right after a push
+  // can read mixed-freshness lists (e.g. a re-added word still in the stale
+  // rejected list, which would win the INSERT OR REPLACE). Bust the CDN cache.
+  const res = await fetch(`${url}?${Date.now()}`);
   if (res.status === 404) return [];
   if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
   const text = await res.text();
