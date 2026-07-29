@@ -55,10 +55,13 @@ type SuggestionRow = {
   status: string;
 };
 
-export async function loader({ context, params }: Route.LoaderArgs) {
+export async function loader({ context, params, request }: Route.LoaderArgs) {
+  const url = new URL(request.url);
+  const noRedirect = url.searchParams.get("no_redirect") === "1";
   const decoded = decodeURIComponent(params.word);
   if (decoded !== decoded.toUpperCase()) {
-    throw redirect(`/wort/${encodeURIComponent(decoded.toUpperCase())}`);
+    // Keep the query string: ?no_redirect / ?redirect_from must survive case canonicalisation.
+    throw redirect(`/wort/${encodeURIComponent(decoded.toUpperCase())}${url.search}`);
   }
   let wordLower = decoded.toLowerCase();
   const db = context.db;
@@ -68,6 +71,9 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       "SELECT word, description, base, source, verified_by, in_list FROM words WHERE word = ?"
     )
     .get(wordLower) as WordRow | undefined;
+
+  // Set when ?no_redirect=1 suppressed a redirect to a differently-spelled entry.
+  let suppressedTarget: string | null = null;
 
   if (!wordRow) {
     const normalisedInput = normalise(wordLower);
@@ -80,16 +86,36 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       // 'ss' (not 'ß'), the direct lookup fails, and the normalise redirect would point
       // back to the same SS URL — an infinite loop. Detect this and serve directly instead.
       if (normalisedMatch.word.toUpperCase() !== decoded) {
-        throw redirect(`/wort/${encodeURIComponent(normalisedMatch.word.toUpperCase())}`);
+        const target = normalisedMatch.word.toUpperCase();
+        if (noRedirect) {
+          suppressedTarget = target;
+        } else {
+          // Carry the original spelling along so the target page can offer a way back.
+          throw redirect(
+            `/wort/${encodeURIComponent(target)}?redirect_from=${encodeURIComponent(decoded)}`
+          );
+        }
+      } else {
+        wordLower = normalisedMatch.word;
+        wordRow = db
+          .prepare(
+            "SELECT word, description, base, source, verified_by, in_list FROM words WHERE word = ?"
+          )
+          .get(wordLower) as WordRow | undefined;
       }
-      wordLower = normalisedMatch.word;
-      wordRow = db
-        .prepare(
-          "SELECT word, description, base, source, verified_by, in_list FROM words WHERE word = ?"
-        )
-        .get(wordLower) as WordRow | undefined;
     }
   }
+
+  // Only trust ?redirect_from if it really is another spelling of this word — the value
+  // ends up in the page, so an arbitrary attacker-supplied string must not be shown.
+  const redirectFromRaw = url.searchParams.get("redirect_from");
+  const redirectFromUpper = redirectFromRaw ? redirectFromRaw.toUpperCase() : null;
+  const redirectedFrom =
+    redirectFromUpper &&
+    redirectFromUpper !== decoded &&
+    normalise(redirectFromUpper) === normalise(wordLower)
+      ? redirectFromUpper
+      : null;
 
   const effectiveBase = wordRow?.base ?? wordLower;
   const relatedWords = db
@@ -146,6 +172,8 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   const loaderData = {
     user: context.user,
     wordRow,
+    redirectedFrom,
+    suppressedTarget,
     relatedWords,
     userSuggestions,
     addInReviewByOthers,
@@ -168,6 +196,8 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
   const {
     user,
     wordRow,
+    redirectedFrom,
+    suppressedTarget,
     relatedWords,
     userSuggestions,
     addInReviewByOthers,
@@ -181,6 +211,33 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
   return (
     <div>
       <div className="max-w-4xl mx-auto px-6 py-12">
+        {redirectedFrom && (
+          <p className="mb-6 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+            Weitergeleitet von <span className="font-mono font-semibold">{redirectedFrom}</span>{" "}
+            – diese Schreibweise wird im Wörterbuch unter{" "}
+            <span className="font-mono font-semibold">{word}</span> geführt.{" "}
+            <Link
+              to={`/wort/${encodeURIComponent(redirectedFrom)}?no_redirect=1`}
+              className="font-semibold text-amber-900 underline hover:text-amber-950"
+            >
+              Seite für {redirectedFrom} trotzdem anzeigen
+            </Link>
+          </p>
+        )}
+
+        {suppressedTarget && (
+          <p className="mb-6 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+            Weiterleitung deaktiviert:{" "}
+            <span className="font-mono font-semibold">{word}</span> ist kein eigener Eintrag.{" "}
+            <Link
+              to={`/wort/${encodeURIComponent(suppressedTarget)}`}
+              className="font-semibold text-amber-900 underline hover:text-amber-950"
+            >
+              Zum Eintrag {suppressedTarget}
+            </Link>
+          </p>
+        )}
+
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <HeroWordBadge word={word} status={status} />

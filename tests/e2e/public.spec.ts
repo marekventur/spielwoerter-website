@@ -55,6 +55,33 @@ test("unknown word shows not-accepted state", async ({ page }) => {
   await expect(page.getByText("Noch nicht im Wörterbuch")).toBeVisible();
 });
 
+test("umlaut spelling redirects and offers a way back to the original", async ({
+  page,
+}) => {
+  await page.goto("/wort/ZZZ%C3%84");
+  await expect(page).toHaveURL("/wort/ZZZAE?redirect_from=ZZZ%C3%84");
+  await expect(page.getByText("Weitergeleitet von")).toBeVisible();
+
+  await page.getByRole("link", { name: "Seite für ZZZÄ trotzdem anzeigen" }).click();
+  await expect(page).toHaveURL("/wort/ZZZ%C3%84?no_redirect=1");
+  await expect(page.getByText("Noch nicht im Wörterbuch")).toBeVisible();
+  await expect(page.getByText("Weiterleitung deaktiviert")).toBeVisible();
+
+  await page.getByRole("link", { name: "Zum Eintrag ZZZAE" }).click();
+  await expect(page).toHaveURL("/wort/ZZZAE");
+});
+
+test("no_redirect survives the lowercase-to-uppercase redirect", async ({ page }) => {
+  await page.goto("/wort/zzz%C3%A4?no_redirect=1");
+  await expect(page).toHaveURL("/wort/ZZZ%C3%84?no_redirect=1");
+  await expect(page.getByText("Weiterleitung deaktiviert")).toBeVisible();
+});
+
+test("bogus redirect_from is ignored", async ({ page }) => {
+  await page.goto("/wort/ZZZAE?redirect_from=GANZWOANDERS");
+  await expect(page.getByText("Weitergeleitet von")).toHaveCount(0);
+});
+
 test("unauthenticated user sees login prompt on word page", async ({
   page,
 }) => {

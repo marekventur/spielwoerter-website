@@ -1,19 +1,31 @@
 import { getTestDb } from "./db";
+import { normalise } from "../../lib/normalise";
 import { initSchema } from "../../lib/schema";
 import { promoteEligibleDrafts } from "../../lib/promotion";
 
 export function seedWords(): void {
   const db = getTestDb();
-  const insert = db.prepare(
-    "INSERT OR REPLACE INTO words (word, description, base, source, verified_by, in_list) VALUES (?, ?, ?, ?, ?, ?)"
+  const stmt = db.prepare(
+    `INSERT OR REPLACE INTO words (word, description, base, source, verified_by, in_list, normalised)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
   );
+  const insert = (
+    word: string,
+    description: string | null,
+    base: string | null,
+    source: string | null,
+    verifiedBy: string | null,
+    inList: string
+  ) => stmt.run(word, description, base, source, verifiedBy, inList, normalise(word));
   db.transaction(() => {
-    insert.run("hund", "ein Haustier", "hund", "duden", "admin", "accepted");
-    insert.run("hunde", "Plural von Hund", "hund", "duden", "admin", "accepted");
-    insert.run("hundes", "Genitiv von Hund", "hund", "duden", "admin", "accepted");
-    insert.run("katze", "ein Haustier", "katze", "duden", "admin", "accepted");
-    insert.run("xyz", "status unsicher", null, "community", null, "uncertain");
-    insert.run("falsch", "abgelehnt", null, "test", null, "rejected");
+    insert("hund", "ein Haustier", "hund", "duden", "admin", "accepted");
+    insert("hunde", "Plural von Hund", "hund", "duden", "admin", "accepted");
+    insert("hundes", "Genitiv von Hund", "hund", "duden", "admin", "accepted");
+    insert("katze", "ein Haustier", "katze", "duden", "admin", "accepted");
+    insert("xyz", "status unsicher", null, "community", null, "uncertain");
+    insert("falsch", "abgelehnt", null, "test", null, "rejected");
+    // Same normalised form as "zzzä" — drives the umlaut redirect tests.
+    insert("zzzae", "Umlaut-Variante", null, "test", null, "accepted");
   })();
 }
 
