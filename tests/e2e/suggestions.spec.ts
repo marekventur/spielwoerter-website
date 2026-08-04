@@ -43,6 +43,28 @@ test("create add-suggestion for word not in list", async ({ page }) => {
   await expect(page.getByText("Entwurf gespeichert")).toBeVisible();
 });
 
+test("panel state resets when navigating to another word via search", async ({
+  page,
+}) => {
+  seedUser(TEST_USER_EMAIL);
+  await loginAs(page, TEST_USER_EMAIL);
+
+  await page.goto("/wort/ZZZNEU");
+  await page.getByRole("button", { name: "Wort hinzufügen" }).click();
+  await page.getByRole("button", { name: "Vorschlag einreichen" }).click();
+  await expect(page.getByText("Entwurf gespeichert")).toBeVisible();
+
+  // Client-side navigation to another word page reuses the mounted route
+  // component — the panel must remount, not carry over ZZZNEU's done-state.
+  await page.getByLabel("Wort nachschlagen").fill("KATZE");
+  await page.getByLabel("Wort nachschlagen").press("Enter");
+  await expect(page).toHaveURL(/\/wort\/KATZE/);
+  await expect(page.getByText("Entwurf gespeichert")).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Melde dieses Wort als fehlerhaft" })
+  ).toBeVisible();
+});
+
 test("create remove-suggestion for accepted word", async ({ page }) => {
   seedUser(TEST_USER_EMAIL);
   await loginAs(page, TEST_USER_EMAIL);

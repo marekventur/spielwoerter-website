@@ -261,7 +261,11 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
             </p>
           )}
 
+          {/* key: navigating /wort/A → /wort/B reuses this route's component tree,
+              so panel state (open forms, done-states, fetched cards) would leak
+              across words without a remount. */}
           <WortPageSuggestionPanel
+            key={wordLower}
             word={word}
             wordLower={wordLower}
             user={user}
@@ -305,6 +309,7 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
         )}
 
         <WordHistorySection
+          key={wordLower}
           word={word}
           wordLower={wordLower}
           user={user}
