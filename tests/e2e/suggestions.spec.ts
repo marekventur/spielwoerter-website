@@ -129,6 +129,38 @@ test("duplicate suggestion shows already-exists message", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("adding a regular verb offers its conjugated forms as cards", async ({
+  page,
+}) => {
+  seedUser(TEST_USER_EMAIL);
+  await loginAs(page, TEST_USER_EMAIL);
+
+  // Made-up but regularly conjugatable verb; no DeepSeek key in tests, so all
+  // variant cards come from the deterministic conjugator.
+  await page.goto("/wort/ZZZKLOPFEN");
+  await page.getByRole("button", { name: "Wort hinzufügen" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "ZZZKLOPFEN hinzufügen", exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "ZZZKLOPFTE hinzufügen", exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "GEZZZKLOPFT hinzufügen", exact: true })
+  ).toBeVisible();
+
+  // Irregular verbs must not get algorithmic cards (only the word itself).
+  await page.goto("/wort/ZZYLAUFEN");
+  await page.getByRole("button", { name: "Wort hinzufügen" }).click();
+  await expect(
+    page.getByRole("heading", { name: "ZZYLAUFEN hinzufügen" })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /ZZYLIEF|ZZYLAUFTE/ })
+  ).toHaveCount(0);
+});
+
 test("morphology suggestions appear after draft creation", async ({ page }) => {
   seedUser(TEST_USER_EMAIL);
   await loginAs(page, TEST_USER_EMAIL);

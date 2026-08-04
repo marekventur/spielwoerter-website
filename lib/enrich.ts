@@ -1,4 +1,5 @@
 import { getDb } from "./db.js";
+import { conjugateRegular } from "./conjugate.js";
 
 const GERMAN_SUFFIXES = ["nen", "ern", "ste", "en", "es", "em", "er", "e", "s", "n"];
 
@@ -88,12 +89,56 @@ export type EnrichResult = {
   variantNotices: Array<{ word: string; reason: "in_list" | "rejected" | "in_review"; description: string }>;
 };
 
+/**
+ * Deterministic complement to the LLM variants: if the word (or its lemma) is
+ * a regular weak verb, merge the full conjugation paradigm into the result.
+ * LLM-provided variants keep priority; every added form goes through the same
+ * blocklist/in-review filtering.
+ */
+function mergeConjugation(result: EnrichResult, word: string): EnrichResult {
+  const db = getDb();
+  const knownStmt = db.prepare(
+    "SELECT 1 FROM words WHERE word = ? AND in_list IN ('accepted', 'uncertain')"
+  );
+  const known = (w: string) => Boolean(knownStmt.get(w));
+  // The base may be a non-infinitive stem (algorithmic base detection), so
+  // fall back to the word itself.
+  let infinitive = "";
+  let paradigm: ReturnType<typeof conjugateRegular> = null;
+  for (const candidate of [result.base?.toLowerCase(), word.toLowerCase()]) {
+    if (!candidate) continue;
+    paradigm = conjugateRegular(candidate, known);
+    if (paradigm) {
+      infinitive = candidate;
+      break;
+    }
+  }
+  if (!paradigm) return result;
+
+  const seen = new Set([
+    word,
+    ...result.variants.map((v) => v.word),
+    ...result.variantNotices.map((v) => v.word),
+  ]);
+  for (const f of paradigm) {
+    if (seen.has(f.word)) continue;
+    seen.add(f.word);
+    const kind = classifyLlmVariant(db, f.word);
+    if (kind === "actionable") {
+      result.variants.push({ word: f.word, description: f.description, base: infinitive });
+    } else {
+      result.variantNotices.push({ word: f.word, reason: kind, description: f.description });
+    }
+  }
+  return result;
+}
+
 export async function enrichWord(word: string): Promise<EnrichResult> {
   const algorithmicBase = detectAlgorithmicBase(word);
   const fallback: EnrichResult = { base: algorithmicBase, description: null, variants: [], variantNotices: [] };
 
   const apiKey = process.env.DEEPSEEK_API_KEY_SUGGESTIONS;
-  if (!apiKey) return fallback;
+  if (!apiKey) return mergeConjugation(fallback, word);
 
   try {
     const response = await fetch("https://api.deepseek.com/chat/completions", {
@@ -114,7 +159,7 @@ export async function enrichWord(word: string): Promise<EnrichResult> {
       signal: AbortSignal.timeout(15_000),
     });
 
-    if (!response.ok) return fallback;
+    if (!response.ok) return mergeConjugation(fallback, word);
 
     const data = await response.json() as { choices?: { message?: { content?: string } }[] };
     const text = data.choices?.[0]?.message?.content ?? "";
@@ -122,7 +167,7 @@ export async function enrichWord(word: string): Promise<EnrichResult> {
     type LLMResult = { base: string; descriptions: Record<string, string> };
     const parsed: LLMResult | null = jsonMatch ? JSON.parse(jsonMatch[0]) as LLMResult : null;
 
-    if (!parsed?.descriptions) return fallback;
+    if (!parsed?.descriptions) return mergeConjugation(fallback, word);
 
     const llmBase = parsed.base?.toLowerCase() ?? word;
     const base: string | null = llmBase === word ? null : llmBase;
@@ -143,8 +188,8 @@ export async function enrichWord(word: string): Promise<EnrichResult> {
       }
     }
 
-    return { base, description, variants, variantNotices };
+    return mergeConjugation({ base, description, variants, variantNotices }, word);
   } catch {
-    return fallback;
+    return mergeConjugation(fallback, word);
   }
 }
