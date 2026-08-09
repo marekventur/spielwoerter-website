@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 export type ChangesetEntry = {
   original: { base: string | null; description: string | null };
   pending: { base?: string; description?: string } | null; // null = marked for deletion
+  /** Word is not in the list yet — submits as an add-suggestion (CSV import). */
+  isNew?: boolean;
 };
 
 export type Changeset = Map<string, ChangesetEntry>;

@@ -60,7 +60,8 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
       }
       return {
         word,
-        type: "change_description" as const,
+        // isNew: word came from a CSV upload and is not in the list yet
+        type: entry.isNew ? ("add" as const) : ("change_description" as const),
         payload: entry.pending,
       };
     });
@@ -86,7 +87,7 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
           .map((c) => `• ${c.word.toUpperCase()}: ${c.message}`)
           .join("\n");
         const comment = window.prompt(
-          `Einige Löschungen widersprechen früheren Entscheidungen:\n\n${list}\n\n` +
+          `Einige Änderungen widersprechen früheren Entscheidungen:\n\n${list}\n\n` +
             "Trotzdem einreichen? Begründung (erscheint in der Wort-Historie):"
         );
         if (!comment?.trim()) {
@@ -222,6 +223,7 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
             changeset={changeset}
             onChangesetChange={setChangeset}
             active={activeTab === "export-import"}
+            limit={limit}
           />
         )}
 

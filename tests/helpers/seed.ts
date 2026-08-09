@@ -109,6 +109,7 @@ export function cleanDb(): void {
   initSchema(db);
   db.exec("DELETE FROM word_comments");
   db.exec("DELETE FROM suggestions");
+  db.exec("DELETE FROM batches");
   db.exec("DELETE FROM mcp_tokens");
   db.exec("DELETE FROM rejected_words");
   db.exec("DELETE FROM otp_codes");

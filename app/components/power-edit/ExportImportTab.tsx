@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Changeset } from "~/hooks/useLocalStorageChangeset";
+import { CsvRoundtripCard } from "~/components/power-edit/CsvRoundtripCard";
 import { loadDictionary } from "~/hooks/usePowerSearch";
 
 type PendingValue = { base?: string; description?: string } | null;
@@ -8,6 +9,7 @@ type Props = {
   changeset: Changeset;
   onChangesetChange: (updater: (prev: Changeset) => Changeset) => void;
   active: boolean;
+  limit: number;
 };
 
 function serialize(changeset: Changeset): string {
@@ -28,7 +30,7 @@ function parseText(s: string): Record<string, PendingValue> | null {
   }
 }
 
-export function ExportImportTab({ changeset, onChangesetChange, active }: Props) {
+export function ExportImportTab({ changeset, onChangesetChange, active, limit }: Props) {
   const [text, setText] = useState(() => serialize(changeset));
   const [error, setError] = useState<string | null>(null);
   const [imported, setImported] = useState(false);
@@ -79,7 +81,14 @@ export function ExportImportTab({ changeset, onChangesetChange, active }: Props)
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+    <div className="space-y-4">
+      <CsvRoundtripCard
+        changesetSize={changeset.size}
+        onChangesetChange={onChangesetChange}
+        limit={limit}
+      />
+
+      <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
       <p className="text-sm text-gray-500">
         Hier kannst du deinen aktuellen Änderungsstand kopieren oder einen gespeicherten Stand einfügen.
       </p>
@@ -108,6 +117,7 @@ export function ExportImportTab({ changeset, onChangesetChange, active }: Props)
         >
           Kopieren
         </button>
+      </div>
       </div>
     </div>
   );
