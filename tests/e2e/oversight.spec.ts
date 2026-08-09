@@ -323,6 +323,25 @@ test("changelog page lists decisions, scheduled removals, and filters by action"
   await expect(page.getByRole("link", { name: "KATZE" })).not.toBeVisible();
 });
 
+test("changelog word filter matches substrings case-insensitively", async ({ page }) => {
+  const userId = seedUser(TEST_USER_EMAIL);
+  seedSuggestion(userId, "haiduck", "add", "moderator_approved");
+  seedSuggestion(userId, "katze", "remove", "moderator_approved");
+
+  // "hai" is a substring of "haiduck" — no exact match required.
+  await page.goto("/aenderungen?wort=hai");
+  await expect(page.getByRole("link", { name: "HAIDUCK" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "KATZE" })).not.toBeVisible();
+
+  // Uppercase input is folded before matching.
+  await page.goto("/aenderungen?wort=AIDU");
+  await expect(page.getByRole("link", { name: "HAIDUCK" })).toBeVisible();
+
+  // LIKE wildcards in user input are literals, not wildcards.
+  await page.goto("/aenderungen?wort=h%25k");
+  await expect(page.getByRole("link", { name: "HAIDUCK" })).not.toBeVisible();
+});
+
 test("removal hints flag likely special forms", async ({ request }) => {
   seedUser(TEST_USER_EMAIL);
   const db = getTestDb();

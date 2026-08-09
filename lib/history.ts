@@ -161,9 +161,14 @@ export type ChangelogFilter = {
   kind?: string;
   /** "approved" | "rejected" | "scheduled" | "pending" */
   status?: string;
-  /** Exact word (lowercased). */
+  /** Substring of the word (lowercased). */
   word?: string;
 };
+
+/** LIKE pattern matching the term anywhere in the word. */
+function wordLikePattern(term: string): string {
+  return `%${term.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+}
 
 const STATUS_SQL: Record<string, string> = {
   approved: "s.status = 'moderator_approved'",
@@ -193,8 +198,8 @@ export function changelog(
     }
     if (filter.status && STATUS_SQL[filter.status]) where.push(STATUS_SQL[filter.status]);
     if (filter.word) {
-      where.push("s.word = ?");
-      params.push(filter.word);
+      where.push("s.word LIKE ? ESCAPE '\\'");
+      params.push(wordLikePattern(filter.word));
     }
     const rows = db
       .prepare(
@@ -210,8 +215,8 @@ export function changelog(
     const params: unknown[] = [];
     if (!forModerator) where.push("c.hidden_at IS NULL");
     if (filter.word) {
-      where.push("c.word = ?");
-      params.push(filter.word);
+      where.push("c.word LIKE ? ESCAPE '\\'");
+      params.push(wordLikePattern(filter.word));
     }
     const rows = db
       .prepare(
