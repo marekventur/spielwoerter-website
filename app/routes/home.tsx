@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Search } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { getRandomWordsCached } from "../../lib/random-words-cache.js";
 import { HomeRandomWords } from "~/components/HomeRandomWords";
 import { Input } from "~/components/ui/input";
@@ -113,6 +113,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 Frei verfügbar unter offener Lizenz. Keine Einschränkungen,
                 keine Gebühren.
               </p>
+              <a
+                href="/api/words.csv"
+                className="inline-flex items-center gap-1.5 mt-3 text-orange-600 font-medium hover:underline"
+              >
+                <Download className="w-4 h-4" />
+                Wortliste herunterladen (CSV)
+              </a>
             </div>
 
             <div className="text-center p-6">

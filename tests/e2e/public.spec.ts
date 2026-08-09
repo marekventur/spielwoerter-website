@@ -113,6 +113,8 @@ test("words CSV streams accepted and uncertain rows, not rejected", async ({
   const res = await request.get("/api/words.csv");
   expect(res.status()).toBe(200);
   expect(res.headers()["content-type"]).toMatch(/text\/csv/);
+  // Public download, no login: browser visits get a named file.
+  expect(res.headers()["content-disposition"]).toBe('attachment; filename="spielwoerter.csv"');
   const text = await res.text();
   const lines = text.trim().split("\n");
   expect(lines[0]).toBe("word,base,description");
@@ -124,6 +126,13 @@ test("words CSV streams accepted and uncertain rows, not rejected", async ({
 test("words CSV rejects unknown column", async ({ request }) => {
   const res = await request.get("/api/words.csv?columns=word,in_list");
   expect(res.status()).toBe(400);
+});
+
+test("homepage offers the full wordlist as CSV download", async ({ page }) => {
+  await page.goto("/");
+  const link = page.getByRole("link", { name: /Wortliste herunterladen/ });
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute("href", "/api/words.csv");
 });
 
 test("latest-update returns a version that tracks wordlist changes", async ({ request }) => {

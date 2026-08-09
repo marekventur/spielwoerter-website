@@ -223,6 +223,8 @@ wordRouter.get("/words.csv", async (req, res) => {
   );
 
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  // Browser visits become a file download; programmatic fetches are unaffected.
+  res.setHeader("Content-Disposition", 'attachment; filename="spielwoerter.csv"');
 
   try {
     await writeChunk(res, cols.map(escapeCsvField).join(",") + "\n");
