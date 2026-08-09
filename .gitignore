@@ -35,3 +35,6 @@ Thumbs.db
 
 # Playwright
 test-results/
+
+# Internal notes with community-member PII — never commit
+docs/wortopia-feedback-*.md
