@@ -80,6 +80,10 @@ export function diffCsvAgainstDictionary(text: string, dictionary: WordRow[]): C
 
   const dictMap = new Map(dictionary.map((r) => [r.word, r]));
   const norm = (v: string | null | undefined) => (v ?? "").trim();
+  // Comparison ignores whitespace details: some stored descriptions contain
+  // embedded newlines, which spreadsheet apps flatten to spaces on save —
+  // that round-trip must not read as a change.
+  const flat = (v: string | null | undefined) => norm(v).replace(/\s+/g, " ");
 
   const uploaded = new Map<string, { base: string; description: string }>();
   let skipped = 0;
@@ -93,7 +97,7 @@ export function diffCsvAgainstDictionary(text: string, dictionary: WordRow[]): C
       continue;
     }
     uploaded.set(word, {
-      base: baseIdx === -1 ? norm(dictMap.get(word)?.base) : norm(rec[baseIdx]).toLowerCase(),
+      base: baseIdx === -1 ? norm(dictMap.get(word)?.base) : norm(rec[baseIdx]),
       description: descIdx === -1 ? norm(dictMap.get(word)?.description) : norm(rec[descIdx]),
     });
   }
@@ -108,13 +112,13 @@ export function diffCsvAgainstDictionary(text: string, dictionary: WordRow[]): C
     const dict = dictMap.get(word);
     if (!dict) {
       const pending: NonNullable<ChangesetEntry["pending"]> = {};
-      if (up.base && up.base !== word) pending.base = up.base;
+      if (up.base && up.base.toLowerCase() !== word) pending.base = up.base.toLowerCase();
       if (up.description) pending.description = up.description;
       changeset.set(word, { original: { base: null, description: null }, pending, isNew: true });
       added++;
       continue;
     }
-    if (norm(dict.base) !== up.base || norm(dict.description) !== up.description) {
+    if (flat(dict.base) !== flat(up.base) || flat(dict.description) !== flat(up.description)) {
       const pending: NonNullable<ChangesetEntry["pending"]> = {};
       if (up.base) pending.base = up.base;
       if (up.description) pending.description = up.description;

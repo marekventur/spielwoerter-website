@@ -12,6 +12,14 @@ test.beforeEach(() => {
 
 test("CSV roundtrip: download from memory, re-upload diffs into a batch", async ({ page }) => {
   seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  // Legacy data quirk: some descriptions contain embedded newlines. Spreadsheet
+  // apps flatten them to spaces — that must not read as a change.
+  getTestDb()
+    .prepare(
+      `INSERT INTO words (word, description, base, source, verified_by, in_list, normalised)
+       VALUES ('zzzumbruch', 'mit' || char(10) || 'Umbruch', null, 'test', null, 'accepted', 'zzzumbruch')`
+    )
+    .run();
   await loginAs(page, TEST_MOD_EMAIL);
   await page.goto("/power-edit");
   await page.getByRole("button", { name: "Export / Import" }).click();
@@ -37,6 +45,7 @@ test("CSV roundtrip: download from memory, re-upload diffs into a batch", async 
     'katze;katze;"eine; Samtpfote"',
     "zzzae;;Umlaut-Variante",
     "zzzbär;;Umlaut-Stichwort",
+    "zzzumbruch;;mit Umbruch",
     "zzzcsvneu;;Testwort aus CSV",
   ].join("\r\n");
   await page.locator('input[type="file"]').setInputFiles({
