@@ -38,12 +38,21 @@ const IRREGULAR_VERBS = [
   "tragen", "treffen", "treiben", "treten", "triefen", "trinken", "trügen",
   "tun", "verderben", "vergessen", "verlieren", "wachsen", "waschen",
   "weben", "weichen", "weisen", "wenden", "werben", "werden", "werfen",
-  "wiegen", "winden", "wissen", "wollen", "wringen", "ziehen", "zwingen",
+  "wiegen", "winden", "wissen", "wollen", "wringen", "zeihen", "ziehen", "zwingen",
   // Not strong, but refused for other reasons: weak/strong doublets
   // (wägen → wog, bleichen → blich) and end-stressed verbs whose Partizip II
   // drops ge- (posaunen → posaunt).
   "wägen", "bleichen", "posaunen", "prophezeien", "frohlocken", "willfahren",
   "baldowern", "klamüsern", "trompeten", "stibitzen", "schmarotzen",
+  // more end-stressed ge-less participles (kredenzt, krakeelt, rumort),
+  // weak/strong doublets (schwären → geschworen, kiesen → erkor), and
+  // disputed sources (kontakten)
+  "kredenzen", "krakeelen", "schwären", "kontakten", "rumoren", "kiesen", "zigeunern",
+  // Anglicisms with silent-e stems (bare imperative would come out wrong:
+  // "lik" instead of "like") or contested ge- participles (promotet/gepromotet)
+  "liken", "faken", "hypen", "stylen", "timen", "tunen",
+  "dopen", "promoten", "relaxen", "retweeten", "recyceln", "recyclen",
+  "upgraden", "downgraden", "updaten", "downloaden", "uploaden",
 ];
 
 // Unambiguously separable prefixes (Partizip II keeps ge- after the prefix,
@@ -77,10 +86,11 @@ type PrefixSplit = { prefix: string; kind: "separable" | "inseparable"; rest: st
 
 /**
  * Split off a verb prefix, but only when the remainder is a known verb
- * according to `isKnownVerb` — this is what keeps "beichten" (≠ be+ichten)
- * from being treated as prefixed. Longest prefix wins ("herunter" before "her").
+ * according to `isVerb` — this is what keeps "beichten" (≠ be+ichten) and
+ * "ankern" (≠ an+kern, "kern" is a noun) from being treated as prefixed.
+ * Longest prefix wins ("herunter" before "her").
  */
-function splitPrefix(infinitive: string, isKnownVerb: (w: string) => boolean): PrefixSplit {
+function splitPrefix(infinitive: string, isVerb: (w: string) => boolean): PrefixSplit {
   const candidates: Array<{ prefix: string; kind: "separable" | "inseparable" }> = [
     ...SEPARABLE_PREFIXES.map((p) => ({ prefix: p, kind: "separable" as const })),
     ...INSEPARABLE_PREFIXES.map((p) => ({ prefix: p, kind: "inseparable" as const })),
@@ -88,7 +98,7 @@ function splitPrefix(infinitive: string, isKnownVerb: (w: string) => boolean): P
   for (const { prefix, kind } of candidates) {
     if (!infinitive.startsWith(prefix)) continue;
     const rest = infinitive.slice(prefix.length);
-    if (rest.length >= 4 && isKnownVerb(rest)) return { prefix, kind, rest };
+    if (verbShaped(rest) && isVerb(rest)) return { prefix, kind, rest };
   }
   return null;
 }
@@ -103,30 +113,36 @@ function needsEpentheticE(stem: string): boolean {
   // vowel(+h) before m/n needs no e (wohnen → wohnst), nor do mm/nn stems
   // (kämmen → kämmst); other consonants except l/r do (atmen → atmest,
   // rechnen → rechnest).
-  if (/[aeiouäöü]h[mn]$/.test(stem)) return false;
-  return /[^aeiouäöülrmn][mn]$/.test(stem);
+  if (/[aeiouäöüy]h[mn]$/.test(stem)) return false;
+  return /[^aeiouäöüylrmn][mn]$/.test(stem);
 }
 
 /**
  * A remainder that looks like it could be a verb (…en/…eln/…ern with a vowel
- * in the stem). Used to refuse words we can't confidently segment.
+ * in the stem). Used to refuse words we can't confidently segment, and to keep
+ * splitPrefix from splitting off a non-infinitive ("ankern" ≠ an+kern).
+ * True -eln/-ern infinitives have a vowel before the el/er (wand-er-n, keg-el-n);
+ * monosyllables like "kern" or "gern" don't qualify.
  */
 function verbShaped(rest: string): boolean {
   if (rest.length < 4 || !/(en|eln|ern)$/.test(rest)) return false;
-  const stem = /(eln|ern)$/.test(rest) ? rest.slice(0, -1) : rest.slice(0, -2);
-  return /[aeiouäöü]/.test(stem);
+  if (/(eln|ern)$/.test(rest)) return /[aeiouäöüy]/.test(rest.slice(0, -3));
+  return /[aeiouäöüy]/.test(rest.slice(0, -2));
 }
 
 /**
  * Conjugate a regular weak verb. Returns null when the word is not a plausible
  * regular infinitive (wrong ending, irregular, or ambiguous prefix).
  *
- * `isKnownVerb` gates prefix detection; pass a words-table lookup in the app
- * and a fixture set in tests.
+ * `isVerb` gates prefix detection — the remainder after a prefix must be a
+ * known VERB, not merely a listed word ("ankern" must not split as an+kern).
+ * `isKnownWord` (any listed word) feeds the unlisted-compound refusal
+ * (fertig+machen); it defaults to `isVerb` for callers without a word list.
  */
 export function conjugateRegular(
   infinitive: string,
-  isKnownVerb: (w: string) => boolean
+  isVerb: (w: string) => boolean,
+  isKnownWord: (w: string) => boolean = isVerb
 ): ConjugatedForm[] | null {
   if (!/^[a-zäöüß]+$/.test(infinitive)) return null;
   if (isIrregular(infinitive)) return null;
@@ -140,7 +156,7 @@ export function conjugateRegular(
   // handle it. This also refuses false segmentations like be|ichten — the cost
   // is coverage, never correctness.
   for (const p of [...SEPARABLE_PREFIXES, ...INSEPARABLE_PREFIXES]) {
-    if (infinitive.startsWith(p) && verbShaped(infinitive.slice(p.length)) && !isKnownVerb(infinitive.slice(p.length)))
+    if (infinitive.startsWith(p) && verbShaped(infinitive.slice(p.length)) && !isVerb(infinitive.slice(p.length)))
       return null;
   }
 
@@ -153,15 +169,17 @@ export function conjugateRegular(
   } else {
     return null;
   }
-  if (stem.length < 2 || !/[aeiouäöü]/.test(stem)) return null;
+  // Same shape requirements as verbShaped: refuses non-infinitives that merely
+  // end in -ern/-eln, like "kern" (imperative) or "gern".
+  if (stem.length < 2 || !verbShaped(infinitive)) return null;
 
-  const split = splitPrefix(infinitive, isKnownVerb);
+  const split = splitPrefix(infinitive, isVerb);
   // Double prefixes (ab+bestellen → abbestellt, ab+gewöhnen → abgewöhnt) shift
   // or drop ge- in ways we don't model — refuse those too, including when the
   // inner prefix can't be confirmed (an+bequemen with unknown "quemen").
   if (
     split &&
-    (splitPrefix(split.rest, isKnownVerb) !== null ||
+    (splitPrefix(split.rest, isVerb) !== null ||
       split.rest.startsWith("ge") ||
       INSEPARABLE_PREFIXES.some(
         (p) => split.rest.startsWith(p) && verbShaped(split.rest.slice(p.length))
@@ -202,7 +220,9 @@ export function conjugateRegular(
   }
 
   // Imperativ (for -eln/-ern verbs the -e forms above already cover it).
-  if (!elVerb) add(stem + (e ? "e" : ""), `Imperativ Sg. ${of}`);
+  // Separable verbs split in the imperative ("blitz ab!"), so the joined
+  // single word ("abblitz") is never a dictionary word — skip it.
+  if (!elVerb && split?.kind !== "separable") add(stem + (e ? "e" : ""), `Imperativ Sg. ${of}`);
 
   // Partizip II: ge- only without prefix; after a separable prefix it moves inside.
   // Unlisted compounds (fertig+machen, fern+steuern, but also inseparable
@@ -212,7 +232,7 @@ export function conjugateRegular(
     for (let i = 3; i <= infinitive.length - 4; i++) {
       const pre = infinitive.slice(0, i);
       const rest = infinitive.slice(i);
-      if (verbShaped(rest) && isKnownVerb(rest) && isKnownVerb(pre)) return null;
+      if (verbShaped(rest) && isVerb(rest) && isKnownWord(pre)) return null;
     }
   }
 
@@ -220,7 +240,7 @@ export function conjugateRegular(
   // -ieren loanwords (studieren, kassieren) form the Partizip II without ge-,
   // but only when there is a syllable before -ieren — native "zieren" or
   // "schmieren" still take ge- (geziert, geschmiert).
-  const ieren = /[aeiouäöü].*ieren$/.test(split ? split.rest : infinitive);
+  const ieren = /[aeiouäöüy].*ieren$/.test(split ? split.rest : infinitive);
   const geStem = ieren ? restStem : "ge" + restStem;
   const p2 =
     split === null

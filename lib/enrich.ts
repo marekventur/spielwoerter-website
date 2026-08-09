@@ -101,13 +101,20 @@ function mergeConjugation(result: EnrichResult, word: string): EnrichResult {
     "SELECT 1 FROM words WHERE word = ? AND in_list IN ('accepted', 'uncertain')"
   );
   const known = (w: string) => Boolean(knownStmt.get(w));
+  // Verb-ness gate for prefix splitting: the remainder must be a listed VERB
+  // ("ankern" must not split as an+kern just because the noun "kern" is listed).
+  const verbStmt = db.prepare(
+    `SELECT 1 FROM words WHERE word = ? AND in_list IN ('accepted', 'uncertain')
+     AND description LIKE 'Verb%'`
+  );
+  const isVerb = (w: string) => Boolean(verbStmt.get(w));
   // The base may be a non-infinitive stem (algorithmic base detection), so
   // fall back to the word itself.
   let infinitive = "";
   let paradigm: ReturnType<typeof conjugateRegular> = null;
   for (const candidate of [result.base?.toLowerCase(), word.toLowerCase()]) {
     if (!candidate) continue;
-    paradigm = conjugateRegular(candidate, known);
+    paradigm = conjugateRegular(candidate, isVerb, known);
     if (paradigm) {
       infinitive = candidate;
       break;
