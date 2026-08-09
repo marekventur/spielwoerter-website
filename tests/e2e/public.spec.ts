@@ -125,3 +125,25 @@ test("words CSV rejects unknown column", async ({ request }) => {
   const res = await request.get("/api/words.csv?columns=word,in_list");
   expect(res.status()).toBe(400);
 });
+
+test("latest-update returns a version that tracks wordlist changes", async ({ request }) => {
+  const { getTestDb } = await import("../helpers/db");
+  const { normalise } = await import("../../lib/normalise");
+
+  const first = await request.get("/api/latest-update");
+  expect(first.status()).toBe(200);
+  const v1 = ((await first.json()) as { version: string }).version;
+  expect(v1).toMatch(/^\d+-\d+$/);
+
+  const db = getTestDb();
+  db.prepare(
+    "INSERT INTO words (word, description, base, source, verified_by, in_list, normalised) VALUES ('zzzversion', null, null, 'test', null, 'accepted', ?)"
+  ).run(normalise("zzzversion"));
+  const changed = await request.get("/api/latest-update");
+  const v2 = ((await changed.json()) as { version: string }).version;
+  expect(v2).not.toBe(v1);
+
+  db.prepare("DELETE FROM words WHERE word = 'zzzversion'").run();
+  const reverted = await request.get("/api/latest-update");
+  expect(((await reverted.json()) as { version: string }).version).toBe(v1);
+});

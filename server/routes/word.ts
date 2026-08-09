@@ -46,6 +46,31 @@ function writeChunk(res: Response, chunk: string): Promise<void> {
 
 export const wordRouter = Router();
 
+// Cheap fingerprint of the published wordlist: row count + total byte length of
+// all content fields. Changes whenever any word, base, or description is
+// added/modified/removed.
+function wordlistFingerprint(db: ReturnType<typeof getDb>): string {
+  const { etag } = db
+    .prepare(
+      `SELECT COUNT(*) || '-' ||
+              CAST(SUM(LENGTH(word) + LENGTH(COALESCE(base,'')) + LENGTH(COALESCE(description,''))) AS TEXT)
+              AS etag
+       FROM words WHERE in_list IN ('accepted', 'uncertain')`
+    )
+    .get() as { etag: string };
+  return etag;
+}
+
+/**
+ * GET /api/latest-update
+ * Public change marker for partners that mirror the wordlist (e.g. Wortopia):
+ * poll this cheaply and re-pull /api/words.csv only when `version` changes.
+ */
+wordRouter.get("/latest-update", (req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=60");
+  res.json({ version: wordlistFingerprint(getDb()) });
+});
+
 /**
  * GET /api/removal-hints?words=a,b,c
  * Advisory special-form warnings for removal flows (see lib/removal-hints.ts).
@@ -81,18 +106,7 @@ wordRouter.get("/words/all", (req, res) => {
 
   const db = getDb();
 
-  // Cheap fingerprint: row count + total byte length of all content fields.
-  // Changes whenever any word, base, or description is added/modified/removed.
-  const { etag } = db
-    .prepare(
-      `SELECT COUNT(*) || '-' ||
-              CAST(SUM(LENGTH(word) + LENGTH(COALESCE(base,'')) + LENGTH(COALESCE(description,''))) AS TEXT)
-              AS etag
-       FROM words WHERE in_list IN ('accepted', 'uncertain')`
-    )
-    .get() as { etag: string };
-
-  const etagValue = `"${etag}"`;
+  const etagValue = `"${wordlistFingerprint(db)}"`;
   res.setHeader("Cache-Control", "private, max-age=3600");
   res.setHeader("ETag", etagValue);
 
