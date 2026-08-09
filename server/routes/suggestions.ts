@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
+import { normalise } from "../../lib/normalise.js";
 import { priorDecision } from "../../lib/prior-decisions.js";
 import { requireUser } from "../http-auth.js";
 
@@ -93,15 +94,17 @@ suggestionsRouter.post("/", (req, res) => {
     .prepare("SELECT 1 FROM rejected_words WHERE word = ? AND action = ?")
     .get(wordLower, action);
 
-  // Settled decisions stick: a moderator can override a rejection or revert a
-  // recent deliberate decision, but only knowingly — with a comment that lands
-  // in the word's history. Non-moderators stay hard-blocked on rejections.
+  // Settled decisions stick, but they are not final: anyone can override a
+  // rejection — knowingly, with a mandatory justification that lands in the
+  // word's history. Moderators additionally get warned when their suggestion
+  // would revert a recent deliberate opposite decision.
   const { force, comment } = req.body as { force?: boolean; comment?: string };
   const confirmComment = typeof comment === "string" ? comment.trim() : "";
   let confirmedPrior = false;
-  if (user.isModerator && (action === "add" || action === "remove")) {
+  if (action === "add" || action === "remove") {
     const prior = priorDecision(db, wordLower, action);
-    if (blocked || prior) {
+    const needsConfirmation = blocked || (user.isModerator && prior);
+    if (needsConfirmation) {
       if (!(force === true && confirmComment)) {
         res.status(409).json({
           requiresConfirmation: true,
@@ -115,6 +118,30 @@ suggestionsRouter.post("/", (req, res) => {
   } else if (blocked) {
     res.status(409).json({ error: "Dieser Vorschlag wurde bereits abgelehnt." });
     return;
+  }
+
+  // Umlaut guard: ae/oe/ue/ss-substituted spellings of words that exist with
+  // umlauts/ß are not separate entries (e.g. "sae" vs "sä"). Adding one needs
+  // an explicit justification, exactly like overriding a rejection.
+  if (action === "add" && !confirmedPrior && wordLower === normalise(wordLower)) {
+    const sibling = db
+      .prepare(
+        `SELECT word FROM words WHERE normalised = ? AND word != ?
+         AND in_list IN ('accepted', 'uncertain') LIMIT 1`
+      )
+      .get(normalise(wordLower), wordLower) as { word: string } | undefined;
+    if (sibling) {
+      if (!(force === true && confirmComment)) {
+        res.status(409).json({
+          requiresConfirmation: true,
+          error:
+            `„${wordLower.toUpperCase()}" sieht wie eine Ersatzschreibweise von ` +
+            `„${sibling.word.toUpperCase()}" aus — Wörter werden immer mit Umlauten und ß aufgenommen.`,
+        });
+        return;
+      }
+      confirmedPrior = true;
+    }
   }
 
   const pipelineStatuses =

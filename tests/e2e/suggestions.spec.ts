@@ -246,15 +246,60 @@ test("moderator can re-add a rejected word via Wort wieder aufnehmen", async ({ 
   expect(sugg?.moderator_fast_track).toBe(1);
 });
 
-test("regular user cannot re-add a rejected word", async ({ page }) => {
+test("regular user can re-propose a rejected word with justification", async ({ page }) => {
   seedUser(TEST_USER_EMAIL);
+  const db = getTestDb();
+  // A previously rejected add-suggestion left a blocklist row.
+  db.prepare(
+    "INSERT OR IGNORE INTO rejected_words (word, action) VALUES ('falsch', 'add')"
+  ).run();
   await loginAs(page, TEST_USER_EMAIL);
 
   await page.goto("/wort/FALSCH");
-  await expect(
-    page.getByText("Es kann nicht erneut vorgeschlagen werden")
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Wort wieder aufnehmen" })
-  ).toHaveCount(0);
+  await expect(page.getByText("als nicht gültig eingestuft")).toBeVisible();
+
+  // Submitting hits the settled-decision 409; the client prompts for a justification.
+  page.on("dialog", (dialog) => void dialog.accept("Steht im Duden, Eintrag 42."));
+  await page.getByRole("button", { name: "Wort erneut vorschlagen" }).click();
+  await page.getByRole("button", { name: "Vorschlag einreichen" }).click();
+  await expect(page.getByText("Entwurf gespeichert")).toBeVisible();
+
+  const sugg = db
+    .prepare(
+      "SELECT id, status, moderator_fast_track FROM suggestions WHERE word = 'falsch' AND action = 'add'"
+    )
+    .get() as { id: number; status: string; moderator_fast_track: number } | undefined;
+  expect(sugg?.status).toBe("draft");
+  // Regular users get no fast-track — the re-proposal goes through normal review.
+  expect(sugg?.moderator_fast_track).toBe(0);
+
+  const justification = db
+    .prepare("SELECT body FROM word_comments WHERE word = 'falsch' AND suggestion_id = ?")
+    .get(sugg?.id) as { body: string } | undefined;
+  expect(justification?.body).toBe("Steht im Duden, Eintrag 42.");
+});
+
+test("adding an ae-spelling of an existing umlaut word requires confirmation", async ({
+  page,
+}) => {
+  seedUser(TEST_USER_EMAIL);
+  await loginAs(page, TEST_USER_EMAIL);
+
+  // "zzzbär" is in the list; proposing "zzzbaer" triggers the umlaut guard prompt.
+  let promptText = "";
+  page.on("dialog", (dialog) => {
+    promptText = dialog.message();
+    return void dialog.accept("Eigenständiges Wort, kein Umlaut-Ersatz.");
+  });
+  await page.goto("/wort/ZZZBAER?no_redirect=1");
+  await page.getByRole("button", { name: "Wort hinzufügen" }).click();
+  await page.getByRole("button", { name: "Vorschlag einreichen" }).click();
+  await expect(page.getByText("Entwurf gespeichert")).toBeVisible();
+  expect(promptText).toContain("ZZZBÄR");
+
+  const db = getTestDb();
+  const sugg = db
+    .prepare("SELECT status FROM suggestions WHERE word = 'zzzbaer' AND action = 'add'")
+    .get() as { status: string } | undefined;
+  expect(sugg?.status).toBe("draft");
 });

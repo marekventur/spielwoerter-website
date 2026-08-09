@@ -26,6 +26,8 @@ export function seedWords(): void {
     insert("falsch", "abgelehnt", null, "test", null, "rejected");
     // Same normalised form as "zzzä" — drives the umlaut redirect tests.
     insert("zzzae", "Umlaut-Variante", null, "test", null, "accepted");
+    // Umlaut entry whose ae-spelling ("zzzbaer") must trigger the umlaut guard.
+    insert("zzzbär", "Umlaut-Stichwort", null, "test", null, "accepted");
   })();
 }
 

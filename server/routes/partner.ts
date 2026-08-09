@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
+import { normalise } from "../../lib/normalise.js";
 import { requirePartnerKey } from "../partner-auth.js";
 import { enrichWord } from "../../lib/enrich.js";
 
@@ -171,6 +172,25 @@ partnerRouter.post("/suggestions", (req, res) => {
     if (blocked) {
       results.push({ word, action, status: "skipped", reason: "blocked" });
       continue;
+    }
+
+    // --- Umlaut guard: refuse ae/oe/ue/ss-substituted spellings of existing entries ---
+    if (internalAction === "add" && word === normalise(word)) {
+      const sibling = db
+        .prepare(
+          `SELECT word FROM words WHERE normalised = ? AND word != ?
+           AND in_list IN ('accepted', 'uncertain') LIMIT 1`
+        )
+        .get(normalise(word), word) as { word: string } | undefined;
+      if (sibling) {
+        results.push({
+          word,
+          action,
+          status: "skipped",
+          reason: `umlaut-substituted spelling of '${sibling.word}'`,
+        });
+        continue;
+      }
     }
 
     // --- Find or create author user ---

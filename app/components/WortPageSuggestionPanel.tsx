@@ -263,17 +263,26 @@ export function WortPageSuggestionPanel({
             Dieses Wort wurde geprüft und als nicht gültig eingestuft.{" "}
             {user?.isModerator
               ? "Als Moderator kannst du es wieder in die Wortliste aufnehmen."
-              : "Es kann nicht erneut vorgeschlagen werden."}
+              : "Auch Prüfungen können Fehler enthalten: Mit einer Begründung (z. B. einem Wörterbuch-Beleg) kannst du es erneut vorschlagen."}
           </p>
-          {user?.isModerator ? (
+          {user ? (
             <Button
               className="bg-orange-500 hover:bg-orange-600"
               onClick={() => void openAddForm()}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Wort wieder aufnehmen
+              {user.isModerator ? "Wort wieder aufnehmen" : "Wort erneut vorschlagen"}
             </Button>
-          ) : null}
+          ) : (
+            <Link to={loginHref} rel="nofollow">
+              <Button
+                variant="outline"
+                className="border-orange-500 text-orange-600 hover:bg-orange-50"
+              >
+                Fehler gefunden? Anmelden und beheben!
+              </Button>
+            </Link>
+          )}
         </div>
       ) : !inList && addInReviewByOthers ? (
         <div className="flex flex-col items-center gap-3 max-w-md text-center">

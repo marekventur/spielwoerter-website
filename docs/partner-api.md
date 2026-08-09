@@ -164,6 +164,7 @@ The suggestion author will receive an email notification when their suggestion i
 |---|---|
 | `conflict` | An in-flight suggestion from another user already exists for this word and action, and net support is < 2. |
 | `blocked` | This word/action combination was previously rejected and is blocked from resubmission. |
+| `umlaut-substituted spelling of '<word>'` | The word looks like an ae/oe/ue/ss spelling of an entry that exists with umlauts/ß. Submit the umlaut spelling instead. |
 | `word is required` | `word` field was missing or empty. |
 | `word exceeds 100 characters` | Word is too long. |
 | `action must be 'upsert' or 'remove'` | Invalid action value. |
@@ -192,6 +193,22 @@ These are returned when the entire request fails (rather than individual suggest
 ## CORS
 
 All `/api/partner/*` endpoints set `Access-Control-Allow-Origin: *`, so they can be called directly from browser JavaScript on any origin, as long as a valid `X-API-Key` header is included.
+
+---
+
+## Endpoint: Latest update marker
+
+```
+GET https://spielwoerter.de/api/latest-update
+```
+
+No authentication required. Returns a cheap change marker for the published wordlist:
+
+```json
+{ "version": "204194-8123456" }
+```
+
+`version` is an opaque string that changes whenever any word, base, or description in the published list is added, modified, or removed. Poll this endpoint (it is cacheable for 60 s) and re-download `/api/words.csv` only when the value differs from the one you last saw — this lets mirrors sync within minutes of a change instead of on a fixed daily schedule.
 
 ---
 
