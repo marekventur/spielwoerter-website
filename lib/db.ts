@@ -25,6 +25,18 @@ export function getDb(): Database.Database {
   return db;
 }
 
+/**
+ * Private connection for long-lived streaming reads (CSV export).
+ * better-sqlite3 is synchronous: holding an open iterator on the shared
+ * getDb() connection across awaits makes every concurrent request throw
+ * "This database connection is busy executing a query" (this broke login in
+ * production while a slow CSV download was in flight). WAL mode makes a
+ * second read-only connection safe. Callers must close() it.
+ */
+export function openReadonlyDb(): Database.Database {
+  return new Database(DB_PATH, { readonly: true });
+}
+
 export function closeDb(): void {
   if (db) {
     db.close();

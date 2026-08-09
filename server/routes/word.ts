@@ -1,5 +1,5 @@
 import { Router, type Response } from "express";
-import { getDb } from "../../lib/db.js";
+import { getDb, openReadonlyDb } from "../../lib/db.js";
 import { detectAlgorithmicBase, enrichWord } from "../../lib/enrich.js";
 import { removalHints } from "../../lib/removal-hints.js";
 import { requireUser } from "../http-auth.js";
@@ -214,7 +214,10 @@ wordRouter.get("/words.csv", async (req, res) => {
       return;
     }
   }
-  const db = getDb();
+  // Own connection: the iterator stays open across write backpressure awaits,
+  // which would wedge the shared connection for every concurrent request
+  // ("This database connection is busy executing a query").
+  const db = openReadonlyDb();
   const selectList = cols.join(", ");
   const stmt = db.prepare(
     `SELECT ${selectList} FROM words
@@ -240,6 +243,8 @@ wordRouter.get("/words.csv", async (req, res) => {
     } else {
       res.destroy(err instanceof Error ? err : undefined);
     }
+  } finally {
+    db.close();
   }
 });
 
