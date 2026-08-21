@@ -38,7 +38,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Links />
         <Meta />
-        <script defer src="https://cloud.umami.is/script.js" data-website-id="22e3f2c2-1cec-43b7-a740-07ceb2b03c2a"></script>
+        {/* Analytics, production only.
+          *
+          * Self-hosted GoatCounter on vps3 (see vps-setup). It replaces Umami
+          * cloud, which used to be loaded here; that site's history back to
+          * 2026-06-05 was imported into GoatCounter first, so nothing was lost
+          * by dropping it.
+          *
+          * The gate is not cosmetic. `import.meta.env.PROD` is false on
+          * dev.spielwoerter.de, because server.js starts the Vite dev server
+          * when NODE_ENV=development and the dev box therefore serves an
+          * unbuilt bundle. The Umami tag this replaces had no such gate, and
+          * its export duly contained pageviews from the dev host counted as
+          * production traffic. */}
+        {import.meta.env.PROD && (
+          <script data-goatcounter="https://analytics.spielwoerter.de/count" async src="https://analytics.spielwoerter.de/count.js"></script>
+        )}
       </head>
       <body className="font-sans antialiased">
         {children}
