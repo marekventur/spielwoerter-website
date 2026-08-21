@@ -78,7 +78,7 @@ export default function DiskussionPage({ loaderData }: Route.ComponentProps) {
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              rows={5}
+              rows={10}
               maxLength={MAX_POST_LENGTH}
               placeholder="Deine Nachricht"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"

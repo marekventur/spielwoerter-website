@@ -182,8 +182,10 @@ Closing it off is right for v1, but four places have to agree or the board leaks
   `+types/*` regenerate.
 - NavBar link only when `user?.isModerator`.
 
-Mirror `word_comments` deliberately: same 1000-char limit for web posts, same
-hide semantics. **Inbound mail is exempt from the length limit** — truncating
+Mirror `word_comments` deliberately on hide semantics, but **not** on length:
+web posts allow 10 000 characters (`word_comments` stays at 1 000 — a remark on
+a single word is a different thing from a rules argument). **Inbound mail is
+exempt from the length limit entirely** — truncating
 someone's considered reply at 1000 characters would be infuriating and they
 can't see the counter.
 

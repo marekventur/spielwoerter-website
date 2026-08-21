@@ -14,7 +14,7 @@ import type Database from "better-sqlite3";
 
 export const MAX_TOPIC_TITLE_LENGTH = 150;
 /** Web posts only. Inbound mail is deliberately not truncated. */
-export const MAX_POST_LENGTH = 1000;
+export const MAX_POST_LENGTH = 10_000;
 
 export type PostSource = "web" | "email";
 
