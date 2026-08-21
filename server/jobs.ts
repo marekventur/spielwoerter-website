@@ -6,6 +6,7 @@ import { getDb } from "../lib/db.js";
 import { promoteEligibleDrafts } from "../lib/promotion.js";
 import { syncPull, syncPush } from "../lib/sync.js";
 import { sendDigestEmails } from "./mailgun.js";
+import { sweepUnmailedPosts } from "./topic-mail.js";
 
 // Jobs with external side effects (GitHub push, digest emails, GCS backup) must
 // only run on the production instance. A local `npm run dev` (NODE_ENV=development)
@@ -46,6 +47,14 @@ export function startSyncJob() {
   syncJobStarted = true;
 
   const run = async () => {
+    // Independent of the GitHub sync below: retry any /diskussion post whose
+    // immediate send failed. Runs even when GitHub credentials are missing.
+    try {
+      await sweepUnmailedPosts(getDb());
+    } catch (err) {
+      console.error("[diskussion] Sweep error:", err instanceof Error ? err.message : err);
+    }
+
     const githubRepo = process.env.SPIELWOERTER_GITHUB_REPO;
     const githubToken = process.env.GITHUB_TOKEN;
     if (!githubRepo || !githubToken) return;

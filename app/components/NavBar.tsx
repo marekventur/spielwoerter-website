@@ -222,6 +222,17 @@ export function NavBar({ user }: Props) {
                       Moderation
                     </Link>
                   )}
+                  {/* Rollout: admins only while /diskussion is being tested.
+                      Change to user.isModerator to open it to all moderators. */}
+                  {user.isAdmin && (
+                    <Link
+                      to="/diskussion"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                      onClick={() => setOpen(false)}
+                    >
+                      Diskussion
+                    </Link>
+                  )}
                   {user.isAdmin && (
                     <Link
                       to="/admin"

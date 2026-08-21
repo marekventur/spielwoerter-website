@@ -78,6 +78,33 @@ export function initSchema(db: Database.Database): void {
       hidden_by INTEGER REFERENCES users(id)
     );
     CREATE INDEX IF NOT EXISTS idx_word_comments_word ON word_comments(word);
+
+    CREATE TABLE IF NOT EXISTS topics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      title TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      last_activity_at TEXT NOT NULL DEFAULT (datetime('now')),
+      pinned INTEGER NOT NULL DEFAULT 0,
+      locked INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS topic_posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      topic_id INTEGER NOT NULL REFERENCES topics(id),
+      parent_id INTEGER REFERENCES topic_posts(id),
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      body TEXT NOT NULL,
+      raw_body TEXT,
+      source TEXT NOT NULL DEFAULT 'web',
+      message_id TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      emailed_at TEXT,
+      hidden_at TEXT,
+      hidden_by INTEGER REFERENCES users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_topic_posts_topic ON topic_posts(topic_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_topic_posts_msgid ON topic_posts(message_id);
   `);
 
   // Migrations: add columns if missing
@@ -107,6 +134,17 @@ export function initSchema(db: Database.Database): void {
   if (!userCols.includes("display_name")) {
     // Public screen name; NULL renders as the automatic "user-<id>".
     db.prepare("ALTER TABLE users ADD COLUMN display_name TEXT").run();
+  }
+  if (!userCols.includes("email_diskussion")) {
+    // Per-channel mail preference: 'all' | 'mine' | 'none'. See lib/topics.ts.
+    db.prepare(
+      "ALTER TABLE users ADD COLUMN email_diskussion TEXT NOT NULL DEFAULT 'all'"
+    ).run();
+  }
+  if (!userCols.includes("email_digest")) {
+    db.prepare(
+      "ALTER TABLE users ADD COLUMN email_digest INTEGER NOT NULL DEFAULT 1"
+    ).run();
   }
 
   const suggCols = (

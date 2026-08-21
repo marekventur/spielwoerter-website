@@ -1,7 +1,8 @@
 import path from "path";
 import os from "os";
 
-export const TEST_PORT = 3005;
+// Overridable: on shared dev boxes 3005 may already belong to another service.
+export const TEST_PORT = Number(process.env.TEST_PORT) || 3005;
 export const BASE_URL = `http://localhost:${TEST_PORT}`;
 export const TEST_DB_PATH = path.join(os.tmpdir(), "spielwoerter-test.db");
 

@@ -32,6 +32,10 @@ export default defineConfig({
       // Same for the enrichment LLM: tests must be offline/deterministic
       // (empty key → enrichWord returns the algorithmic fallback, no variants)
       DEEPSEEK_API_KEY_SUGGESTIONS: "",
+      // Inbound mail endpoint: the path secret the tests post to.
+      INBOUND_SECRET: "test-inbound-secret",
+      MAILGUN_DOMAIN: "mail.test",
+      DISKUSSION_ADDRESS: "moderatoren-test@mail.test",
     },
   },
 });

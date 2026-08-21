@@ -17,6 +17,8 @@ import { mcpRouter } from "./routes/mcp.js";
 import { batchRouter } from "./routes/batch.js";
 import { commentsRouter } from "./routes/comments.js";
 import { profileRouter } from "./routes/profile.js";
+import { topicsRouter } from "./routes/topics.js";
+import { inboundRouter } from "./routes/inbound.js";
 
 declare module "react-router" {
   interface AppLoadContext {
@@ -43,6 +45,9 @@ app.use("/api/partner", partnerRouter);
 app.use("/api/batch", batchRouter);
 app.use("/api/word-comments", commentsRouter);
 app.use("/api/profile", profileRouter);
+app.use("/api/topics", topicsRouter);
+// Public endpoint: authenticated by a secret in the path, not by session.
+app.use("/api/inbound", inboundRouter);
 
 startPromotionJob();
 startSyncJob();

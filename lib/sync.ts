@@ -124,8 +124,18 @@ export async function syncPush(
   db: Database.Database,
   githubRepo: string,
   githubToken: string,
-  branch = "main"
+  branch = "main",
+  opts: { allowNonProduction?: boolean } = {}
 ): Promise<{ pushed: number; digestUsers: DigestUser[] }> {
+  // Writes to the real spielwoerter repo, so it is production-only by default.
+  // The dev box runs the same .env with real GitHub credentials; without this,
+  // a moderator hitting /api/sync/push on dev.spielwoerter.de would commit to
+  // the live wordlists. scripts/sync-push.ts opts in explicitly.
+  if (process.env.NODE_ENV !== "production" && !opts.allowNonProduction) {
+    console.log("[sync push] Skipped (not production).");
+    return { pushed: 0, digestUsers: [] };
+  }
+
   const unsynced = db
     .prepare(
       `SELECT s.id, s.word, s.action, s.payload, s.user_id, u.email AS user_email
@@ -263,7 +273,7 @@ export async function syncPush(
   const unnotified = db
     .prepare(
       `SELECT s.id, s.word, s.action, s.status, s.payload, u.email AS user_email,
-              s.moderation_comment, s.original_payload
+              u.email_digest, s.moderation_comment, s.original_payload
        FROM suggestions s
        JOIN users u ON u.id = s.user_id
        WHERE s.status IN ('moderator_approved', 'moderator_rejected')
@@ -276,12 +286,16 @@ export async function syncPush(
     status: string;
     payload: string | null;
     user_email: string;
+    email_digest: number;
     moderation_comment: string | null;
     original_payload: string | null;
   }[];
 
   const byUser = new Map<string, DigestUser>();
   for (const s of unnotified) {
+    // Opted out of the digest on /konto. Still selected above, so notified_at
+    // is stamped and the row does not pile up in every later run.
+    if (!s.email_digest) continue;
     if (!byUser.has(s.user_email)) {
       byUser.set(s.user_email, { email: s.user_email, approved: [], rejected: [] });
     }

@@ -37,3 +37,41 @@ profileRouter.post("/", (req, res) => {
   db.prepare("UPDATE users SET display_name = ? WHERE id = ?").run(trimmed, user.id);
   res.json({ ok: true, displayName: trimmed });
 });
+
+/** Per-channel mail preferences. See lib/topics.ts for how they are applied. */
+profileRouter.post("/email", (req, res) => {
+  const user = requireUser(req, res);
+  if (!user) return;
+
+  const { emailDiskussion, emailDigest } = req.body as {
+    emailDiskussion?: string;
+    emailDigest?: boolean;
+  };
+  const db = getDb();
+
+  if (emailDiskussion !== undefined) {
+    if (!["all", "mine", "none"].includes(emailDiskussion)) {
+      res.status(400).json({ error: "Ungültige Einstellung" });
+      return;
+    }
+    db.prepare("UPDATE users SET email_diskussion = ? WHERE id = ?").run(
+      emailDiskussion,
+      user.id
+    );
+  }
+  if (emailDigest !== undefined) {
+    db.prepare("UPDATE users SET email_digest = ? WHERE id = ?").run(
+      emailDigest ? 1 : 0,
+      user.id
+    );
+  }
+
+  const row = db
+    .prepare("SELECT email_diskussion, email_digest FROM users WHERE id = ?")
+    .get(user.id) as { email_diskussion: string; email_digest: number };
+  res.json({
+    ok: true,
+    emailDiskussion: row.email_diskussion,
+    emailDigest: !!row.email_digest,
+  });
+});

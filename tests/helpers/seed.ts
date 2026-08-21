@@ -107,6 +107,8 @@ export function cleanDb(): void {
   const db = getTestDb();
   // Ensure schema exists (server initializes lazily; tests may run before first request)
   initSchema(db);
+  db.exec("DELETE FROM topic_posts");
+  db.exec("DELETE FROM topics");
   db.exec("DELETE FROM word_comments");
   db.exec("DELETE FROM suggestions");
   db.exec("DELETE FROM batches");

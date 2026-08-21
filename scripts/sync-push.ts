@@ -17,8 +17,18 @@ if (!githubToken) {
 const branch = process.argv[2] ?? "main";
 console.log(`Target branch: ${branch}`);
 
+// Deliberate manual invocation, so it opts out of syncPush's production guard.
+// Say so loudly — this writes to the real repo from wherever it is run.
+if (process.env.NODE_ENV !== "production") {
+  console.warn(
+    `\u26a0\ufe0f  NODE_ENV ist nicht "production" \u2014 pushe trotzdem nach ${githubRepo}#${branch}.`
+  );
+}
+
 const db = getDb();
-const { pushed, digestUsers } = await syncPush(db, githubRepo, githubToken, branch);
+const { pushed, digestUsers } = await syncPush(db, githubRepo, githubToken, branch, {
+  allowNonProduction: true,
+});
 console.log(`Pushed: ${pushed}`);
 if (digestUsers.length > 0) {
   console.log("Digest users:", JSON.stringify(digestUsers, null, 2));

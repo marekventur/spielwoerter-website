@@ -9,7 +9,8 @@ Related: [AGENTS.md](./AGENTS.md) has a short general agent briefing; this file 
 ```bash
 npm run dev          # Dev server (Vite HMR + Express) on http://localhost:3004
 npm run typecheck    # react-router typegen && tsc -b — run after adding/renaming routes so +types/* regenerate
-npm run test:e2e     # Full Playwright suite (~95 tests, ~2 min)
+npm run test:e2e     # Full Playwright suite (~118 tests, ~3 min)
+TEST_PORT=3014 npm run test:e2e                   # When 3005 is taken (see below)
 npm run test:e2e -- tests/e2e/oversight.spec.ts   # Single spec file
 npm run test:e2e -- -g "scheduled removal"        # Single test by title
 npm run sync:pull    # Pull wordlists from GitHub into the local SQLite DB
@@ -18,6 +19,25 @@ npm run sync:pull    # Pull wordlists from GitHub into the local SQLite DB
 Dev login: without `MAILGUN_API_KEY`, the OTP code is printed to the server console. `marekventur@gmail.com` is bootstrapped as admin+moderator on every schema init.
 
 E2E tests boot their own server on port 3005 with a throwaway DB in the OS tmpdir (`tests/global-setup.ts`), blank out MAILGUN/DEEPSEEK keys for offline determinism, read OTP codes directly from the DB (`tests/helpers/auth.ts`), and run with 1 worker (SQLite). CI runs them on every push/PR (`.github/workflows/e2e.yml`).
+
+**On `dev.marekventur.com`, port 3005 is already `wortopia-dev` under pm2**, so the
+whole suite aborts with `http://localhost:3005 is already used` before a single test
+runs. Override it — `TEST_PORT=3014 npm run test:e2e`. Pick a port that is free on
+*both* boxes: vps3 holds 3001-3011 and 3013, dev holds 3003/3004/3005/3012.
+
+**Playwright's browser install refuses on Ubuntu 26.04.** `npx playwright install
+chromium` fails with `Playwright does not support chromium on ubuntu26.04-x64`. This is
+a hardcoded platform allowlist in the pinned 1.58.2, not a real incompatibility — the
+browser runs fine once present. Install it with the platform override (the arch suffix
+is required; `ubuntu24.04` alone fails):
+
+```bash
+PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64 npx playwright install chromium
+```
+
+Install-time only — `npm run test:e2e` then needs no env var. Bumping `@playwright/test`
+to >=1.62 removes the need entirely (that version knows ubuntu26.04), but it is a
+dependency bump on a repo that deploys from `main`. CI is unaffected: `ubuntu-latest`.
 
 **Deploy: every push to `main` auto-deploys to the production VPS** (`.github/workflows/deploy.yml` → rsync to `/var/www/spielwoerter.de`, excluding `data/`).
 

@@ -1,6 +1,7 @@
 import { redirect } from "react-router";
 import { Card } from "~/components/ui/card";
 import { ProfileNameCard } from "~/components/ProfileNameCard";
+import { EmailSettingsCard } from "~/components/EmailSettingsCard";
 import type { Route } from "./+types/konto";
 
 export function meta({}: Route.MetaArgs) {
@@ -24,6 +25,8 @@ export default function KontoPage({ loaderData }: Route.ComponentProps) {
       </p>
 
       <ProfileNameCard user={user} />
+
+      <EmailSettingsCard user={user} />
 
       <Card className="p-4">
         <p className="text-sm text-gray-600">
