@@ -187,7 +187,6 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
 }
 
 const externalDictionaries = [
-  { name: "Wiktionary", url: (w: string) => `https://de.wiktionary.org/wiki/${w}` },
   { name: "Duden", url: (w: string) => `https://www.duden.de/suchen/dudenonline/${w}` },
   { name: "DWDS", url: (w: string) => `https://www.dwds.de/wb/${w}` },
 ];

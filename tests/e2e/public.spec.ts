@@ -37,7 +37,7 @@ test("word page shows accepted word with description and badge", async ({
   await expect(page.getByText("ein Haustier")).toBeVisible();
   // External links
   await expect(page.getByRole("link", { name: "Duden" }).first()).toBeVisible();
-  await expect(page.getByRole("link", { name: "Wiktionary" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Wiktionary" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "DWDS" })).toBeVisible();
 });
 
