@@ -89,12 +89,21 @@ export type EnrichResult = {
   variantNotices: Array<{ word: string; reason: "in_list" | "rejected" | "in_review"; description: string }>;
 };
 
-/** Every string obtained by swapping one pair of adjacent letters in `w`. */
+const VOWELS = /[aeiouäöüy]/;
+
+/**
+ * Every string obtained by swapping one pair of adjacent letters in `w`,
+ * restricted to pairs that are both vowels or both consonants. A vowel next
+ * to a consonant is not a typo signal in German: e-Tilgung and its inverse
+ * legitimately turn "dunkel" into "dunkle", "birken" into "birkne" and
+ * "rumset" sits next to "rumste". "zuielten" vs "zueilten" (ie/ei) is caught.
+ */
 function adjacentTranspositions(w: string): string[] {
   const out: string[] = [];
   for (let i = 0; i + 1 < w.length; i++) {
-    if (w[i] === w[i + 1]) continue;
-    out.push(w.slice(0, i) + w[i + 1] + w[i] + w.slice(i + 2));
+    const a = w[i], b = w[i + 1];
+    if (a === b || VOWELS.test(a) !== VOWELS.test(b)) continue;
+    out.push(w.slice(0, i) + b + a + w.slice(i + 2));
   }
   return out;
 }
@@ -184,8 +193,12 @@ export async function enrichWord(word: string): Promise<EnrichResult> {
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        // "deepseek-chat" is a retired alias that currently resolves to deepseek-flash.
+        // "deepseek-chat" is a retired alias that currently resolves to deepseek-flash
+        // in NON-thinking mode. Naming the model explicitly turns thinking on by
+        // default, which spends the whole max_tokens budget on reasoning and returns
+        // an empty message, so say so explicitly.
         model: process.env.DEEPSEEK_MODEL_SUGGESTIONS || "deepseek-flash",
+        thinking: { type: "disabled" },
         temperature: 0.2,
         max_tokens: 400,
         messages: [
