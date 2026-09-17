@@ -1,3 +1,4 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { getDb } from "./db.js";
 import { conjugateRegular } from "./conjugate.js";
 
@@ -178,45 +179,152 @@ function mergeConjugation(result: EnrichResult, word: string): EnrichResult {
   return result;
 }
 
-export async function enrichWord(word: string): Promise<EnrichResult> {
-  const algorithmicBase = detectAlgorithmicBase(word);
-  const fallback: EnrichResult = { base: algorithmicBase, description: null, variants: [], variantNotices: [] };
+export type LlmOptions = {
+  provider: "openai" | "anthropic";
+  model: string;
+  /** OpenAI-compatible endpoints only (DeepSeek, Moonshot, ...). */
+  baseUrl?: string;
+  /** Bearer key for OpenAI-compatible endpoints; Anthropic falls back to ANTHROPIC_API_KEY. */
+  apiKey?: string;
+  /** Extra JSON fields for OpenAI-compatible requests (vendor extensions such as DeepSeek's `thinking`). */
+  extraBody?: Record<string, unknown>;
+  /** Anthropic only: reasoning effort. Omitted = the model's default. */
+  effort?: "low" | "medium" | "high" | "xhigh" | "max";
+};
 
-  const apiKey = process.env.DEEPSEEK_API_KEY_SUGGESTIONS;
-  if (!apiKey) return mergeConjugation(fallback, word);
+/**
+ * DeepSeek's V4 models think by default and spend the whole `max_tokens`
+ * budget on reasoning when it is small, returning an empty message. The
+ * retired "deepseek-chat" alias was the non-thinking mode; naming a model
+ * explicitly needs this to keep that behaviour.
+ */
+export const DEEPSEEK_NO_THINKING = { thinking: { type: "disabled" } } as const;
 
-  try {
-    const response = await fetch("https://api.deepseek.com/chat/completions", {
+export type LlmSuggestion = { base: string; descriptions: Record<string, string> };
+
+export type LlmSuggestResult = {
+  /** null when the model answered `null` (unknown word) or produced no parseable object. */
+  suggestion: LlmSuggestion | null;
+  raw: string;
+  model: string;
+  usage: { input_tokens: number; output_tokens: number };
+  stopReason: string | null;
+};
+
+/**
+ * Which model answers the suggestion prompt. Defaults to DeepSeek's flash
+ * model over their OpenAI-compatible API ("deepseek-chat" is a retired alias
+ * that currently resolves to it). SUGGESTIONS_LLM_PROVIDER=anthropic switches
+ * to the Anthropic SDK; SUGGESTIONS_LLM_BASE_URL points the OpenAI-compatible
+ * path at another vendor. Returns null when no credential is configured.
+ */
+export function llmOptionsFromEnv(): LlmOptions | null {
+  const provider = process.env.SUGGESTIONS_LLM_PROVIDER === "anthropic" ? "anthropic" : "openai";
+  const model =
+    process.env.SUGGESTIONS_LLM_MODEL ||
+    process.env.DEEPSEEK_MODEL_SUGGESTIONS ||
+    (provider === "anthropic" ? "claude-opus-5" : "deepseek-flash");
+  if (provider === "anthropic") {
+    if (!process.env.ANTHROPIC_API_KEY) return null;
+    const effort = process.env.SUGGESTIONS_LLM_EFFORT as LlmOptions["effort"] | undefined;
+    return { provider, model, ...(effort ? { effort } : {}) };
+  }
+  const apiKey = process.env.SUGGESTIONS_LLM_API_KEY || process.env.DEEPSEEK_API_KEY_SUGGESTIONS;
+  if (!apiKey) return null;
+  const baseUrl = process.env.SUGGESTIONS_LLM_BASE_URL || "https://api.deepseek.com";
+  return {
+    provider,
+    model,
+    apiKey,
+    baseUrl,
+    ...(baseUrl.includes("deepseek") ? { extraBody: DEEPSEEK_NO_THINKING } : {}),
+  };
+}
+
+/**
+ * One round trip of the suggestion prompt. Throws on transport or HTTP
+ * errors (with `status` set for HTTP) so callers can tell "the model said
+ * null" from "the call failed".
+ */
+export async function llmSuggest(word: string, opts: LlmOptions): Promise<LlmSuggestResult> {
+  let text = "";
+  let model = opts.model;
+  let usage = { input_tokens: 0, output_tokens: 0 };
+  let stopReason: string | null = null;
+
+  if (opts.provider === "anthropic") {
+    const client = new Anthropic(opts.apiKey ? { apiKey: opts.apiKey } : {});
+    const res = await client.messages.create({
+      model: opts.model,
+      max_tokens: 4096,
+      system: DEEPSEEK_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: word }],
+      ...(opts.effort ? { output_config: { effort: opts.effort } } : {}),
+    });
+    text = res.content.filter((b) => b.type === "text").map((b) => b.text).join("");
+    model = res.model;
+    usage = { input_tokens: res.usage.input_tokens, output_tokens: res.usage.output_tokens };
+    stopReason = res.stop_reason;
+  } else {
+    const base = (opts.baseUrl ?? "https://api.deepseek.com").replace(/\/$/, "");
+    const response = await fetch(`${base}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${opts.apiKey ?? ""}`,
       },
       body: JSON.stringify({
-        // "deepseek-chat" is a retired alias that currently resolves to deepseek-flash
-        // in NON-thinking mode. Naming the model explicitly turns thinking on by
-        // default, which spends the whole max_tokens budget on reasoning and returns
-        // an empty message, so say so explicitly.
-        model: process.env.DEEPSEEK_MODEL_SUGGESTIONS || "deepseek-flash",
-        thinking: { type: "disabled" },
+        model: opts.model,
         temperature: 0.2,
         max_tokens: 400,
         messages: [
           { role: "system", content: DEEPSEEK_SYSTEM_PROMPT },
           { role: "user", content: word },
         ],
+        ...(opts.extraBody ?? {}),
       }),
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(60_000),
     });
+    if (!response.ok) {
+      const err = new Error(`LLM request failed: HTTP ${response.status}`) as Error & { status: number };
+      err.status = response.status;
+      throw err;
+    }
+    const data = await response.json() as {
+      model?: string;
+      choices?: { message?: { content?: string }; finish_reason?: string }[];
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
+    };
+    text = data.choices?.[0]?.message?.content ?? "";
+    model = data.model ?? opts.model;
+    usage = { input_tokens: data.usage?.prompt_tokens ?? 0, output_tokens: data.usage?.completion_tokens ?? 0 };
+    stopReason = data.choices?.[0]?.finish_reason ?? null;
+  }
 
-    if (!response.ok) return mergeConjugation(fallback, word);
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  let suggestion: LlmSuggestion | null = null;
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[0]) as Partial<LlmSuggestion>;
+      if (parsed && typeof parsed.base === "string" && parsed.descriptions && typeof parsed.descriptions === "object") {
+        suggestion = { base: parsed.base, descriptions: parsed.descriptions };
+      }
+    } catch {
+      suggestion = null;
+    }
+  }
+  return { suggestion, raw: text, model, usage, stopReason };
+}
 
-    const data = await response.json() as { choices?: { message?: { content?: string } }[] };
-    const text = data.choices?.[0]?.message?.content ?? "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    type LLMResult = { base: string; descriptions: Record<string, string> };
-    const parsed: LLMResult | null = jsonMatch ? JSON.parse(jsonMatch[0]) as LLMResult : null;
+export async function enrichWord(word: string): Promise<EnrichResult> {
+  const algorithmicBase = detectAlgorithmicBase(word);
+  const fallback: EnrichResult = { base: algorithmicBase, description: null, variants: [], variantNotices: [] };
 
+  const opts = llmOptionsFromEnv();
+  if (!opts) return mergeConjugation(fallback, word);
+
+  try {
+    const { suggestion: parsed } = await llmSuggest(word, opts);
     if (!parsed?.descriptions) return mergeConjugation(fallback, word);
 
     const llmBase = parsed.base?.toLowerCase() ?? word;
