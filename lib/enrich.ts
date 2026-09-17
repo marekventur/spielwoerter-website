@@ -89,11 +89,26 @@ export type EnrichResult = {
   variantNotices: Array<{ word: string; reason: "in_list" | "rejected" | "in_review"; description: string }>;
 };
 
+/** Every string obtained by swapping one pair of adjacent letters in `w`. */
+function adjacentTranspositions(w: string): string[] {
+  const out: string[] = [];
+  for (let i = 0; i + 1 < w.length; i++) {
+    if (w[i] === w[i + 1]) continue;
+    out.push(w.slice(0, i) + w[i + 1] + w[i] + w.slice(i + 2));
+  }
+  return out;
+}
+
 /**
  * Deterministic complement to the LLM variants: if the word (or its lemma) is
  * a regular weak verb, merge the full conjugation paradigm into the result.
  * LLM-provided variants keep priority; every added form goes through the same
  * blocklist/in-review filtering.
+ *
+ * Also drops LLM variants that are one adjacent-letter swap away from a form
+ * we trust for the same lemma: the looked-up word, a rule-generated paradigm
+ * form, or a listed word with the same base ("zuielten" next to "zueilten").
+ * The same-lemma restriction keeps genuine neighbours apart (rief / reif).
  */
 function mergeConjugation(result: EnrichResult, word: string): EnrichResult {
   const db = getDb();
@@ -120,6 +135,20 @@ function mergeConjugation(result: EnrichResult, word: string): EnrichResult {
       break;
     }
   }
+  const paradigmWords = new Set((paradigm ?? []).map((f) => f.word));
+  const lemma = infinitive || result.base?.toLowerCase() || word.toLowerCase();
+  const listedForLemmaStmt = db.prepare(
+    `SELECT 1 FROM words WHERE word = ? AND in_list IN ('accepted', 'uncertain')
+     AND (base = ? OR word = ?)`
+  );
+  const trusted = (w: string) =>
+    w === word.toLowerCase() || paradigmWords.has(w) || Boolean(listedForLemmaStmt.get(w, lemma, lemma));
+  result.variants = result.variants.filter((v) => {
+    const twin = adjacentTranspositions(v.word).find(trusted);
+    if (twin) console.log(`[enrich] dropped LLM variant "${v.word}" (letter swap of "${twin}")`);
+    return !twin;
+  });
+
   if (!paradigm) return result;
 
   const seen = new Set([
@@ -155,7 +184,8 @@ export async function enrichWord(word: string): Promise<EnrichResult> {
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
+        // "deepseek-chat" is a retired alias that currently resolves to deepseek-flash.
+        model: process.env.DEEPSEEK_MODEL_SUGGESTIONS || "deepseek-flash",
         temperature: 0.2,
         max_tokens: 400,
         messages: [
