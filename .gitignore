@@ -38,3 +38,12 @@ test-results/
 
 # Internal notes with community-member PII — never commit
 docs/wortopia-feedback-*.md
+
+# LLM eval (scripts/eval-enrich.mjs): keep per-case results, drop bulk and derived output
+.claude/hillclimb/**/traces/
+.claude/hillclimb/**/ref/
+.claude/hillclimb/**/report.html
+.claude/hillclimb/**/state.json
+.claude/hillclimb/**/trajectory/
+.claude/hillclimb/**/progress.txt
+.claude/worktrees/
