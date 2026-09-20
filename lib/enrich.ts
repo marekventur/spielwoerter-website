@@ -89,11 +89,35 @@ export type EnrichResult = {
   variantNotices: Array<{ word: string; reason: "in_list" | "rejected" | "in_review"; description: string }>;
 };
 
+const VOWELS = /[aeiouäöüy]/;
+
+/**
+ * Every string obtained by swapping one pair of adjacent letters in `w`,
+ * restricted to pairs that are both vowels or both consonants. A vowel next
+ * to a consonant is not a typo signal in German: e-Tilgung and its inverse
+ * legitimately turn "dunkel" into "dunkle", "birken" into "birkne" and
+ * "rumset" sits next to "rumste". "zuielten" vs "zueilten" (ie/ei) is caught.
+ */
+function adjacentTranspositions(w: string): string[] {
+  const out: string[] = [];
+  for (let i = 0; i + 1 < w.length; i++) {
+    const a = w[i], b = w[i + 1];
+    if (a === b || VOWELS.test(a) !== VOWELS.test(b)) continue;
+    out.push(w.slice(0, i) + b + a + w.slice(i + 2));
+  }
+  return out;
+}
+
 /**
  * Deterministic complement to the LLM variants: if the word (or its lemma) is
  * a regular weak verb, merge the full conjugation paradigm into the result.
  * LLM-provided variants keep priority; every added form goes through the same
  * blocklist/in-review filtering.
+ *
+ * Also drops LLM variants that are one adjacent-letter swap away from a form
+ * we trust for the same lemma: the looked-up word, a rule-generated paradigm
+ * form, or a listed word with the same base ("zuielten" next to "zueilten").
+ * The same-lemma restriction keeps genuine neighbours apart (rief / reif).
  */
 function mergeConjugation(result: EnrichResult, word: string): EnrichResult {
   const db = getDb();
@@ -120,6 +144,20 @@ function mergeConjugation(result: EnrichResult, word: string): EnrichResult {
       break;
     }
   }
+  const paradigmWords = new Set((paradigm ?? []).map((f) => f.word));
+  const lemma = infinitive || result.base?.toLowerCase() || word.toLowerCase();
+  const listedForLemmaStmt = db.prepare(
+    `SELECT 1 FROM words WHERE word = ? AND in_list IN ('accepted', 'uncertain')
+     AND (base = ? OR word = ?)`
+  );
+  const trusted = (w: string) =>
+    w === word.toLowerCase() || paradigmWords.has(w) || Boolean(listedForLemmaStmt.get(w, lemma, lemma));
+  result.variants = result.variants.filter((v) => {
+    const twin = adjacentTranspositions(v.word).find(trusted);
+    if (twin) console.log(`[enrich] dropped LLM variant "${v.word}" (letter swap of "${twin}")`);
+    return !twin;
+  });
+
   if (!paradigm) return result;
 
   const seen = new Set([
@@ -155,7 +193,12 @@ export async function enrichWord(word: string): Promise<EnrichResult> {
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
+        // "deepseek-chat" is a retired alias that currently resolves to deepseek-flash
+        // in NON-thinking mode. Naming the model explicitly turns thinking on by
+        // default, which spends the whole max_tokens budget on reasoning and returns
+        // an empty message, so say so explicitly.
+        model: process.env.DEEPSEEK_MODEL_SUGGESTIONS || "deepseek-flash",
+        thinking: { type: "disabled" },
         temperature: 0.2,
         max_tokens: 400,
         messages: [
