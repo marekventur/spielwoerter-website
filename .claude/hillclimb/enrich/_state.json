@@ -1,0 +1,66 @@
+{
+  "flow": "enrich",
+  "description": "Which model should answer the word-suggestion prompt behind /api/word-enrich (lib/enrich.ts llmSuggest). One variant per model, same prompt and code.",
+  "metrics": [
+    {
+      "id": "pass",
+      "label": "all checks",
+      "kind": "binary"
+    },
+    {
+      "id": "base_ok",
+      "label": "lemma/null ok",
+      "kind": "binary"
+    },
+    {
+      "id": "no_invalid",
+      "label": "no invalid",
+      "kind": "binary"
+    },
+    {
+      "id": "required_ok",
+      "label": "core forms",
+      "kind": "binary"
+    },
+    {
+      "id": "typo_free",
+      "label": "no letter swap",
+      "kind": "binary"
+    },
+    {
+      "id": "format_ok",
+      "label": "format ok",
+      "kind": "binary"
+    }
+  ],
+  "perf_fields": [
+    {
+      "id": "cost_usd",
+      "label": "cost",
+      "unit": "USD"
+    },
+    {
+      "id": "in_tokens",
+      "label": "in tok"
+    },
+    {
+      "id": "out_tokens",
+      "label": "out tok"
+    },
+    {
+      "id": "latency_s",
+      "label": "latency",
+      "unit": "s"
+    },
+    {
+      "id": "forms",
+      "label": "forms"
+    }
+  ],
+  "harness_paths": [
+    "scripts/eval-enrich.mjs",
+    "scripts/eval-enrich-cases.json",
+    "lib/enrich.ts"
+  ],
+  "harness_sha": "0d3f1ba27d348fcbff1270271e84c65d48957e0d2be68b271b9fa25bf46b766b"
+}
