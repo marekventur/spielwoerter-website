@@ -3,7 +3,7 @@ import { Card } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { WordHistoryList } from "~/components/WordHistoryList";
-import { changelog, moderatorNames } from "../../lib/history.js";
+import { changelog } from "../../lib/history.js";
 import { screenName } from "../../lib/screen-name.js";
 import type { Route } from "./+types/aenderungen";
 
@@ -26,8 +26,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const filter = {
     kind: url.searchParams.get("art") || undefined,
     status: url.searchParams.get("status") || undefined,
-    word: url.searchParams.get("wort")?.trim().toLowerCase() || undefined,
-    person: url.searchParams.get("von")?.trim() || undefined,
+    // "wort" is the parameter's old name; existing links keep working.
+    query: (url.searchParams.get("q") ?? url.searchParams.get("wort"))?.trim() || undefined,
     from: url.searchParams.get("ab") || undefined,
     to: url.searchParams.get("bis") || undefined,
   };
@@ -46,7 +46,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     page,
     isModerator,
     viewerName: context.user ? screenName(context.user.displayName, context.user.id) : null,
-    moderatorNames: moderatorNames(context.db),
   };
 }
 
@@ -67,7 +66,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function AenderungenPage({ loaderData }: Route.ComponentProps) {
-  const { items, hasMore, page, isModerator, viewerName, moderatorNames } = loaderData;
+  const { items, hasMore, page, isModerator, viewerName } = loaderData;
   const [searchParams] = useSearchParams();
   const revalidator = useRevalidator();
 
@@ -132,24 +131,12 @@ export default function AenderungenPage({ loaderData }: Route.ComponentProps) {
           ))}
         </select>
         <Input
-          name="wort"
-          defaultValue={searchParams.get("wort") ?? ""}
-          placeholder="Wort"
-          className="h-9 w-36 text-sm"
+          name="q"
+          defaultValue={searchParams.get("q") ?? searchParams.get("wort") ?? ""}
+          placeholder="Filter"
+          aria-label="Filter"
+          className="h-9 w-44 text-sm"
         />
-        <Input
-          name="von"
-          list="aenderungen-personen"
-          defaultValue={searchParams.get("von") ?? ""}
-          placeholder="Name"
-          aria-label="Name"
-          className="h-9 w-36 text-sm"
-        />
-        <datalist id="aenderungen-personen">
-          {moderatorNames.map((n) => (
-            <option key={n} value={n} />
-          ))}
-        </datalist>
         <label className="flex items-center gap-1 text-sm text-gray-500">
           ab
           <Input

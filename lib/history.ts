@@ -161,10 +161,11 @@ export type ChangelogFilter = {
   kind?: string;
   /** "approved" | "rejected" | "scheduled" | "pending" */
   status?: string;
-  /** Substring of the word (lowercased). */
-  word?: string;
-  /** Screen name: items this person submitted, decided or commented. */
-  person?: string;
+  /**
+   * Free-text filter. Every term must match: as a substring of the word, or as
+   * the exact screen name of whoever submitted, decided or commented.
+   */
+  query?: string;
   /** Inclusive UTC day bounds (YYYY-MM-DD) on the item's sort timestamp. */
   from?: string;
   to?: string;
@@ -187,12 +188,21 @@ export function userIdForScreenName(db: Database.Database, name: string): number
   return row?.id ?? null;
 }
 
-/** Screen names of all moderators, for the changelog's person suggestions. */
-export function moderatorNames(db: Database.Database): string[] {
-  const rows = db
-    .prepare("SELECT id, display_name FROM users WHERE is_moderator = 1")
-    .all() as { id: number; display_name: string | null }[];
-  return rows.map((r) => screenName(r.display_name, r.id)).sort((a, b) => a.localeCompare(b, "de"));
+/**
+ * Splits the free-text filter into terms. A screen name may contain spaces, so
+ * the whole input is tried as a name before it is split on whitespace.
+ */
+function queryTerms(
+  db: Database.Database,
+  query: string
+): { like: string; userId: number | null }[] {
+  const whole = query.trim();
+  if (!whole) return [];
+  const parts = userIdForScreenName(db, whole) !== null ? [whole] : whole.split(/\s+/);
+  return parts.map((t) => ({
+    like: wordLikePattern(t.toLowerCase()),
+    userId: userIdForScreenName(db, t),
+  }));
 }
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -233,16 +243,19 @@ export function changelog(
 
   const items: HistoryItem[] = [];
 
-  // An unknown name matches nobody rather than silently dropping the filter.
-  const personId = filter.person ? userIdForScreenName(db, filter.person) : null;
-  if (filter.person && personId === null) return { items, hasMore: false };
+  const terms = filter.query ? queryTerms(db, filter.query) : [];
 
   if (includeSuggestions) {
     const where: string[] = [VISIBLE_SUGGESTIONS];
     const params: unknown[] = [];
-    if (personId !== null) {
-      where.push("(s.user_id = ? OR s.decided_by = ?)");
-      params.push(personId, personId);
+    for (const t of terms) {
+      if (t.userId !== null) {
+        where.push("(s.word LIKE ? ESCAPE '\\' OR s.user_id = ? OR s.decided_by = ?)");
+        params.push(t.like, t.userId, t.userId);
+      } else {
+        where.push("s.word LIKE ? ESCAPE '\\'");
+        params.push(t.like);
+      }
     }
     dayRange("COALESCE(s.decided_at, s.created_at)", filter, where, params);
     if (filter.kind) {
@@ -250,10 +263,6 @@ export function changelog(
       params.push(filter.kind);
     }
     if (filter.status && STATUS_SQL[filter.status]) where.push(STATUS_SQL[filter.status]);
-    if (filter.word) {
-      where.push("s.word LIKE ? ESCAPE '\\'");
-      params.push(wordLikePattern(filter.word));
-    }
     const rows = db
       .prepare(
         `${SUGGESTION_SELECT} WHERE ${where.join(" AND ")}
@@ -267,15 +276,16 @@ export function changelog(
     const where: string[] = [];
     const params: unknown[] = [];
     if (!forModerator) where.push("c.hidden_at IS NULL");
-    if (personId !== null) {
-      where.push("c.user_id = ?");
-      params.push(personId);
+    for (const t of terms) {
+      if (t.userId !== null) {
+        where.push("(c.word LIKE ? ESCAPE '\\' OR c.user_id = ?)");
+        params.push(t.like, t.userId);
+      } else {
+        where.push("c.word LIKE ? ESCAPE '\\'");
+        params.push(t.like);
+      }
     }
     dayRange("c.created_at", filter, where, params);
-    if (filter.word) {
-      where.push("c.word LIKE ? ESCAPE '\\'");
-      params.push(wordLikePattern(filter.word));
-    }
     const rows = db
       .prepare(
         `${COMMENT_SELECT}${where.length ? ` WHERE ${where.join(" AND ")}` : ""}

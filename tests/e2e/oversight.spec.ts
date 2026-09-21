@@ -356,26 +356,44 @@ test("changelog filters by person and by date range", async ({ page }) => {
   stamp.run("2026-02-10 12:00:00", null, null, removal);
   stamp.run("2026-03-01 12:00:00", "2026-03-10 12:00:00", modId, decided);
 
-  // A chosen name matches case-insensitively: own submissions and decisions.
-  await page.goto("/aenderungen?von=wortfuchs");
+  // The one filter box also takes a screen name, case-insensitively: that
+  // person's submissions and decisions. Nothing on the page advertises it.
+  await page.goto("/aenderungen?q=wortfuchs");
   await expect(page.getByRole("link", { name: "KATZE" })).toBeVisible();
   await expect(page.getByRole("link", { name: "HUNDE" })).toBeVisible();
   await expect(page.getByRole("link", { name: "HAIDUCK" })).not.toBeVisible();
-  await expect(page.locator('#aenderungen-personen option[value="Wortfuchs"]')).toHaveCount(1);
+  await expect(page.locator("datalist")).toHaveCount(0);
+  await expect(page.locator('input[name="von"]')).toHaveCount(0);
+  const filterBox = page.getByRole("textbox", { name: "Filter" });
+  await expect(filterBox).toHaveValue("wortfuchs");
 
-  // Automatic names work too; an unknown name matches nothing.
-  await page.goto(`/aenderungen?von=Besucher-${userId}`);
+  // Automatic names work too; a string that is neither matches nothing.
+  await page.goto(`/aenderungen?q=Besucher-${userId}`);
   await expect(page.getByRole("link", { name: "HAIDUCK" })).toBeVisible();
   await expect(page.getByRole("link", { name: "KATZE" })).not.toBeVisible();
-  await page.goto("/aenderungen?von=Niemand123");
+  await page.goto("/aenderungen?q=Niemand123");
   await expect(page.getByRole("link", { name: "HAIDUCK" })).not.toBeVisible();
+
+  // Terms narrow each other: this person's entries on words containing "hun".
+  await page.goto("/aenderungen?q=wortfuchs+hun");
+  await expect(page.getByRole("link", { name: "HUNDE" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "KATZE" })).not.toBeVisible();
+
+  // Typing into the box and submitting works, and the old parameter still does.
+  await filterBox.fill("katz");
+  await page.getByRole("button", { name: "Filtern" }).click();
+  await expect(page).toHaveURL(/q=katz/);
+  await expect(page.getByRole("link", { name: "KATZE" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "HUNDE" })).not.toBeVisible();
+  await page.goto("/aenderungen?wort=hai");
+  await expect(page.getByRole("link", { name: "HAIDUCK" })).toBeVisible();
 
   // Date bounds are inclusive and use the decision date once there is one.
   await page.goto("/aenderungen?ab=2026-02-01&bis=2026-02-28");
   await expect(page.getByRole("link", { name: "KATZE" })).toBeVisible();
   await expect(page.getByRole("link", { name: "HAIDUCK" })).not.toBeVisible();
   await expect(page.getByRole("link", { name: "HUNDE" })).not.toBeVisible();
-  await page.goto("/aenderungen?von=Wortfuchs&ab=2026-03-10&bis=2026-03-10");
+  await page.goto("/aenderungen?q=Wortfuchs&ab=2026-03-10&bis=2026-03-10");
   await expect(page.getByRole("link", { name: "HUNDE" })).toBeVisible();
   await expect(page.getByRole("link", { name: "KATZE" })).not.toBeVisible();
 
