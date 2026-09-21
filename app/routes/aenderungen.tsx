@@ -3,7 +3,7 @@ import { Card } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { WordHistoryList } from "~/components/WordHistoryList";
-import { changelog } from "../../lib/history.js";
+import { changelog, moderatorNames } from "../../lib/history.js";
 import { screenName } from "../../lib/screen-name.js";
 import type { Route } from "./+types/aenderungen";
 
@@ -27,6 +27,9 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     kind: url.searchParams.get("art") || undefined,
     status: url.searchParams.get("status") || undefined,
     word: url.searchParams.get("wort")?.trim().toLowerCase() || undefined,
+    person: url.searchParams.get("von")?.trim() || undefined,
+    from: url.searchParams.get("ab") || undefined,
+    to: url.searchParams.get("bis") || undefined,
   };
 
   const isModerator = context.user?.isModerator ?? false;
@@ -43,6 +46,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     page,
     isModerator,
     viewerName: context.user ? screenName(context.user.displayName, context.user.id) : null,
+    moderatorNames: moderatorNames(context.db),
   };
 }
 
@@ -63,7 +67,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function AenderungenPage({ loaderData }: Route.ComponentProps) {
-  const { items, hasMore, page, isModerator, viewerName } = loaderData;
+  const { items, hasMore, page, isModerator, viewerName, moderatorNames } = loaderData;
   const [searchParams] = useSearchParams();
   const revalidator = useRevalidator();
 
@@ -133,6 +137,37 @@ export default function AenderungenPage({ loaderData }: Route.ComponentProps) {
           placeholder="Wort"
           className="h-9 w-36 text-sm"
         />
+        <Input
+          name="von"
+          list="aenderungen-personen"
+          defaultValue={searchParams.get("von") ?? ""}
+          placeholder="Name"
+          aria-label="Name"
+          className="h-9 w-36 text-sm"
+        />
+        <datalist id="aenderungen-personen">
+          {moderatorNames.map((n) => (
+            <option key={n} value={n} />
+          ))}
+        </datalist>
+        <label className="flex items-center gap-1 text-sm text-gray-500">
+          ab
+          <Input
+            type="date"
+            name="ab"
+            defaultValue={searchParams.get("ab") ?? ""}
+            className="h-9 w-36 text-sm"
+          />
+        </label>
+        <label className="flex items-center gap-1 text-sm text-gray-500">
+          bis
+          <Input
+            type="date"
+            name="bis"
+            defaultValue={searchParams.get("bis") ?? ""}
+            className="h-9 w-36 text-sm"
+          />
+        </label>
         <Button
           type="submit"
           variant="outline"

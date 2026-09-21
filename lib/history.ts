@@ -1,5 +1,5 @@
 import type Database from "better-sqlite3";
-import { screenName } from "./screen-name.js";
+import { AUTO_NAME_PATTERN, screenName } from "./screen-name.js";
 import { FAST_TRACK_REMOVE_HOURS } from "./promotion.js";
 
 /**
@@ -163,7 +163,51 @@ export type ChangelogFilter = {
   status?: string;
   /** Substring of the word (lowercased). */
   word?: string;
+  /** Screen name: items this person submitted, decided or commented. */
+  person?: string;
+  /** Inclusive UTC day bounds (YYYY-MM-DD) on the item's sort timestamp. */
+  from?: string;
+  to?: string;
 };
+
+/**
+ * Screen name -> user id. Automatic names only resolve while the user has not
+ * chosen a display name, so a name never points at two people. Emails are
+ * deliberately not accepted.
+ */
+export function userIdForScreenName(db: Database.Database, name: string): number | null {
+  const auto = AUTO_NAME_PATTERN.exec(name.trim());
+  const row = (
+    auto
+      ? db
+          .prepare("SELECT id FROM users WHERE id = ? AND COALESCE(TRIM(display_name), '') = ''")
+          .get(Number(auto[2]))
+      : db.prepare("SELECT id FROM users WHERE TRIM(display_name) = ? COLLATE NOCASE").get(name.trim())
+  ) as { id: number } | undefined;
+  return row?.id ?? null;
+}
+
+/** Screen names of all moderators, for the changelog's person suggestions. */
+export function moderatorNames(db: Database.Database): string[] {
+  const rows = db
+    .prepare("SELECT id, display_name FROM users WHERE is_moderator = 1")
+    .all() as { id: number; display_name: string | null }[];
+  return rows.map((r) => screenName(r.display_name, r.id)).sort((a, b) => a.localeCompare(b, "de"));
+}
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Day-range conditions on a timestamp expression (SQLite UTC strings sort as text). */
+function dayRange(expr: string, filter: ChangelogFilter, where: string[], params: unknown[]): void {
+  if (filter.from && DAY.test(filter.from)) {
+    where.push(`substr(${expr}, 1, 10) >= ?`);
+    params.push(filter.from);
+  }
+  if (filter.to && DAY.test(filter.to)) {
+    where.push(`substr(${expr}, 1, 10) <= ?`);
+    params.push(filter.to);
+  }
+}
 
 /** LIKE pattern matching the term anywhere in the word. */
 function wordLikePattern(term: string): string {
@@ -189,9 +233,18 @@ export function changelog(
 
   const items: HistoryItem[] = [];
 
+  // An unknown name matches nobody rather than silently dropping the filter.
+  const personId = filter.person ? userIdForScreenName(db, filter.person) : null;
+  if (filter.person && personId === null) return { items, hasMore: false };
+
   if (includeSuggestions) {
     const where: string[] = [VISIBLE_SUGGESTIONS];
     const params: unknown[] = [];
+    if (personId !== null) {
+      where.push("(s.user_id = ? OR s.decided_by = ?)");
+      params.push(personId, personId);
+    }
+    dayRange("COALESCE(s.decided_at, s.created_at)", filter, where, params);
     if (filter.kind) {
       where.push("s.action = ?");
       params.push(filter.kind);
@@ -214,6 +267,11 @@ export function changelog(
     const where: string[] = [];
     const params: unknown[] = [];
     if (!forModerator) where.push("c.hidden_at IS NULL");
+    if (personId !== null) {
+      where.push("c.user_id = ?");
+      params.push(personId);
+    }
+    dayRange("c.created_at", filter, where, params);
     if (filter.word) {
       where.push("c.word LIKE ? ESCAPE '\\'");
       params.push(wordLikePattern(filter.word));
