@@ -342,6 +342,47 @@ test("changelog word filter matches substrings case-insensitively", async ({ pag
   await expect(page.getByRole("link", { name: "HAIDUCK" })).not.toBeVisible();
 });
 
+test("changelog filters by person and by date range", async ({ page }) => {
+  const userId = seedUser(TEST_USER_EMAIL);
+  const modId = seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const db = getTestDb();
+  db.prepare("UPDATE users SET display_name = 'Wortfuchs' WHERE id = ?").run(modId);
+
+  const own = seedSuggestion(userId, "haiduck", "add", "moderator_approved");
+  const removal = seedSuggestion(modId, "katze", "remove", "moderator_approved");
+  const decided = seedSuggestion(userId, "hunde", "add", "moderator_approved");
+  const stamp = db.prepare("UPDATE suggestions SET created_at = ?, decided_at = ?, decided_by = ? WHERE id = ?");
+  stamp.run("2026-01-10 12:00:00", null, null, own);
+  stamp.run("2026-02-10 12:00:00", null, null, removal);
+  stamp.run("2026-03-01 12:00:00", "2026-03-10 12:00:00", modId, decided);
+
+  // A chosen name matches case-insensitively: own submissions and decisions.
+  await page.goto("/aenderungen?von=wortfuchs");
+  await expect(page.getByRole("link", { name: "KATZE" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "HUNDE" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "HAIDUCK" })).not.toBeVisible();
+  await expect(page.locator('#aenderungen-personen option[value="Wortfuchs"]')).toHaveCount(1);
+
+  // Automatic names work too; an unknown name matches nothing.
+  await page.goto(`/aenderungen?von=Besucher-${userId}`);
+  await expect(page.getByRole("link", { name: "HAIDUCK" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "KATZE" })).not.toBeVisible();
+  await page.goto("/aenderungen?von=Niemand123");
+  await expect(page.getByRole("link", { name: "HAIDUCK" })).not.toBeVisible();
+
+  // Date bounds are inclusive and use the decision date once there is one.
+  await page.goto("/aenderungen?ab=2026-02-01&bis=2026-02-28");
+  await expect(page.getByRole("link", { name: "KATZE" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "HAIDUCK" })).not.toBeVisible();
+  await expect(page.getByRole("link", { name: "HUNDE" })).not.toBeVisible();
+  await page.goto("/aenderungen?von=Wortfuchs&ab=2026-03-10&bis=2026-03-10");
+  await expect(page.getByRole("link", { name: "HUNDE" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "KATZE" })).not.toBeVisible();
+
+  const content = await page.content();
+  expect(content).not.toContain(TEST_MOD_EMAIL);
+});
+
 test("removal hints flag likely special forms", async ({ request }) => {
   seedUser(TEST_USER_EMAIL);
   const db = getTestDb();
