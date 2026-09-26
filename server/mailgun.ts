@@ -98,11 +98,14 @@ export async function sendOtpEmail(email: string, code: string): Promise<void> {
 
   if (!mailEnabled("transactional")) return;
 
+  // The code goes first, next to the word "Anmeldecode": that is the shape
+  // Gmail's mobile apps recognise for their "Copy code" shortcut (no header or
+  // markup is involved — it is read off the subject and body).
   // A code from a dev box must be impossible to confuse with a real one — it
   // only works on that host, and its link points at that host.
   const subject = isProduction
-    ? "Dein Spielwörter-Code"
-    : "[DEV] Dein Spielwörter-Code";
+    ? `${code} ist dein Spielwörter-Anmeldecode`
+    : `[DEV] ${code} ist dein Spielwörter-Anmeldecode`;
 
   const from =
     process.env.MAILGUN_FROM || `Spielwörter <noreply@${domain}>`;
