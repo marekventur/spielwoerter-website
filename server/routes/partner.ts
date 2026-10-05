@@ -3,6 +3,7 @@ import { getDb } from "../../lib/db.js";
 import { normalise } from "../../lib/normalise.js";
 import { requirePartnerKey } from "../partner-auth.js";
 import { enrichWord } from "../../lib/enrich.js";
+import { IN_PIPELINE_SQL } from "../../lib/pipeline.js";
 
 export const partnerRouter = Router();
 
@@ -34,9 +35,6 @@ partnerRouter.get("/enrich/:word", async (req, res) => {
   const result = await enrichWord(word);
   res.json(result);
 });
-
-const PIPELINE_STATUSES =
-  "('draft', 'pending_review', 'ai_approved', 'needs_moderator', 'moderator_approved')";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -200,7 +198,7 @@ partnerRouter.post("/suggestions", (req, res) => {
     const conflict = db
       .prepare(
         `SELECT id FROM suggestions
-         WHERE word = ? AND action = ? AND status IN ${PIPELINE_STATUSES} AND user_id != ?
+         WHERE word = ? AND action = ? AND ${IN_PIPELINE_SQL} AND user_id != ?
          LIMIT 1`
       )
       .get(word, internalAction, userId) as { id: number } | undefined;

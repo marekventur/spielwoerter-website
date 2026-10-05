@@ -1,6 +1,7 @@
 import { data, Link, redirect } from "react-router";
 import { normalise } from "../../lib/normalise.js";
 import { wordHistory } from "../../lib/history.js";
+import { IN_PIPELINE_SQL } from "../../lib/pipeline.js";
 import { ExternalLink } from "lucide-react";
 import { Card } from "~/components/ui/card";
 import { HeroWordBadge } from "~/components/HeroWordBadge";
@@ -128,19 +129,18 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   const userSuggestions = context.user
     ? (db
         .prepare(
-          "SELECT id, action, status FROM suggestions WHERE user_id = ? AND word = ? ORDER BY created_at DESC"
+          `SELECT id, action, status FROM suggestions WHERE user_id = ? AND word = ? AND ${IN_PIPELINE_SQL}
+           ORDER BY created_at DESC`
         )
         .all(context.user.id, wordLower) as SuggestionRow[])
     : [];
 
-  const pipelineStatuses =
-    "('draft', 'pending_review', 'ai_approved', 'needs_moderator', 'moderator_approved')";
   const addInReviewByOthers = context.user
     ? Boolean(
         db
           .prepare(
             `SELECT 1 FROM suggestions WHERE word = ? AND action = 'add'
-             AND status IN ${pipelineStatuses}
+             AND ${IN_PIPELINE_SQL}
              AND user_id != ?
              LIMIT 1`
           )
@@ -150,7 +150,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
         db
           .prepare(
             `SELECT 1 FROM suggestions WHERE word = ? AND action = 'add'
-             AND status IN ${pipelineStatuses}
+             AND ${IN_PIPELINE_SQL}
              LIMIT 1`
           )
           .get(wordLower)
@@ -161,7 +161,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
         db
           .prepare(
             `SELECT 1 FROM suggestions WHERE word = ? AND action = 'remove'
-             AND status IN ${pipelineStatuses}
+             AND ${IN_PIPELINE_SQL}
              AND user_id != ?
              LIMIT 1`
           )

@@ -129,6 +129,47 @@ test("duplicate suggestion shows already-exists message", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("approved suggestion blocks only until it is published", async ({ page }) => {
+  const userId = seedUser(TEST_USER_EMAIL);
+  const id = seedSuggestion(userId, "hund", "change_description", "moderator_approved", {
+    description: "x",
+  });
+  await loginAs(page, TEST_USER_EMAIL);
+
+  await page.goto("/wort/HUND");
+  await expect(
+    page.getByText("Du hast bereits einen Vorschlag für dieses Wort")
+  ).toBeVisible();
+
+  getTestDb()
+    .prepare("UPDATE suggestions SET synced_at = datetime('now') WHERE id = ?")
+    .run(id);
+  await page.goto("/wort/HUND");
+  await expect(
+    page.getByRole("button", { name: "Melde dieses Wort als fehlerhaft" })
+  ).toBeVisible();
+});
+
+test("another user's published add does not block a new add", async ({ request }) => {
+  const otherId = seedUser(TEST_USER_EMAIL);
+  const id = seedSuggestion(otherId, "neutestwort", "add", "moderator_approved", {
+    description: "x",
+  });
+  seedUser(TEST_USER2_EMAIL);
+  const sessionId = await loginViaApi(TEST_USER2_EMAIL);
+  const post = () =>
+    request.post("/api/suggestions", {
+      headers: { Cookie: `session=${sessionId}` },
+      data: { word: "neutestwort", action: "add", payload: { description: "x", base: "y" } },
+    });
+
+  expect((await post()).status()).toBe(409);
+  getTestDb()
+    .prepare("UPDATE suggestions SET synced_at = datetime('now') WHERE id = ?")
+    .run(id);
+  expect((await post()).status()).toBe(200);
+});
+
 test("adding a regular verb offers its conjugated forms as cards", async ({
   page,
 }) => {

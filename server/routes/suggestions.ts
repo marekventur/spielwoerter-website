@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getDb } from "../../lib/db.js";
 import { normalise } from "../../lib/normalise.js";
 import { priorDecision } from "../../lib/prior-decisions.js";
+import { IN_PIPELINE_SQL } from "../../lib/pipeline.js";
 import { requireUser } from "../http-auth.js";
 
 /** Lemma: if base equals the word, omit base (stored as null on sync). */
@@ -144,12 +145,10 @@ suggestionsRouter.post("/", (req, res) => {
     }
   }
 
-  const pipelineStatuses =
-    "('draft', 'pending_review', 'ai_approved', 'needs_moderator', 'moderator_approved')";
   if (action === "add" || action === "remove") {
     const otherPipeline = db
       .prepare(
-        `SELECT 1 FROM suggestions WHERE word = ? AND action = ? AND status IN ${pipelineStatuses}
+        `SELECT 1 FROM suggestions WHERE word = ? AND action = ? AND ${IN_PIPELINE_SQL}
          AND user_id != ?
          LIMIT 1`
       )

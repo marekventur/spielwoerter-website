@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getDb } from "./db.js";
 import { conjugateRegular } from "./conjugate.js";
+import { IN_PIPELINE_SQL } from "./pipeline.js";
 
 const GERMAN_SUFFIXES = ["nen", "ern", "ste", "en", "es", "em", "er", "e", "s", "n"];
 
@@ -37,7 +38,7 @@ export function classifyLlmVariant(
   const inReview = db
     .prepare(
       `SELECT 1 FROM suggestions WHERE word = ? AND action = 'add'
-       AND status IN ('draft', 'pending_review', 'ai_approved', 'needs_moderator', 'moderator_approved')
+       AND ${IN_PIPELINE_SQL}
        LIMIT 1`
     )
     .get(w);
