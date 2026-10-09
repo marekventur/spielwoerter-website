@@ -202,7 +202,18 @@ export function conjugateRegular(
 
   // Präsens: -eln/-ern verbs use the infinitive for wir/sie, plain -en otherwise.
   add(stem + "e", `1. Pers. Sg. Präs. ${of}`);
-  if (elVerb) add(stem.slice(0, -2) + stem.slice(-1) + "e", `1. Pers. Sg. Präs. ${of} (e-Tilgung)`);
+  if (elVerb) {
+    add(stem.slice(0, -2) + stem.slice(-1) + "e", `1. Pers. Sg. Präs. ${of} (e-Tilgung)`);
+    // Final e dropped too (REGELN.md, e-Tilgung in 1. Pers. Sg. / Imperativ Sg.):
+    // "ich wander", "häkel!". Separable verbs split in the imperative, so for
+    // them the joined form is only the 1st person ("dass ich aufmunter").
+    add(
+      stem,
+      split?.kind === "separable"
+        ? `1. Pers. Sg. Präs. ${of} (e-Tilgung)`
+        : `1. Pers. Sg. Präs. / Imperativ Sg. ${of} (e-Tilgung)`
+    );
+  }
   add(sStem ? stem + "t" : stem + e + "st", `2. Pers. Sg. Präs. ${of}`);
   add(stem + e + "t", `3. Pers. Sg. / 2. Pers. Pl. Präs. ${of}`);
 
@@ -249,6 +260,25 @@ export function conjugateRegular(
         ? split.prefix + geStem + e + "t"
         : stem + e + "t";
   add(p2, `Part. II ${of}`);
+
+  // Genitive of the substantivised infinitive, allowed for every infinitive
+  // (REGELN.md): "des Wanderns", "des Freuens".
+  add(infinitive + "s", `Genitiv des substantivierten Infinitivs ${of}`);
+
+  // -en after a stem vowel (or vowel + h) may lose its e (REGELN.md "Endung -en
+  // nach Vokal"): infinitive and 1st/3rd person plural ("freun", "drohn"),
+  // and the zu-infinitive. Weak verbs have no other -en form after the stem
+  // (Partizip II ends in -t); never for Partizip I or the substantivised
+  // infinitive's declension, so "freuend" and "Freuens" keep their e.
+  if (!elVerb && /[aeiouäöüy]h?$/.test(stem)) {
+    add(stem + "n", `Infinitiv / 1. u. 3. Pers. Pl. Präs. ${of} (e-Tilgung nach Vokal)`);
+    if (split?.kind === "separable") {
+      add(
+        split.prefix + "zu" + split.rest.slice(0, -2) + "n",
+        `Inf. mit zu ${of} (e-Tilgung nach Vokal)`
+      );
+    }
+  }
 
   // Partizip I + adjectival declension of both participles.
   const p1 = infinitive + "d";
