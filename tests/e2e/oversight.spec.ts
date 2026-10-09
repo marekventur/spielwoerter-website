@@ -263,66 +263,6 @@ test("moderators can hide comments from the public stream", async ({ page, reque
   await expect(page.getByText("Unpassender Kommentar")).not.toBeVisible();
 });
 
-test("moderators can reply to a comment; the reply is public and mail is skipped on dev", async ({
-  page,
-  request,
-}) => {
-  const userId = seedUser(TEST_USER_EMAIL);
-  seedUser(TEST_MOD_EMAIL, { isModerator: true });
-  const userSession = await loginViaApi(TEST_USER_EMAIL);
-
-  await request.post("/api/word-comments", {
-    headers: cookieHeader(userSession),
-    data: { word: "hund", body: "Warum ist das gültig?" },
-  });
-
-  await loginAs(page, TEST_MOD_EMAIL, "/wort/HUND");
-  await page.locator("summary").click();
-  await page.getByRole("button", { name: "antworten" }).click();
-  await page.getByPlaceholder(/Antwort an/).fill("Steht so im Duden.");
-  await page.getByRole("button", { name: "Antwort senden" }).click();
-
-  await expect(page.getByText("Steht so im Duden.")).toBeVisible();
-  await expect(page.getByText(`Antwort an Besucher-${userId}`)).toBeVisible();
-  const reply = getTestDb()
-    .prepare("SELECT reply_to, user_id FROM word_comments WHERE body = 'Steht so im Duden.'")
-    .get() as { reply_to: number | null };
-  expect(reply.reply_to).not.toBeNull();
-
-  // Public stream shows the reply; no address leaks.
-  await page.context().clearCookies();
-  await page.goto("/wort/HUND");
-  await page.locator("summary").click();
-  await expect(page.getByText(`Antwort an Besucher-${userId}`)).toBeVisible();
-  expect(await page.content()).not.toContain(TEST_USER_EMAIL);
-});
-
-test("only moderators can reply to comments", async ({ page, request }) => {
-  seedUser(TEST_USER_EMAIL);
-  seedUser(TEST_USER2_EMAIL);
-  const session = await loginViaApi(TEST_USER_EMAIL);
-  const session2 = await loginViaApi(TEST_USER2_EMAIL);
-
-  await request.post("/api/word-comments", {
-    headers: cookieHeader(session),
-    data: { word: "hund", body: "Frage" },
-  });
-  const comment = getTestDb()
-    .prepare("SELECT id FROM word_comments WHERE word = 'hund'")
-    .get() as { id: number };
-
-  const res = await request.post(`/api/word-comments/${comment.id}/reply`, {
-    headers: cookieHeader(session2),
-    data: { body: "Antwort" },
-  });
-  expect(res.status()).toBe(403);
-
-  await loginAs(page, TEST_USER2_EMAIL, "/wort/HUND");
-  await page.locator("summary").click();
-  await expect(page.getByText("Frage")).toBeVisible();
-  await expect(page.getByRole("button", { name: "antworten" })).not.toBeVisible();
-});
-
 test("screen name can be set, is validated, and must be unique", async ({ request }) => {
   seedUser(TEST_USER_EMAIL);
   seedUser(TEST_USER2_EMAIL);

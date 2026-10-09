@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { MessageSquare, Pin, Lock } from "lucide-react";
 import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { formatTimestamp } from "~/components/WordHistoryList";
-import { listTopics, MAX_POST_LENGTH, MAX_TOPIC_TITLE_LENGTH } from "../../lib/topics";
+import {
+  listTopics,
+  MAX_POST_LENGTH,
+  MAX_TOPIC_TITLE_LENGTH,
+  type TopicKind,
+} from "../../lib/topics";
 import { screenName } from "../../lib/screen-name";
 import type { Route } from "./+types/diskussion";
 
@@ -16,15 +21,24 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+const FILTERS: { key: string; label: string; kinds: TopicKind[] }[] = [
+  { key: "moderation", label: "Moderation", kinds: ["moderation"] },
+  { key: "woerter", label: "Wortgespräche", kinds: ["word"] },
+  { key: "alle", label: "Alle", kinds: ["moderation", "word"] },
+];
+
+export async function loader({ context, request }: Route.LoaderArgs) {
   // Moderators only, reads included. 404 rather than 403: a 403 would confirm
-  // that the board exists.
+  // that the board exists. Users reach their word threads via /gespraeche.
   if (!context.user?.isModerator) throw new Response("Not Found", { status: 404 });
-  return { topics: listTopics(context.db) };
+  const key = new URL(request.url).searchParams.get("zeige") ?? "moderation";
+  const filter = FILTERS.find((f) => f.key === key) ?? FILTERS[0];
+  return { topics: listTopics(context.db, filter.kinds), filter: filter.key };
 }
 
 export default function DiskussionPage({ loaderData }: Route.ComponentProps) {
-  const { topics } = loaderData;
+  const { topics, filter } = loaderData;
+  const [, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -109,6 +123,31 @@ export default function DiskussionPage({ loaderData }: Route.ComponentProps) {
         )}
       </div>
 
+      <div className="flex gap-1 mb-4" role="tablist">
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            role="tab"
+            aria-selected={f.key === filter}
+            onClick={() => setSearchParams(f.key === "moderation" ? {} : { zeige: f.key })}
+            className={`text-sm px-3 py-1 rounded-full border ${
+              f.key === filter
+                ? "bg-orange-500 border-orange-500 text-white"
+                : "border-gray-300 text-gray-600 hover:bg-orange-50"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+      {filter !== "moderation" && (
+        <p className="text-xs text-gray-500 mb-4">
+          Wortgespräche sind privat zwischen der Moderation und einer Person. E-Mails gehen nur an
+          Beteiligte, nicht an alle Moderator:innen.
+        </p>
+      )}
+
       {topics.length === 0 ? (
         <p className="text-sm text-gray-400">Noch keine Themen.</p>
       ) : (
@@ -122,6 +161,11 @@ export default function DiskussionPage({ loaderData }: Route.ComponentProps) {
                       <p className="font-medium text-gray-900 flex items-center gap-2">
                         {!!t.pinned && <Pin className="w-3.5 h-3.5 text-orange-500 shrink-0" />}
                         {!!t.locked && <Lock className="w-3.5 h-3.5 text-gray-400 shrink-0" />}
+                        {t.kind === "word" && (
+                          <span className="text-[10px] uppercase tracking-wide bg-sky-100 text-sky-700 rounded-full px-1.5 py-px shrink-0">
+                            Wort
+                          </span>
+                        )}
                         <span className="truncate">{t.title}</span>
                       </p>
                       <p className="text-xs text-gray-500 mt-1">

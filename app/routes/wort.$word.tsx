@@ -2,6 +2,7 @@ import { data, Link, redirect } from "react-router";
 import { normalise } from "../../lib/normalise.js";
 import { wordHistory } from "../../lib/history.js";
 import { IN_PIPELINE_SQL } from "../../lib/pipeline.js";
+import { listWordThreads } from "../../lib/conversations.js";
 import { ExternalLink } from "lucide-react";
 import { Card } from "~/components/ui/card";
 import { HeroWordBadge } from "~/components/HeroWordBadge";
@@ -181,6 +182,12 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     history: wordHistory(db, wordLower, {
       forModerator: context.user?.isModerator ?? false,
     }),
+    // Private word threads: moderators see all for the word, users their own.
+    threads: listWordThreads(db, context.user, { word: wordLower }).map((t) => ({
+      id: t.id,
+      title: t.title,
+      post_count: t.post_count,
+    })),
     siteUrl: (process.env.SITE_URL ?? "https://spielwoerter.de").replace(/\/$/, ""),
   };
   return data(loaderData, { status: wordRow ? 200 : 404 });
@@ -313,6 +320,7 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
           wordLower={wordLower}
           user={user}
           history={history}
+          threads={loaderData.threads}
         />
       </div>
     </div>

@@ -9,6 +9,8 @@ export type User = {
   /** Per-channel mail preferences; see lib/topics.ts and /konto. */
   emailDiskussion: "all" | "mine" | "none";
   emailDigest: boolean;
+  /** Mail for messages from (or answers to) the moderation; see lib/messages.ts. */
+  emailMessages: boolean;
 };
 
 export function getUserFromSession(
@@ -18,7 +20,7 @@ export function getUserFromSession(
   const row = db
     .prepare(
       `SELECT u.id, u.email, u.display_name, u.is_moderator, u.is_admin,
-              u.email_diskussion, u.email_digest
+              u.email_diskussion, u.email_digest, u.email_messages
        FROM sessions s
        JOIN users u ON u.id = s.user_id
        WHERE s.id = ? AND s.expires_at > datetime('now')`
@@ -32,6 +34,7 @@ export function getUserFromSession(
         is_admin: number;
         email_diskussion: string;
         email_digest: number;
+        email_messages: number;
       }
     | undefined;
 
@@ -47,5 +50,6 @@ export function getUserFromSession(
         ? row.email_diskussion
         : "all",
     emailDigest: !!row.email_digest,
+    emailMessages: !!row.email_messages,
   };
 }

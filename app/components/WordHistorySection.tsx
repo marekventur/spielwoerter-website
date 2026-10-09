@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link, useRevalidator } from "react-router";
-import { History } from "lucide-react";
+import { Link, useNavigate, useRevalidator } from "react-router";
+import { History, Lock } from "lucide-react";
+import { openWordThread } from "~/components/word-thread-api";
 import { Button } from "~/components/ui/button";
 import { WordHistoryList } from "~/components/WordHistoryList";
 import { screenName } from "../../lib/screen-name";
@@ -12,13 +13,22 @@ type WordHistorySectionProps = {
   wordLower: string;
   user: User | null;
   history: HistoryItem[];
+  /** Private word threads the viewer may see (lib/conversations.ts). */
+  threads: { id: number; title: string; post_count: number }[];
 };
 
 /**
  * Collapsed "Änderungshistorie & Diskussion" at the bottom of a word page:
  * the word's public event stream plus a comment form for logged-in users.
  */
-export function WordHistorySection({ word, wordLower, user, history }: WordHistorySectionProps) {
+export function WordHistorySection({
+  word,
+  wordLower,
+  user,
+  history,
+  threads,
+}: WordHistorySectionProps) {
+  const navigate = useNavigate();
   const [comment, setComment] = useState("");
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -50,17 +60,10 @@ export function WordHistorySection({ word, wordLower, user, history }: WordHisto
     if (res.ok) revalidator.revalidate();
   };
 
-  const reply = async (commentId: number, body: string): Promise<string | null> => {
-    const res = await fetch(`/api/word-comments/${commentId}/reply`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ body }),
-    });
-    if (!res.ok) {
-      const d = (await res.json().catch(() => ({}))) as { error?: string };
-      return d.error ?? "Fehler";
-    }
-    revalidator.revalidate();
+  const messageCommenter = async (commentId: number, body: string): Promise<string | null> => {
+    const result = await openWordThread({ commentId, body });
+    if ("error" in result) return result.error;
+    void navigate(`/diskussion/${result.topicId}`);
     return null;
   };
 
@@ -95,6 +98,24 @@ export function WordHistorySection({ word, wordLower, user, history }: WordHisto
       </summary>
 
       <div className="mt-4">
+        {threads.length > 0 && (
+          <div className="mb-4 text-sm">
+            <p className="text-xs text-gray-500 mb-1 inline-flex items-center gap-1">
+              <Lock className="w-3 h-3" />
+              Private Gespräche (nur für Beteiligte und die Moderation sichtbar)
+            </p>
+            <ul className="space-y-0.5">
+              {threads.map((t) => (
+                <li key={t.id}>
+                  <Link to={`/diskussion/${t.id}`} className="text-orange-600 hover:underline">
+                    {t.title}
+                  </Link>{" "}
+                  <span className="text-xs text-gray-400">({t.post_count})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <WordHistoryList
           items={history}
           canHideComments={user?.isModerator ?? false}
@@ -102,7 +123,7 @@ export function WordHistorySection({ word, wordLower, user, history }: WordHisto
           isModerator={user?.isModerator ?? false}
           viewerName={user ? screenName(user.displayName, user.id) : null}
           onScheduledAction={(id, kind) => void scheduledAction(id, kind)}
-          onReply={user?.isModerator ? reply : undefined}
+          onMessage={user?.isModerator ? messageCommenter : undefined}
         />
 
         {user ? (

@@ -7,12 +7,16 @@ import {
   normaliseSubject,
   parseMessageIds,
 } from "../../lib/topics.js";
-import { diskussionAddress } from "../mailgun.js";
+import { participantByToken, postToWordThread } from "../../lib/conversations.js";
+import { diskussionAddress, tokenFromReplyAddress } from "../mailgun.js";
 import { mailTopicPostInBackground } from "../topic-mail.js";
 
 /**
  * Inbound mail from Mailgun: replies to the moderator discussion list become
- * posts on /diskussion.
+ * posts on /diskussion (/:secret/diskussion), and replies to a word thread's
+ * private address gespraech+<token>@ become posts in that thread
+ * (/:secret/gespraech). The two paths never cross: the list address only ever
+ * reaches board topics, a token only its own word thread.
  *
  * This endpoint is public and unauthenticated in the browser sense, so it has
  * three independent gates:
@@ -154,39 +158,116 @@ inboundRouter.post(
   }
 );
 
-async function handleInbound(req: express.Request): Promise<void> {
+inboundRouter.post(
+  "/:secret/gespraech",
+  inboundLimit,
+  ...parsers,
+  async (req, res) => {
+    const expected = process.env.INBOUND_SECRET;
+    if (!expected || req.params.secret !== expected) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    try {
+      await handleWordThreadInbound(req);
+    } catch (err) {
+      console.error("[inbound] Word-thread handler error:", err);
+    }
+    res.json({ ok: true });
+  }
+);
+
+type Inbound = { fields: Fields; header: (name: string) => string | null; sender: string };
+
+async function readInbound(req: express.Request): Promise<Inbound> {
   let fields = fieldsFrom(req);
   if (fields["message-url"] && !fields["body-plain"] && !fields["stripped-text"]) {
     const stored = await fetchStoredMessage(fields["message-url"]);
     if (stored) fields = { ...fields, ...stored };
   }
-
   const header = headerLookup(fields);
   const from = fields["from"] ?? fields["sender"] ?? header("From") ?? "";
-  const sender = extractAddress(from);
+  return { fields, header, sender: extractAddress(from) };
+}
 
-  // ── Loop prevention ──────────────────────────────────────────────────────
+/** Loop and spam guards shared by both paths. Returns why to drop, or null. */
+function dropReason({ header, sender }: Inbound): string | null {
   // Our own notification mail must never come back in as a post.
-  if (sender === diskussionAddress().toLowerCase()) {
-    console.warn("[inbound] Dropped: mail from our own list address");
-    return;
-  }
+  const domain = (process.env.MAILGUN_DOMAIN || "mail.spielwoerter.de").toLowerCase();
+  if (sender === diskussionAddress().toLowerCase()) return "mail from our own list address";
+  if (sender === `noreply@${domain}`) return "mail from our own no-reply address";
   const autoSubmitted = header("Auto-Submitted");
-  if (autoSubmitted && autoSubmitted.toLowerCase() !== "no") {
-    console.warn(`[inbound] Dropped: Auto-Submitted: ${autoSubmitted}`);
-    return;
-  }
-  if ((header("List-Id") ?? "").toLowerCase().includes("spielwoerter")) {
-    console.warn("[inbound] Dropped: carries our own List-Id");
-    return;
+  if (autoSubmitted && autoSubmitted.toLowerCase() !== "no") return `Auto-Submitted: ${autoSubmitted}`;
+  if ((header("List-Id") ?? "").toLowerCase().includes("spielwoerter")) return "carries our own List-Id";
+  // The domain runs spam_action=tag, so Mailgun flags rather than blocks.
+  if ((header("X-Mailgun-Sflag") ?? "").toLowerCase() === "yes") return `flagged as spam (${sender})`;
+  return null;
+}
+
+/**
+ * A reply to gespraech+<token>@. Accepted only if the token belongs to a word
+ * thread AND the mail comes from that participant's own address. From: alone
+ * is spoofable and the token alone could leak with a forwarded mail; together
+ * they mean "this person, about this thread". No subject fallback, no new
+ * threads: anything that does not match exactly is dropped.
+ */
+async function handleWordThreadInbound(req: express.Request): Promise<void> {
+  const inbound = await readInbound(req);
+  const { fields, header, sender } = inbound;
+  const reason = dropReason(inbound);
+  if (reason) return void console.warn(`[inbound] Word thread: dropped, ${reason}`);
+
+  const recipients = (fields["recipient"] ?? header("To") ?? "").split(",").map(extractAddress);
+  const token = recipients.map(tokenFromReplyAddress).find((t) => t !== null);
+  const db = getDb();
+  const participant = token ? participantByToken(db, token) : undefined;
+  if (!participant) return void console.warn("[inbound] Word thread: dropped, unknown token");
+
+  const user = db
+    .prepare("SELECT id, email, is_moderator FROM users WHERE id = ?")
+    .get(participant.user_id) as { id: number; email: string; is_moderator: number } | undefined;
+  if (!user || user.email.toLowerCase() !== sender) {
+    // No bounce: never confirm what a token belongs to.
+    return void console.warn(`[inbound] Word thread: dropped, sender does not own the token (${sender})`);
   }
 
-  // ── Spam ─────────────────────────────────────────────────────────────────
-  // The domain runs spam_action=tag, so Mailgun flags rather than blocks.
-  if ((header("X-Mailgun-Sflag") ?? "").toLowerCase() === "yes") {
-    console.warn(`[inbound] Dropped: flagged as spam (${sender})`);
-    return;
+  const rawBody = fields["body-plain"] ?? "";
+  const body = (fields["stripped-text"] ?? rawBody).trim();
+  if (!body) return void console.warn(`[inbound] Word thread: dropped, empty body from ${sender}`);
+
+  // Parent only within the same thread; a foreign Message-Id is ignored.
+  let parentId: number | null = null;
+  const findInTopic = db.prepare("SELECT id FROM topic_posts WHERE message_id = ? AND topic_id = ?");
+  for (const mid of [
+    ...parseMessageIds(header("In-Reply-To")),
+    ...parseMessageIds(header("References")).reverse(),
+  ]) {
+    const hit = findInTopic.get(mid, participant.topic_id) as { id: number } | undefined;
+    if (hit) {
+      parentId = hit.id;
+      break;
+    }
   }
+
+  const result = postToWordThread(
+    db,
+    { id: user.id, isModerator: !!user.is_moderator },
+    participant.topic_id,
+    body,
+    { parentId, source: "email", rawBody }
+  );
+  if (!result.ok) {
+    return void console.warn(`[inbound] Word thread ${participant.topic_id}: dropped, ${result.error}`);
+  }
+  console.log(`[inbound] Post ${result.postId} added to word thread ${participant.topic_id} by user ${user.id}`);
+  mailTopicPostInBackground(db, result.postId);
+}
+
+async function handleInbound(req: express.Request): Promise<void> {
+  const inbound = await readInbound(req);
+  const { fields, header, sender } = inbound;
+  const reason = dropReason(inbound);
+  if (reason) return void console.warn(`[inbound] Dropped: ${reason}`);
 
   // ── Sender must be a moderator ───────────────────────────────────────────
   const db = getDb();
@@ -215,8 +296,12 @@ async function handleInbound(req: express.Request): Promise<void> {
     ...parseMessageIds(header("In-Reply-To")),
     ...parseMessageIds(header("References")).reverse(),
   ];
+  // Board topics only: a word thread (visible to a user) must never be
+  // reachable through the list address, whatever the headers say.
   const findByMessageId = db.prepare(
-    "SELECT id, topic_id FROM topic_posts WHERE message_id = ?"
+    `SELECT p.id, p.topic_id FROM topic_posts p
+     JOIN topics t ON t.id = p.topic_id AND t.kind = 'moderation'
+     WHERE p.message_id = ?`
   );
   let parentId: number | null = null;
   let topicId: number | null = null;
@@ -236,7 +321,7 @@ async function handleInbound(req: express.Request): Promise<void> {
     const title = normaliseSubject(subject);
     const bySubject = db
       .prepare(
-        "SELECT id FROM topics WHERE lower(title) = lower(?) ORDER BY last_activity_at DESC LIMIT 1"
+        "SELECT id FROM topics WHERE kind = 'moderation' AND lower(title) = lower(?) ORDER BY last_activity_at DESC LIMIT 1"
       )
       .get(title) as { id: number } | undefined;
     if (bySubject) topicId = bySubject.id;

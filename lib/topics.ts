@@ -15,11 +15,17 @@ import type Database from "better-sqlite3";
 export const MAX_TOPIC_TITLE_LENGTH = 150;
 /** Web posts only. Inbound mail is deliberately not truncated. */
 export const MAX_POST_LENGTH = 10_000;
+/** Word threads (lib/conversations.ts), web and mail. */
+export const MAX_MESSAGE_LENGTH = 5000;
 
 export type PostSource = "web" | "email";
 
+export type TopicKind = "moderation" | "word";
+
 export type TopicSummary = {
   id: number;
+  kind: TopicKind;
+  word: string | null;
   title: string;
   created_at: string;
   last_activity_at: string;
@@ -198,10 +204,14 @@ export function recipientsFor(
   return kept;
 }
 
-export function listTopics(db: Database.Database): TopicSummary[] {
+/** Moderators only (the route checks). `kinds` defaults to the board itself. */
+export function listTopics(
+  db: Database.Database,
+  kinds: TopicKind[] = ["moderation"]
+): TopicSummary[] {
   return db
     .prepare(
-      `SELECT t.id, t.title, t.created_at, t.last_activity_at, t.pinned, t.locked,
+      `SELECT t.id, t.kind, t.word, t.title, t.created_at, t.last_activity_at, t.pinned, t.locked,
               t.user_id AS author_id, au.display_name AS author_name,
               (SELECT COUNT(*) FROM topic_posts p
                 WHERE p.topic_id = t.id AND p.hidden_at IS NULL) AS post_count,
@@ -213,22 +223,26 @@ export function listTopics(db: Database.Database): TopicSummary[] {
                              WHERE p2.topic_id = t.id AND p2.hidden_at IS NULL
                              ORDER BY p2.created_at DESC, p2.id DESC LIMIT 1)
          LEFT JOIN users lu ON lu.id = lp.user_id
+        WHERE t.kind IN (${kinds.map(() => "?").join(", ")})
         ORDER BY t.pinned DESC, t.last_activity_at DESC`
     )
-    .all() as TopicSummary[];
+    .all(...kinds) as TopicSummary[];
 }
 
 export function getTopic(db: Database.Database, id: number) {
   return db
     .prepare(
-      `SELECT t.id, t.title, t.created_at, t.last_activity_at, t.pinned, t.locked,
-              t.user_id AS author_id, u.display_name AS author_name
+      `SELECT t.id, t.kind, t.word, t.suggestion_id, t.title, t.created_at, t.last_activity_at,
+              t.pinned, t.locked, t.user_id AS author_id, u.display_name AS author_name
          FROM topics t JOIN users u ON u.id = t.user_id
         WHERE t.id = ?`
     )
     .get(id) as
     | {
         id: number;
+        kind: TopicKind;
+        word: string | null;
+        suggestion_id: number | null;
         title: string;
         created_at: string;
         last_activity_at: string;
@@ -287,6 +301,7 @@ export function deleteTopic(db: Database.Database, topicId: number): boolean {
   if (!exists) return false;
   db.transaction(() => {
     // FK order: children first.
+    db.prepare("DELETE FROM topic_participants WHERE topic_id = ?").run(topicId);
     db.prepare("DELETE FROM topic_posts WHERE topic_id = ?").run(topicId);
     db.prepare("DELETE FROM topics WHERE id = ?").run(topicId);
   })();

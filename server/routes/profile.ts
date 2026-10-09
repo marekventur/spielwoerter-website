@@ -43,9 +43,10 @@ profileRouter.post("/email", (req, res) => {
   const user = requireUser(req, res);
   if (!user) return;
 
-  const { emailDiskussion, emailDigest } = req.body as {
+  const { emailDiskussion, emailDigest, emailMessages } = req.body as {
     emailDiskussion?: string;
     emailDigest?: boolean;
+    emailMessages?: boolean;
   };
   const db = getDb();
 
@@ -66,12 +67,20 @@ profileRouter.post("/email", (req, res) => {
     );
   }
 
+  if (emailMessages !== undefined) {
+    db.prepare("UPDATE users SET email_messages = ? WHERE id = ?").run(
+      emailMessages ? 1 : 0,
+      user.id
+    );
+  }
+
   const row = db
-    .prepare("SELECT email_diskussion, email_digest FROM users WHERE id = ?")
-    .get(user.id) as { email_diskussion: string; email_digest: number };
+    .prepare("SELECT email_diskussion, email_digest, email_messages FROM users WHERE id = ?")
+    .get(user.id) as { email_diskussion: string; email_digest: number; email_messages: number };
   res.json({
     ok: true,
     emailDiskussion: row.email_diskussion,
     emailDigest: !!row.email_digest,
+    emailMessages: !!row.email_messages,
   });
 });

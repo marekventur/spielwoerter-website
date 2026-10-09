@@ -13,11 +13,13 @@ const DISKUSSION_OPTIONS: { value: User["emailDiskussion"]; label: string }[] = 
 export function EmailSettingsCard({ user }: { user: User }) {
   const [diskussion, setDiskussion] = useState(user.emailDiskussion);
   const [digest, setDigest] = useState(user.emailDigest);
+  const [messages, setMessages] = useState(user.emailMessages);
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const save = async (patch: {
     emailDiskussion?: User["emailDiskussion"];
     emailDigest?: boolean;
+    emailMessages?: boolean;
   }) => {
     setState("saving");
     const res = await fetch("/api/profile/email", {
@@ -75,6 +77,24 @@ export function EmailSettingsCard({ user }: { user: User }) {
             </label>
             <p className="text-xs text-gray-400 mt-0.5 ml-6">
               Wenn deine Vorschläge angenommen oder abgelehnt wurden.
+            </p>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={messages}
+                onChange={(e) => {
+                  setMessages(e.target.checked);
+                  void save({ emailMessages: e.target.checked });
+                }}
+              />
+              Nachrichten der Moderation
+            </label>
+            <p className="text-xs text-gray-400 mt-0.5 ml-6">
+              Neue Beiträge in deinen privaten Gesprächen mit der Moderation. Ohne E-Mail findest du
+              sie unter „Meine Gespräche".
             </p>
           </div>
 

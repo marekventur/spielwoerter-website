@@ -193,6 +193,13 @@ export function NavBar({ user }: Props) {
                     Meine Vorschläge
                   </Link>
                   <Link
+                    to="/gespraeche"
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                    onClick={() => setOpen(false)}
+                  >
+                    Meine Gespräche
+                  </Link>
+                  <Link
                     to="/konto"
                     className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                     onClick={() => setOpen(false)}

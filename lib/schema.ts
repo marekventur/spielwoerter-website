@@ -155,12 +155,52 @@ export function initSchema(db: Database.Database): void {
       "ALTER TABLE users ADD COLUMN email_digest INTEGER NOT NULL DEFAULT 1"
     ).run();
   }
+  if (!userCols.includes("email_messages")) {
+    // Mail for word threads the user takes part in (lib/conversations.ts); opt-out on /konto.
+    db.prepare(
+      "ALTER TABLE users ADD COLUMN email_messages INTEGER NOT NULL DEFAULT 1"
+    ).run();
+  }
+
+  const topicCols = (
+    db.prepare("SELECT name FROM pragma_table_info('topics')").all() as { name: string }[]
+  ).map((r) => r.name);
+  if (!topicCols.includes("kind")) {
+    // 'moderation' = the moderators' board; 'word' = a private thread between
+    // the moderation and one user about a word (lib/conversations.ts).
+    db.prepare("ALTER TABLE topics ADD COLUMN kind TEXT NOT NULL DEFAULT 'moderation'").run();
+  }
+  if (!topicCols.includes("word")) {
+    db.prepare("ALTER TABLE topics ADD COLUMN word TEXT").run();
+  }
+  if (!topicCols.includes("suggestion_id")) {
+    db.prepare("ALTER TABLE topics ADD COLUMN suggestion_id INTEGER REFERENCES suggestions(id)").run();
+  }
+  db.exec(`
+    -- One thread per suggestion: the button opens the existing one.
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_topics_suggestion
+      ON topics(suggestion_id) WHERE suggestion_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_topics_word ON topics(word) WHERE word IS NOT NULL;
+
+    -- Who may see a word thread besides the moderators, and who gets its mail.
+    -- reply_token is that person's private reply address (gespraech+<token>@);
+    -- it is never shown to anyone else.
+    CREATE TABLE IF NOT EXISTS topic_participants (
+      topic_id INTEGER NOT NULL REFERENCES topics(id),
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      reply_token TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (topic_id, user_id)
+    );
+  `);
 
   const commentCols = (
     db.prepare("SELECT name FROM pragma_table_info('word_comments')").all() as { name: string }[]
   ).map((r) => r.name);
   if (!commentCols.includes("reply_to")) {
-    // A moderator's reply to another comment; its author is notified by mail.
+    // Was: a moderator's public reply to a comment (2026-10-09, replaced the
+    // same day by private word threads, lib/conversations.ts). Unused; kept so
+    // the column that exists in production is not a schema surprise.
     db.prepare(
       "ALTER TABLE word_comments ADD COLUMN reply_to INTEGER REFERENCES word_comments(id)"
     ).run();

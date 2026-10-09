@@ -8,10 +8,12 @@ import {
   backlinks,
   getPosts,
   getTopic,
+  MAX_MESSAGE_LENGTH,
   MAX_POST_LENGTH,
   type PostRow,
 } from "../../lib/topics";
 import { screenName } from "../../lib/screen-name";
+import { canSeeTopic, threadParticipants } from "../../lib/conversations";
 import type { Route } from "./+types/diskussion.$id";
 
 export function meta({ data }: Route.MetaArgs) {
@@ -22,13 +24,23 @@ export function meta({ data }: Route.MetaArgs) {
 }
 
 export async function loader({ context, params }: Route.LoaderArgs) {
-  if (!context.user?.isModerator) throw new Response("Not Found", { status: 404 });
-  const topic = getTopic(context.db, Number(params.id));
-  if (!topic) throw new Response("Not Found", { status: 404 });
+  // One rule for board topics and word threads: lib/conversations.ts. 404 for
+  // everyone who may not see it, so nothing confirms that a thread exists.
+  const user = context.user;
+  const topicId = Number(params.id);
+  if (!user || !canSeeTopic(context.db, user, topicId)) throw new Response("Not Found", { status: 404 });
+  const topic = getTopic(context.db, topicId)!;
+  const posts = getPosts(context.db, topic.id);
   return {
     topic,
-    posts: getPosts(context.db, topic.id),
-    isAdmin: context.user.isAdmin,
+    // Hidden posts never leave the server for non-moderators.
+    posts: user.isModerator ? posts : posts.filter((p) => !p.hidden_at),
+    isModerator: user.isModerator,
+    isAdmin: user.isAdmin,
+    participants:
+      topic.kind === "word"
+        ? threadParticipants(context.db, topic.id).filter((p) => !p.isModerator).map((p) => p.name)
+        : [],
   };
 }
 
@@ -39,7 +51,8 @@ function Post({
 }: {
   post: PostRow;
   repliesTo?: PostRow;
-  onHide: (id: number) => void;
+  /** Moderators only. */
+  onHide?: (id: number) => void;
 }) {
   const hidden = !!post.hidden_at;
   return (
@@ -74,19 +87,22 @@ function Post({
       >
         {post.body}
       </p>
-      <button
-        className="mt-1 text-xs text-gray-400 hover:text-orange-600 inline-flex items-center gap-1"
-        onClick={() => onHide(post.id)}
-      >
-        {hidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-        {hidden ? "Einblenden" : "Ausblenden"}
-      </button>
+      {onHide && (
+        <button
+          className="mt-1 text-xs text-gray-400 hover:text-orange-600 inline-flex items-center gap-1"
+          onClick={() => onHide(post.id)}
+        >
+          {hidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+          {hidden ? "Einblenden" : "Ausblenden"}
+        </button>
+      )}
     </div>
   );
 }
 
 export default function TopicPage({ loaderData }: Route.ComponentProps) {
-  const { topic, posts, isAdmin } = loaderData;
+  const { topic, posts, isModerator, isAdmin, participants } = loaderData;
+  const isWord = topic.kind === "word";
   const revalidator = useRevalidator();
   const navigate = useNavigate();
   const [body, setBody] = useState("");
@@ -131,8 +147,11 @@ export default function TopicPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12 w-full">
-      <Link to="/diskussion" className="text-sm text-gray-400 hover:text-orange-600">
-        ← Alle Themen
+      <Link
+        to={isModerator ? (isWord ? "/diskussion?zeige=woerter" : "/diskussion") : "/gespraeche"}
+        className="text-sm text-gray-400 hover:text-orange-600"
+      >
+        {isModerator ? "← Alle Themen" : "← Meine Gespräche"}
       </Link>
 
       <div className="flex items-start justify-between gap-4 mt-2 mb-1">
@@ -141,6 +160,7 @@ export default function TopicPage({ loaderData }: Route.ComponentProps) {
           {!!topic.locked && <Lock className="w-4 h-4 text-gray-400 shrink-0" />}
           {topic.title}
         </h1>
+        {isModerator && (
         <div className="flex gap-2 shrink-0">
           <Button
             variant="secondary"
@@ -167,11 +187,25 @@ export default function TopicPage({ loaderData }: Route.ComponentProps) {
             </Button>
           )}
         </div>
+        )}
       </div>
-      <p className="text-xs text-gray-500 mb-6">
+      <p className="text-xs text-gray-500 mb-3">
         gestartet von {screenName(topic.author_name, topic.author_id)} am{" "}
         {formatTimestamp(topic.created_at)}
       </p>
+      {isWord && (
+        <p className="text-sm text-sky-800 bg-sky-50 border border-sky-200 rounded-lg px-3 py-2 mb-6">
+          Privates Gespräch zu{" "}
+          <Link
+            to={`/wort/${encodeURIComponent((topic.word ?? "").toUpperCase())}`}
+            className="font-mono font-semibold underline"
+          >
+            {(topic.word ?? "").toUpperCase()}
+          </Link>
+          . Sichtbar nur für die Moderation und {participants.join(", ")}.
+        </p>
+      )}
+      {!isWord && <div className="mb-3" />}
 
       <Card className="p-4 divide-y divide-gray-100">
         {posts.map((p) => (
@@ -179,7 +213,7 @@ export default function TopicPage({ loaderData }: Route.ComponentProps) {
             key={p.id}
             post={p}
             repliesTo={repliesTo.get(p.id)}
-            onHide={(id) => void toggle(`/api/topics/posts/${id}/hide`)}
+            onHide={isModerator ? (id) => void toggle(`/api/topics/posts/${id}/hide`) : undefined}
           />
         ))}
       </Card>
@@ -194,7 +228,7 @@ export default function TopicPage({ loaderData }: Route.ComponentProps) {
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={8}
-            maxLength={MAX_POST_LENGTH}
+            maxLength={isWord ? MAX_MESSAGE_LENGTH : MAX_POST_LENGTH}
             placeholder="Deine Antwort"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"
           />

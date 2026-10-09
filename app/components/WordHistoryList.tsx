@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { EyeOff, Reply } from "lucide-react";
+import { EyeOff, Mail } from "lucide-react";
 import type { HistoryItem, HistoryActor } from "../../lib/history";
 
 // SQLite UTC timestamps, formatted by string slicing so server and client
@@ -80,8 +80,11 @@ function statusText(item: HistoryItem): React.ReactNode {
   }
 }
 
-/** Inline reply box under a comment. `onSubmit` resolves to an error message or null. */
-function ReplyForm({
+/**
+ * Inline box for the first message of a private word thread (word history,
+ * moderation queue). `onSubmit` resolves to an error message or null.
+ */
+export function MessageForm({
   toName,
   onSubmit,
   onCancel,
@@ -109,7 +112,7 @@ function ReplyForm({
         rows={2}
         maxLength={1000}
         autoFocus
-        placeholder={`Antwort an ${toName} – erscheint hier und geht per E-Mail an ${toName}`}
+        placeholder={`Nachricht an ${toName}: startet ein Gespräch, das nur ${toName} und die Moderation sehen`}
         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"
       />
       {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
@@ -120,7 +123,7 @@ function ReplyForm({
           onClick={() => void send()}
           className="text-xs text-orange-700 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 disabled:opacity-50"
         >
-          {sending ? "Wird gesendet…" : "Antwort senden"}
+          {sending ? "Wird gesendet…" : "Nachricht senden"}
         </button>
         <button
           type="button"
@@ -146,8 +149,11 @@ type WordHistoryListProps = {
   /** Viewer's own screen name — hides confirm/object on their own entries. */
   viewerName?: string | null;
   onScheduledAction?: (suggestionId: number, kind: "approve" | "object") => void;
-  /** Moderator viewer: reply to a comment (mailed to its author). Resolves to an error or null. */
-  onReply?: (commentId: number, body: string) => Promise<string | null>;
+  /**
+   * Moderator viewer: start a private word thread with a comment's author.
+   * Resolves to an error or null.
+   */
+  onMessage?: (commentId: number, body: string) => Promise<string | null>;
 };
 
 export function WordHistoryList({
@@ -158,9 +164,9 @@ export function WordHistoryList({
   isModerator = false,
   viewerName = null,
   onScheduledAction,
-  onReply,
+  onMessage,
 }: WordHistoryListProps) {
-  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [messaging, setMessaging] = useState<number | null>(null);
 
   if (items.length === 0) {
     return <p className="text-sm text-gray-400 py-3">Noch keine Einträge.</p>;
@@ -223,9 +229,6 @@ export function WordHistoryList({
                   Kommentar
                 </span>
                 {item.submitter && <ActorName actor={item.submitter} />}
-                {item.replyTo && (
-                  <span className="text-gray-500">· Antwort an {item.replyTo}</span>
-                )}
                 {item.hidden && (
                   <span className="text-xs text-gray-400 italic">ausgeblendet</span>
                 )}
@@ -240,17 +243,18 @@ export function WordHistoryList({
                     {item.hidden ? "einblenden" : "ausblenden"}
                   </button>
                 )}
-                {onReply &&
+                {onMessage &&
                   isModerator &&
                   !item.hidden &&
-                  item.submitter?.name !== viewerName && (
+                  item.submitter &&
+                  item.submitter.name !== viewerName && (
                     <button
                       type="button"
-                      onClick={() => setReplyingTo(replyingTo === item.id ? null : item.id)}
+                      onClick={() => setMessaging(messaging === item.id ? null : item.id)}
                       className="text-xs text-gray-400 hover:text-orange-600 inline-flex items-center gap-1"
                     >
-                      <Reply className="w-3 h-3" />
-                      antworten
+                      <Mail className="w-3 h-3" />
+                      Nachricht an {item.submitter.name}
                     </button>
                   )}
               </>
@@ -263,13 +267,13 @@ export function WordHistoryList({
               {item.body}
             </p>
           )}
-          {item.kind === "comment" && replyingTo === item.id && onReply && (
-            <ReplyForm
+          {item.kind === "comment" && messaging === item.id && onMessage && (
+            <MessageForm
               toName={item.submitter?.name ?? ""}
-              onCancel={() => setReplyingTo(null)}
+              onCancel={() => setMessaging(null)}
               onSubmit={async (body) => {
-                const error = await onReply(item.id, body);
-                if (!error) setReplyingTo(null);
+                const error = await onMessage(item.id, body);
+                if (!error) setMessaging(null);
                 return error;
               }}
             />

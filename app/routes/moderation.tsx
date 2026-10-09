@@ -6,6 +6,7 @@ import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { screenName } from "../../lib/screen-name.js";
 import type { Route } from "./+types/moderation";
+import { MessageToSubmitter } from "~/components/MessageToSubmitter";
 
 type ModerationItem = {
   id: number;
@@ -18,6 +19,7 @@ type ModerationItem = {
   in_list: string | null;
   base: string | null;
   requester_label: string | null;
+  requester_is_self: boolean;
 };
 
 type RecentItem = {
@@ -28,6 +30,8 @@ type RecentItem = {
   decided_at: string;
   synced_at: string | null;
   decided_by_label: string | null;
+  requester_label: string | null;
+  requester_is_self: boolean;
 };
 
 type ModeratorEntry = {
@@ -107,14 +111,16 @@ export async function loader({ context }: Route.LoaderArgs) {
        WHERE s.status IN ('pending_review', 'needs_moderator')
        ORDER BY COALESCE(w.base, s.word), s.word, s.created_at`
     )
-    .all() as (Omit<ModerationItem, "requester_label"> & {
+    .all() as (Omit<ModerationItem, "requester_label" | "requester_is_self"> & {
     requester_id: number | null;
     requester_name: string | null;
   })[];
+  const viewerId = context.user.id;
   const items = rawItems.map(({ requester_id, requester_name, ...rest }) => ({
     ...rest,
     requester_label:
       requester_id === null ? null : screenName(requester_name, requester_id),
+    requester_is_self: requester_id === viewerId,
   }));
 
   // decided_at is NULL for decisions made before the column existed —
@@ -123,19 +129,26 @@ export async function loader({ context }: Route.LoaderArgs) {
     .prepare(
       `SELECT s.id, s.word, s.action, s.status, s.synced_at,
               COALESCE(s.decided_at, s.last_modified_at) AS decided_at,
-              d.id AS decided_by_id, d.display_name AS decided_by_name
+              d.id AS decided_by_id, d.display_name AS decided_by_name,
+              u.id AS requester_id, u.display_name AS requester_name
        FROM suggestions s
        LEFT JOIN users d ON d.id = s.decided_by
+       LEFT JOIN users u ON u.id = s.user_id
        WHERE s.status IN ('moderator_approved', 'moderator_rejected')
        ORDER BY COALESCE(s.decided_at, s.last_modified_at) DESC
        LIMIT 50`
     )
-    .all() as (Omit<RecentItem, "decided_by_label"> & {
+    .all() as (Omit<RecentItem, "decided_by_label" | "requester_label" | "requester_is_self"> & {
     decided_by_id: number | null;
     decided_by_name: string | null;
+    requester_id: number | null;
+    requester_name: string | null;
   })[];
-  const recent = rawRecent.map(({ decided_by_id, decided_by_name, ...rest }) => ({
+  const recent = rawRecent.map(({ decided_by_id, decided_by_name, requester_id, requester_name, ...rest }) => ({
     ...rest,
+    requester_label:
+      requester_id === null ? null : screenName(requester_name, requester_id),
+    requester_is_self: requester_id === viewerId,
     decided_by_label:
       decided_by_id === null ? null : screenName(decided_by_name, decided_by_id),
   }));
@@ -543,6 +556,11 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                                 von {item.requester_label}
                               </p>
                             )}
+                            {item.requester_label && !item.requester_is_self && (
+                              <div className="mb-1">
+                                <MessageToSubmitter suggestionId={item.id} toName={item.requester_label} />
+                              </div>
+                            )}
 
                             <a
                               href={`https://www.duden.de/suchen/dudenonline/${item.word}`}
@@ -756,6 +774,9 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                       {" · "}
                       {new Date(r.decided_at).toLocaleDateString("de-DE")}
                     </span>
+                    {r.requester_label && !r.requester_is_self && (
+                      <MessageToSubmitter suggestionId={r.id} toName={r.requester_label} />
+                    )}
                     <div className="ml-auto shrink-0">
                       <Button
                         size="default"

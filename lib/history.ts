@@ -34,8 +34,6 @@ export type HistoryItem = {
   /** comment items */
   body: string | null;
   hidden: boolean;
-  /** Reply items: screen name of the comment's author being answered. */
-  replyTo: string | null;
 };
 
 type SuggestionRow = {
@@ -65,8 +63,6 @@ type CommentRow = {
   u_id: number;
   u_name: string | null;
   u_mod: number;
-  p_id: number | null;
-  p_name: string | null;
 };
 
 function actor(id: number, name: string | null, isMod: number | null): HistoryActor {
@@ -91,7 +87,6 @@ function suggestionItem(r: SuggestionRow): HistoryItem {
     publishAt: r.publish_at,
     body: null,
     hidden: false,
-    replyTo: null,
   };
 }
 
@@ -112,7 +107,6 @@ function commentItem(r: CommentRow): HistoryItem {
     publishAt: null,
     body: r.body,
     hidden: r.hidden_at !== null,
-    replyTo: r.p_id !== null ? screenName(r.p_name, r.p_id) : null,
   };
 }
 
@@ -136,12 +130,9 @@ const SUGGESTION_SELECT = `
 
 const COMMENT_SELECT = `
   SELECT c.id, c.word, c.body, c.created_at, c.hidden_at,
-         u.id AS u_id, u.display_name AS u_name, u.is_moderator AS u_mod,
-         pu.id AS p_id, pu.display_name AS p_name
+         u.id AS u_id, u.display_name AS u_name, u.is_moderator AS u_mod
   FROM word_comments c
-  JOIN users u ON u.id = c.user_id
-  LEFT JOIN word_comments p ON p.id = c.reply_to
-  LEFT JOIN users pu ON pu.id = p.user_id`;
+  JOIN users u ON u.id = c.user_id`;
 
 export function wordHistory(
   db: Database.Database,

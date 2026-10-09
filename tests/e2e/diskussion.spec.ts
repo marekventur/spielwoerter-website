@@ -171,7 +171,9 @@ test("non-moderators cannot see or use the board", async ({ request }) => {
     headers: cookieHeader(userSession),
     data: { body: "darf ich nicht" },
   });
-  expect(write.status()).toBe(403);
+  // 404 like the pages: users may post in their own word threads, so the
+  // endpoint is open to users and must not confirm other threads exist.
+  expect(write.status()).toBe(404);
 
   // Anonymous too (no Cookie header at all).
   const anon = await request.get("/diskussion");

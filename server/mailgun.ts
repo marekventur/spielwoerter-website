@@ -1,11 +1,5 @@
 import type { DigestUser } from "../lib/sync.js";
 import { renderDigestHtml } from "./email-templates/digest.js";
-import {
-  commentReplySubject,
-  renderCommentReplyHtml,
-  renderCommentReplyText,
-  type CommentReplyMailData,
-} from "./email-templates/comment-reply.js";
 
 /**
  * Who a mail can reach decides whether dev may send it.
@@ -93,27 +87,6 @@ export async function sendDigestEmails(users: DigestUser[]): Promise<void> {
   }
 }
 
-/**
- * A moderator answered someone's word comment. Broadcast-class: it reaches a
- * user other than the one who triggered it, so dev stays silent. From the
- * no-reply sender; the reply belongs on the word page, not in a mailbox.
- */
-export async function sendCommentReplyEmail(
-  to: string,
-  data: CommentReplyMailData
-): Promise<void> {
-  const domain = process.env.MAILGUN_DOMAIN;
-  const siteUrl = (process.env.SITE_URL || "https://spielwoerter.de").replace(/\/$/, "");
-  const subject = commentReplySubject(data.word);
-  const form = new FormData();
-  form.append("from", process.env.MAILGUN_FROM || `Spielwörter <noreply@${domain}>`);
-  form.append("to", to);
-  form.append("subject", subject);
-  form.append("html", renderCommentReplyHtml(data, siteUrl));
-  form.append("text", renderCommentReplyText(data, siteUrl));
-  await mailgunSend(to, subject, form);
-}
-
 export async function sendOtpEmail(email: string, code: string): Promise<void> {
   const domain = process.env.MAILGUN_DOMAIN;
   const siteUrl = process.env.SITE_URL || "https://spielwoerter.de";
@@ -154,6 +127,22 @@ export async function sendOtpEmail(email: string, code: string): Promise<void> {
  * endpoint that has no other way to know who is writing. The fallback is a
  * guessable default, which is fine for dev and tests (where nothing is sent).
  */
+/**
+ * A participant's private reply address for one word thread
+ * (lib/conversations.ts). Needs a Mailgun route for gespraech+*@ to
+ * /api/inbound/<secret>/gespraech.
+ */
+export function wordThreadReplyAddress(token: string): string {
+  const domain = process.env.MAILGUN_DOMAIN || "mail.spielwoerter.de";
+  return `gespraech+${token}@${domain}`;
+}
+
+/** Inverse of wordThreadReplyAddress: the token, or null if it is not one. */
+export function tokenFromReplyAddress(address: string): string | null {
+  const m = /^gespraech\+([a-z0-9]+)@/i.exec(address.trim());
+  return m ? m[1].toLowerCase() : null;
+}
+
 export function diskussionAddress(): string {
   const domain = process.env.MAILGUN_DOMAIN || "mail.spielwoerter.de";
   return process.env.DISKUSSION_ADDRESS || `moderatoren@${domain}`;
@@ -166,6 +155,29 @@ export type OutgoingMail = {
   /** Raw RFC headers, sent through Mailgun's `h:` prefix. */
   headers?: Record<string, string>;
 };
+
+/**
+ * One word-thread mail to one person. From the no-reply sender, never the
+ * moderators' list address (whose secrecy guards the board's mail-in), with
+ * that person's private token address as Reply-To.
+ */
+export async function sendWordThreadEmail(
+  to: string,
+  replyTo: string,
+  mail: OutgoingMail
+): Promise<void> {
+  const domain = process.env.MAILGUN_DOMAIN;
+  const form = new FormData();
+  form.append("from", process.env.MAILGUN_FROM || `Spielwörter <noreply@${domain}>`);
+  form.append("to", to);
+  form.append("subject", mail.subject);
+  form.append("html", mail.html);
+  form.append("text", mail.text);
+  for (const [key, value] of Object.entries({ ...(mail.headers ?? {}), "Reply-To": replyTo })) {
+    form.append(`h:${key}`, value);
+  }
+  await mailgunSend(to, mail.subject, form);
+}
 
 /**
  * One mail per recipient — never a shared To:/Cc:.

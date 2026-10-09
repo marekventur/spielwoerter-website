@@ -1,11 +1,22 @@
 import type Database from "better-sqlite3";
 import { screenName } from "../lib/screen-name.js";
 import { recipientsFor } from "../lib/topics.js";
-import { diskussionAddress, sendTopicPostEmails } from "./mailgun.js";
+import { threadParticipants, wordThreadRecipients } from "../lib/conversations.js";
+import {
+  diskussionAddress,
+  sendTopicPostEmails,
+  sendWordThreadEmail,
+  wordThreadReplyAddress,
+} from "./mailgun.js";
 import {
   renderTopicPostHtml,
   renderTopicPostText,
 } from "./email-templates/topic-post.js";
+import {
+  renderWordThreadHtml,
+  renderWordThreadText,
+  wordThreadSubject,
+} from "./email-templates/word-thread.js";
 
 type PostContext = {
   id: number;
@@ -15,6 +26,7 @@ type PostContext = {
   body: string;
   message_id: string | null;
   title: string;
+  kind: string;
   display_name: string | null;
   is_first: number;
 };
@@ -23,7 +35,7 @@ function loadPost(db: Database.Database, postId: number): PostContext | undefine
   return db
     .prepare(
       `SELECT p.id, p.topic_id, p.parent_id, p.user_id, p.body, p.message_id,
-              t.title, u.display_name,
+              t.title, t.kind, u.display_name,
               (SELECT MIN(p2.id) FROM topic_posts p2 WHERE p2.topic_id = p.topic_id) = p.id
                 AS is_first
          FROM topic_posts p
@@ -66,6 +78,7 @@ export async function mailTopicPost(
 ): Promise<void> {
   const post = loadPost(db, postId);
   if (!post) return;
+  if (post.kind === "word") return mailWordThreadPost(db, post);
 
   const recipients = recipientsFor(db, post.topic_id, post.user_id).map((r) => r.email);
   if (recipients.length === 0) {
@@ -110,6 +123,60 @@ export async function mailTopicPost(
   if (failed === 0) {
     db.prepare("UPDATE topic_posts SET emailed_at = datetime('now') WHERE id = ?").run(postId);
   }
+}
+
+/**
+ * Word thread: only participants other than the author (lib/conversations.ts),
+ * one mail each, every one with that person's own reply address. Same
+ * best-effort contract as the board: unstamped on any failure, so the sweeper
+ * retries. A retry can re-send to those who already got it; that is the
+ * board's behaviour too and preferable to a lost message.
+ */
+async function mailWordThreadPost(db: Database.Database, post: PostContext): Promise<void> {
+  const recipients = wordThreadRecipients(db, post.topic_id, post.user_id);
+  const stamp = () =>
+    db.prepare("UPDATE topic_posts SET emailed_at = datetime('now') WHERE id = ?").run(post.id);
+  if (recipients.length === 0) return void stamp();
+
+  const siteUrl = process.env.SITE_URL || "https://spielwoerter.de";
+  const domain = process.env.MAILGUN_DOMAIN || "mail.spielwoerter.de";
+  const data = {
+    topicId: post.topic_id,
+    title: post.title,
+    authorName: screenName(post.display_name, post.user_id),
+    body: post.body,
+    isNewTopic: !!post.is_first,
+    participantNames: threadParticipants(db, post.topic_id)
+      .filter((p) => !p.isModerator)
+      .map((p) => p.name),
+  };
+  const parentChain = referencesChain(db, post.parent_id);
+  const headers: Record<string, string> = {
+    "Message-Id": `<${post.message_id ?? `post-${post.id}@${domain}`}>`,
+    "Auto-Submitted": "auto-generated",
+    "List-Unsubscribe": `<${siteUrl}/konto>`,
+  };
+  if (parentChain.length > 0) {
+    headers["In-Reply-To"] = `<${parentChain[parentChain.length - 1]}>`;
+    headers["References"] = parentChain.map((m) => `<${m}>`).join(" ");
+  }
+  const mail = {
+    subject: wordThreadSubject(data),
+    html: renderWordThreadHtml(data, siteUrl),
+    text: renderWordThreadText(data, siteUrl),
+    headers,
+  };
+
+  let failed = 0;
+  for (const r of recipients) {
+    try {
+      await sendWordThreadEmail(r.email, wordThreadReplyAddress(r.reply_token), mail);
+    } catch (err) {
+      failed++;
+      console.error(`[gespraech] Failed to send post ${post.id} to user ${r.id}:`, err);
+    }
+  }
+  if (failed === 0) stamp();
 }
 
 /** Fire-and-forget wrapper: a failing mail must not fail the HTTP request. */
