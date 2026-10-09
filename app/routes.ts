@@ -16,4 +16,5 @@ export default [
   route("diskussion/:id", "routes/diskussion.$id.tsx"),
   route("admin", "routes/admin.tsx"),
   route("power-edit", "routes/power-edit.tsx"),
+  route("pruefliste", "routes/pruefliste.tsx"),
 ] satisfies RouteConfig;

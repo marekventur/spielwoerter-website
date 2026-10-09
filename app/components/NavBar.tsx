@@ -224,6 +224,15 @@ export function NavBar({ user }: Props) {
                   )}
                   {user.isModerator && (
                     <Link
+                      to="/pruefliste"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                      onClick={() => setOpen(false)}
+                    >
+                      Prüfliste
+                    </Link>
+                  )}
+                  {user.isModerator && (
+                    <Link
                       to="/diskussion"
                       className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                       onClick={() => setOpen(false)}

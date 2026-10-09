@@ -79,6 +79,15 @@ export function initSchema(db: Database.Database): void {
     );
     CREATE INDEX IF NOT EXISTS idx_word_comments_word ON word_comments(word);
 
+    -- One-off (2026-10): moderators' keep/strike decisions on the dictionary-only
+    -- base words of the long-forms expansion (lib/pruefliste.ts, /pruefliste).
+    CREATE TABLE IF NOT EXISTS review_decisions (
+      word TEXT PRIMARY KEY,
+      decision TEXT NOT NULL CHECK (decision IN ('behalten', 'streichen')),
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      decided_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS topics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id),
