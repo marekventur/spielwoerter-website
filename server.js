@@ -44,6 +44,8 @@ if (DEVELOPMENT) {
     "/assets",
     express.static("build/client/assets", { immutable: true, maxAge: "1y" })
   );
+  // The inbound mail routes carry INBOUND_SECRET in the path; keep it out of the logs.
+  morgan.token("url", (/** @type {express.Request} */ req) => (req.originalUrl || req.url).replace(/(\/api\/inbound\/)[^/?]+/, "$1***"));
   app.use(morgan("tiny"));
   app.use(express.static("build/client", { maxAge: "1h" }));
   const mod = await import(BUILD_PATH);

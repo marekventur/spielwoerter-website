@@ -33,8 +33,8 @@ jobs:
           key_file="$RUNNER_TEMP/deploy-key"
           printf '%s\n' "$SSH_PRIVATE_KEY_CONTENT" > "$key_file"
           chmod 600 "$key_file"
-          ./deploy.sh "$key_file"
-          # Write .env to VPS (rsync excludes it)
+          # Write .env first (rsync excludes it), so the restart in post_deploy.sh
+          # picks up a changed ENV_FILE in the same deploy.
           if [[ -z "$ENV_FILE_CONTENT" ]]; then
             echo "ERROR: ENV_FILE secret is not set"
             exit 1
@@ -43,3 +43,4 @@ jobs:
           SSH_OPTS=(-i "$key_file" -o StrictHostKeyChecking=accept-new)
           printf '%s' "$ENV_FILE_CONTENT" | ssh "${SSH_OPTS[@]}" root@vps3.marekventur.com "cat > /var/www/$NAME/.env"
           echo "=== .env written to VPS ==="
+          ./deploy.sh "$key_file"

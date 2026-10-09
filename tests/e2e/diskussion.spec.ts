@@ -296,6 +296,17 @@ test("inbound rejects a wrong secret, unknown senders and non-moderators", async
   expect(count()).toBe(0);
 });
 
+test("inbound accepts every listed secret during a rotation, nothing else", async ({ request }) => {
+  seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const form = () => inboundForm({ from: TEST_MOD_EMAIL, subject: "Rotation", "body-plain": "Y" });
+  for (const secret of ["old-inbound-secret", SECRET]) {
+    expect((await request.post(`/api/inbound/${secret}/diskussion`, form())).ok()).toBeTruthy();
+  }
+  for (const secret of ["old-inbound", "test-inbound-secret,%20old-inbound-secret", "%20"]) {
+    expect((await request.post(`/api/inbound/${secret}/diskussion`, form())).status()).toBe(404);
+  }
+});
+
 test("inbound refuses to ingest our own notification mail", async ({ request }) => {
   seedUser(TEST_MOD_EMAIL, { isModerator: true });
   const db = getTestDb();

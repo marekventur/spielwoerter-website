@@ -1,4 +1,5 @@
 import express, { Router } from "express";
+import { timingSafeEqual } from "node:crypto";
 import rateLimit from "express-rate-limit";
 import { getDb } from "../../lib/db.js";
 import {
@@ -135,13 +136,26 @@ async function fetchStoredMessage(url: string): Promise<Fields | null> {
   }
 }
 
+/**
+ * INBOUND_SECRET may list several comma-separated secrets, so a rotation can
+ * accept the old and the new one until the Mailgun routes point at the new URL.
+ */
+function secretMatches(given: string | string[]): boolean {
+  if (typeof given !== "string") return false;
+  const secrets = (process.env.INBOUND_SECRET ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const a = Buffer.from(given);
+  return secrets.some((s) => {
+    const b = Buffer.from(s);
+    return a.length === b.length && timingSafeEqual(a, b);
+  });
+}
+
 inboundRouter.post(
   "/:secret/diskussion",
   inboundLimit,
   ...parsers,
   async (req, res) => {
-    const expected = process.env.INBOUND_SECRET;
-    if (!expected || req.params.secret !== expected) {
+    if (!secretMatches(req.params.secret)) {
       // Do not confirm the endpoint exists.
       res.status(404).json({ error: "Not found" });
       return;
@@ -163,8 +177,7 @@ inboundRouter.post(
   inboundLimit,
   ...parsers,
   async (req, res) => {
-    const expected = process.env.INBOUND_SECRET;
-    if (!expected || req.params.secret !== expected) {
+    if (!secretMatches(req.params.secret)) {
       res.status(404).json({ error: "Not found" });
       return;
     }
