@@ -50,6 +50,20 @@ export function WordHistorySection({ word, wordLower, user, history }: WordHisto
     if (res.ok) revalidator.revalidate();
   };
 
+  const reply = async (commentId: number, body: string): Promise<string | null> => {
+    const res = await fetch(`/api/word-comments/${commentId}/reply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body }),
+    });
+    if (!res.ok) {
+      const d = (await res.json().catch(() => ({}))) as { error?: string };
+      return d.error ?? "Fehler";
+    }
+    revalidator.revalidate();
+    return null;
+  };
+
   const scheduledAction = async (id: number, kind: "approve" | "object") => {
     let body: Record<string, string> = {};
     if (kind === "object") {
@@ -88,6 +102,7 @@ export function WordHistorySection({ word, wordLower, user, history }: WordHisto
           isModerator={user?.isModerator ?? false}
           viewerName={user ? screenName(user.displayName, user.id) : null}
           onScheduledAction={(id, kind) => void scheduledAction(id, kind)}
+          onReply={user?.isModerator ? reply : undefined}
         />
 
         {user ? (

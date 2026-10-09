@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router";
-import { EyeOff } from "lucide-react";
+import { EyeOff, Reply } from "lucide-react";
 import type { HistoryItem, HistoryActor } from "../../lib/history";
 
 // SQLite UTC timestamps, formatted by string slicing so server and client
@@ -79,6 +80,60 @@ function statusText(item: HistoryItem): React.ReactNode {
   }
 }
 
+/** Inline reply box under a comment. `onSubmit` resolves to an error message or null. */
+function ReplyForm({
+  toName,
+  onSubmit,
+  onCancel,
+}: {
+  toName: string;
+  onSubmit: (body: string) => Promise<string | null>;
+  onCancel: () => void;
+}) {
+  const [body, setBody] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const send = async () => {
+    if (!body.trim()) return;
+    setSending(true);
+    setError(await onSubmit(body.trim()));
+    setSending(false);
+  };
+
+  return (
+    <div className="mt-2 max-w-lg">
+      <textarea
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        rows={2}
+        maxLength={1000}
+        autoFocus
+        placeholder={`Antwort an ${toName} – erscheint hier und geht per E-Mail an ${toName}`}
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"
+      />
+      {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
+      <div className="mt-1 flex gap-2">
+        <button
+          type="button"
+          disabled={sending || !body.trim()}
+          onClick={() => void send()}
+          className="text-xs text-orange-700 border border-orange-300 rounded px-2 py-1 hover:bg-orange-50 disabled:opacity-50"
+        >
+          {sending ? "Wird gesendet…" : "Antwort senden"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+        >
+          Abbrechen
+        </button>
+      </div>
+    </div>
+  );
+}
+
 type WordHistoryListProps = {
   items: HistoryItem[];
   /** Show the word per row and link it (changelog view). */
@@ -91,6 +146,8 @@ type WordHistoryListProps = {
   /** Viewer's own screen name — hides confirm/object on their own entries. */
   viewerName?: string | null;
   onScheduledAction?: (suggestionId: number, kind: "approve" | "object") => void;
+  /** Moderator viewer: reply to a comment (mailed to its author). Resolves to an error or null. */
+  onReply?: (commentId: number, body: string) => Promise<string | null>;
 };
 
 export function WordHistoryList({
@@ -101,7 +158,10 @@ export function WordHistoryList({
   isModerator = false,
   viewerName = null,
   onScheduledAction,
+  onReply,
 }: WordHistoryListProps) {
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+
   if (items.length === 0) {
     return <p className="text-sm text-gray-400 py-3">Noch keine Einträge.</p>;
   }
@@ -163,6 +223,9 @@ export function WordHistoryList({
                   Kommentar
                 </span>
                 {item.submitter && <ActorName actor={item.submitter} />}
+                {item.replyTo && (
+                  <span className="text-gray-500">· Antwort an {item.replyTo}</span>
+                )}
                 {item.hidden && (
                   <span className="text-xs text-gray-400 italic">ausgeblendet</span>
                 )}
@@ -177,6 +240,19 @@ export function WordHistoryList({
                     {item.hidden ? "einblenden" : "ausblenden"}
                   </button>
                 )}
+                {onReply &&
+                  isModerator &&
+                  !item.hidden &&
+                  item.submitter?.name !== viewerName && (
+                    <button
+                      type="button"
+                      onClick={() => setReplyingTo(replyingTo === item.id ? null : item.id)}
+                      className="text-xs text-gray-400 hover:text-orange-600 inline-flex items-center gap-1"
+                    >
+                      <Reply className="w-3 h-3" />
+                      antworten
+                    </button>
+                  )}
               </>
             )}
           </div>
@@ -186,6 +262,17 @@ export function WordHistoryList({
             >
               {item.body}
             </p>
+          )}
+          {item.kind === "comment" && replyingTo === item.id && onReply && (
+            <ReplyForm
+              toName={item.submitter?.name ?? ""}
+              onCancel={() => setReplyingTo(null)}
+              onSubmit={async (body) => {
+                const error = await onReply(item.id, body);
+                if (!error) setReplyingTo(null);
+                return error;
+              }}
+            />
           )}
           {item.kind === "suggestion" && item.decisionComment && (
             <p className="mt-1 text-gray-600 border-l-2 border-gray-200 pl-2 italic">

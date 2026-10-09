@@ -147,6 +147,16 @@ export function initSchema(db: Database.Database): void {
     ).run();
   }
 
+  const commentCols = (
+    db.prepare("SELECT name FROM pragma_table_info('word_comments')").all() as { name: string }[]
+  ).map((r) => r.name);
+  if (!commentCols.includes("reply_to")) {
+    // A moderator's reply to another comment; its author is notified by mail.
+    db.prepare(
+      "ALTER TABLE word_comments ADD COLUMN reply_to INTEGER REFERENCES word_comments(id)"
+    ).run();
+  }
+
   const suggCols = (
     db.prepare("SELECT name FROM pragma_table_info('suggestions')").all() as { name: string }[]
   ).map((r) => r.name);

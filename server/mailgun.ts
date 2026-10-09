@@ -1,5 +1,11 @@
 import type { DigestUser } from "../lib/sync.js";
 import { renderDigestHtml } from "./email-templates/digest.js";
+import {
+  commentReplySubject,
+  renderCommentReplyHtml,
+  renderCommentReplyText,
+  type CommentReplyMailData,
+} from "./email-templates/comment-reply.js";
 
 /**
  * Who a mail can reach decides whether dev may send it.
@@ -85,6 +91,27 @@ export async function sendDigestEmails(users: DigestUser[]): Promise<void> {
       console.error(`[digest] Failed to send to ${u.email}:`, err);
     }
   }
+}
+
+/**
+ * A moderator answered someone's word comment. Broadcast-class: it reaches a
+ * user other than the one who triggered it, so dev stays silent. From the
+ * no-reply sender; the reply belongs on the word page, not in a mailbox.
+ */
+export async function sendCommentReplyEmail(
+  to: string,
+  data: CommentReplyMailData
+): Promise<void> {
+  const domain = process.env.MAILGUN_DOMAIN;
+  const siteUrl = (process.env.SITE_URL || "https://spielwoerter.de").replace(/\/$/, "");
+  const subject = commentReplySubject(data.word);
+  const form = new FormData();
+  form.append("from", process.env.MAILGUN_FROM || `Spielwörter <noreply@${domain}>`);
+  form.append("to", to);
+  form.append("subject", subject);
+  form.append("html", renderCommentReplyHtml(data, siteUrl));
+  form.append("text", renderCommentReplyText(data, siteUrl));
+  await mailgunSend(to, subject, form);
 }
 
 export async function sendOtpEmail(email: string, code: string): Promise<void> {
