@@ -62,5 +62,5 @@
     "scripts/eval-enrich-cases.json",
     "lib/enrich.ts"
   ],
-  "harness_sha": "0d3f1ba27d348fcbff1270271e84c65d48957e0d2be68b271b9fa25bf46b766b"
+  "harness_sha": "23c72853bc74cce7da81baf1b8908188bc3cdb40d4017405b23e43aa36e665b8"
 }
