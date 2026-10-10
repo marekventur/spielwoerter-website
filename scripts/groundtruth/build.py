@@ -5,7 +5,9 @@ asked about:
 
   steigerbar.tsv    adjective: may it be compared?       (REGELN "Adjektive")
   deklinierbar.tsv  adjective: may it be declined?       (indeclinables: clean, sexy, ...)
-  transitiv.tsv     verb: transitive? + perfect auxiliary (Gerundiv, declined Partizip II)
+  transitiv.tsv     verb: transitive? (Gerundiv allowed)
+  partizip.tsv      verb: may the Partizip II be declined? (transitive, sein-perfect,
+                    or reflexive with a sein-state)
 
 e-Tilgung is deliberately absent: it is grammar applied by rule
 (lib/conjugate.ts), not a judgement per word.
@@ -108,7 +110,13 @@ def load_kaikki(path, adjectives, verbs):
             forms = e.get("forms") or []
             if pos == "adj" and w in adjectives:
                 tags = [set(f.get("tags") or []) for f in forms]
-                a = adj.setdefault(w, {"positive": False, "comparative": False, "declined": False})
+                a = adj.setdefault(w, {"positive": False, "comparative": False, "declined": False,
+                                       "table": False, "no_comparison": False, "indeclinable": False})
+                notes = " ".join(e.get("notes") or [])
+                # A full table (~50 forms) is an editorial choice; a stub of a few forms is not.
+                a["table"] |= len(forms) >= 40
+                a["no_comparison"] |= bool(re.search(r"nicht steigerbar|Steigerung[^.]*unüblich|keine Steigerung", notes))
+                a["indeclinable"] |= "indeclinable" in (e.get("tags") or []) or "indeklinabel" in notes
                 a["positive"] |= any("positive" in t for t in tags)
                 a["comparative"] |= any("comparative" in t or "superlative" in t for t in tags)
                 a["declined"] |= any("positive" in t and ({"nominative", "genitive", "dative", "accusative"} & t) for t in tags)
@@ -323,10 +331,12 @@ def main():
         mod, ev = moderator_verdict(w, "komp", yes, no, accepted, p2)
         k = kai_adj.get(w)
         wik = None
-        if k and k["positive"]:
-            wik = "ja" if k["comparative"] else "nein"
-        # Wiktionary lists comparatives generously (am totesten), so only its
-        # "nein" is a strong signal on its own.
+        if k and (k["no_comparison"] or (k["table"] and not k["comparative"])):
+            wik = "nein"
+        elif k and k["comparative"]:
+            wik = "ja"
+        # Wiktionary lists comparatives generously (toter), so only its "nein"
+        # (an explicit note, or a full table without comparison) is strong.
         label, conf = combine(mod, wik, strong_wik=(wik == "nein"))
         if conf == "none":
             continue
@@ -343,8 +353,10 @@ def main():
         mod, ev = moderator_verdict(w, "dekl_adj", yes, no, accepted, p2)
         k = kai_adj.get(w)
         wik = None
-        if k and k["positive"]:
-            wik = "ja" if k["declined"] else "nein"
+        if k and k["indeclinable"]:
+            wik = "nein"  # only explicit markers: spelling variants often just lack a table
+        elif k and k["declined"]:
+            wik = "ja"
         label, conf = combine(mod, wik, strong_wik=(wik == "nein"))
         if conf in ("none", "weak"):
             continue  # "ja" is the default for nearly every adjective; keep the informative rows
@@ -364,9 +376,10 @@ def main():
         # so it only speaks to transitivity for haben-only verbs.
         g_mod, g_ev = moderator_verdict(w, "gerundiv", yes, no, accepted, p2)
         p_mod, p_ev = moderator_verdict(w, "dekl_p2", yes, no, accepted, p2)
-        if aux != "haben" and p_mod == "ja":
-            # sein-verbs (or unknown auxiliary): a kept declined Part. II says nothing
-            # about transitivity; a struck one still says "not transitive".
+        if p_mod == "ja":
+            # A kept declined Part. II says nothing about transitivity: sein-verbs and
+            # reflexive verbs with a sein-state (abgeregt) qualify too. A struck one
+            # still says "not transitive". That question is partizip.tsv.
             p_mod = None
         mods = {m for m in (g_mod, p_mod) if m}
         mod = mods.pop() if len(mods) == 1 else None
@@ -404,12 +417,39 @@ def main():
            "hilfsverb", "reflexiv", "liste_gerundiv", "liste_dekl_p2", "beschreibung"], rows)
     summary["transitiv"] = collections.Counter((r[2], r[1]) for r in rows)
 
+    # --- partizip: may the Partizip II be declined? ---------------------------
+    rows = []
+    for w in sorted(verbs):
+        k = kai_verb.get(w)
+        aux = "+".join(sorted(k["aux"])) if k and k["aux"] else ""
+        mod, ev = moderator_verdict(w, "dekl_p2", yes, no, accepted, p2)
+        wik, strong = None, False
+        if k:
+            transitive = k["passive"] and k["trans"] > 0
+            if "sein" in k["aux"] or transitive:
+                wik, strong = "ja", True
+            elif k["aux"] == {"haben"} and k["intrans"] and not k["trans"] and not k["passive"] \
+                    and not k["reflexive"]:
+                wik, strong = "nein", True
+        label, conf = combine(mod, wik, strong)
+        if conf == "none":
+            continue
+        liste = "ja" if surviving(w, "dekl_p2", accepted, p2) else "nein"
+        rows.append((w, label, conf, mod or "", ",".join(ev[:5]), wik or "", aux,
+                     "reflexiv" if k and k["reflexive"] else "", liste,
+                     verbs[w].get("description", "")[:90]))
+    write(out / "partizip.tsv",
+          ["wort", "label", "vertrauen", "moderation", "belegformen", "wiktionary", "hilfsverb",
+           "reflexiv", "liste", "beschreibung"], rows)
+    summary["partizip"] = collections.Counter((r[2], r[1]) for r in rows)
+
     for name, c in summary.items():
         print(name, dict(sorted(c.items())), file=sys.stderr)
     sample_sets(out, a.per_label, a.review)
 
 
-LIST_COLUMN = {"steigerbar": "liste", "deklinierbar": "liste", "transitiv": "liste_dekl_p2"}
+LIST_COLUMN = {"steigerbar": "liste", "deklinierbar": "liste", "transitiv": "liste_dekl_p2",
+               "partizip": "liste"}
 
 
 def sample_sets(out, per_label, review):

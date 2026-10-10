@@ -1,6 +1,6 @@
 wort	label	vertrauen	moderation	belegformen	wiktionary	wikt_passiv	hilfsverb	reflexiv	liste_gerundiv	liste_dekl_p2	beschreibung
 aalen	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — 1. sich träge ausstrecken, faulenzen; 2. (Fischfang) Aale fangen
-aasen	ja	gold	ja	geaaste	ja		haben		nein	ja	Verb — verschwenderisch leben, Geld verschwenden
+aasen	ja	weak		geaaste	ja		haben		nein	ja	Verb — verschwenderisch leben, Geld verschwenden
 abackern	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — sich sehr abmühen, hart arbeiten
 abarten	nein	silver			nein		sein		nein		Verb — sich von der Art entfernen, degenerieren
 abbacken	ja	silver			ja	passiv	haben		nein	nein	Verb — (selten) durch Backen entfernen oder trocknen
@@ -217,7 +217,6 @@ abputzen	ja	weak			ja	passiv	haben		nein	nein	Verb — reinigen, säubern; von e
 abraten	ja	weak			ja	passiv	haben		nein	nein	Verb — jemandem von etwas abraten, abmahnen, davon abhalten
 abrechnen	ja	silver			ja	passiv	haben		nein	nein	Verb — eine Rechnung begleichen, verrechnen
 abreden	ja	weak			ja	passiv	haben		nein	nein	Verb — (etwas) absprechen, vereinbaren; (veraltet) leugnen
-abregen	ja	gold	ja	abgeregte,abgeregtem,abgeregten,abgeregter,abgeregtes			haben	reflexiv	nein	ja	Verb — (sich) beruhigen, zur Ruhe kommen
 abreiben	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — durch Reiben entfernen oder reinigen
 abreichen	ja	weak			ja	passiv	haben		nein	nein	Verb — (etwas) reichend übergeben; ausreichen
 abreisen	ja	weak			ja	passiv	sein		nein		Verb — einen Ort verlassen, weggehen
@@ -338,15 +337,15 @@ abästen	ja	silver			ja	passiv	haben		nein	nein	Verb — (Bäume) von Ästen bef
 abätzen	ja	weak			ja	passiv	haben		nein	ja	Verb — mit Ätzmittel wegbeizen, ätzend entfernen
 abäugeln	ja	weak			ja	passiv	haben		nein	nein	Verb — (ugs.) durch genaues Hinsehen abschätzen oder erkennen
 achteln	ja	silver			ja	passiv	haben		nein	nein	Verb — in Achtel teilen
-achten	ja	gold	ja	geachtetem,geachteter,geachtetes	ja	passiv	haben		nein	ja	Verb — Wertschätzung entgegenbringen; beachten
+achten	ja	silver		geachtetem,geachteter,geachtetes	ja	passiv	haben		nein	ja	Verb — Wertschätzung entgegenbringen; beachten
 achtgeben	ja	weak			ja	passiv	haben		nein	nein	Verb — aufpassen, sich in Acht nehmen
 ackern	ja	weak			ja	passiv	haben		nein	ja	Verb — (ugs.) schwer arbeiten, schuften; landwirtschaftlich bearbeiten
-adden	ja	gold	ja	geaddete,geaddetem,geaddeter,geaddetes	ja	passiv	haben		nein	ja	Verb- hinzufügen
+adden	ja	silver		geaddete,geaddetem,geaddeter,geaddetes	ja	passiv	haben		nein	ja	Verb- hinzufügen
 addieren	ja	weak			ja	passiv	haben		nein	ja	Verb — Zahlen zusammenzählen, summieren
 adeln	ja	silver			ja	passiv	haben		nein	ja	Verb — in den Adelsstand erheben; veredeln
 adorieren	ja	silver			ja	passiv	haben		nein	ja	Verb — (veraltet/gehoben) verehren, anbeten
 agieren	ja	weak			ja	passiv	haben		nein	ja	Verb — handeln, tätig sein, eine Rolle spielen
-agitieren	ja	gold	ja	agitiertem,agitierten,agitierter,agitiertes	ja	passiv	haben		nein	ja	Verb — aufwiegeln, Unruhe stiften; heftig bewegen
+agitieren	ja	weak		agitiertem,agitierten,agitierter,agitiertes	ja	passiv	haben		nein	ja	Verb — aufwiegeln, Unruhe stiften; heftig bewegen
 ahnden	ja	silver			ja	passiv	haben		nein	ja	Verb — eine Tat bestrafen, rügen, zur Rechenschaft ziehen
 ahnen	ja	weak			ja	passiv	haben		nein	ja	Verb — eine Ahnung, ein Vorausgefühl von etwas haben
 amtieren	ja	weak			ja	passiv	haben		nein	ja	Verb — ein Amt bekleiden, in einer Funktion tätig sein
@@ -383,7 +382,7 @@ anbrüten	ja	silver			ja	passiv	haben		nein	nein	Verb — (Eier) durch Wärme zu
 anbumsen	ja	weak			ja	passiv	haben+sein		nein		Verb (ugs.) — anstoßen, anrempeln; mit dumpfem Geräusch aufprallen
 anbändeln	ja	weak			ja	passiv	haben		nein	nein	Verb — ein Gespräch, eine Bekanntschaft anfangen
 andampfen	ja	weak			ja	passiv	sein		nein		Verb — (etwas) mit Dampf behandeln oder bedampfen
-andauen	ja	gold	ja	angedautem,angedauten,angedauter,angedautes	ja	passiv	haben		nein	ja	Verb — (med.) mit dem Verdauen beginnen
+andauen	ja	silver		angedautem,angedauten,angedauter,angedautes	ja	passiv	haben		nein	ja	Verb — (med.) mit dem Verdauen beginnen
 andauern	nein	silver			nein		haben		nein	nein	Verb — (meist unpersönlich) fortdauern, weiter andauern
 andenken	ja	silver			ja	passiv	haben		nein	nein	Verb — an etwas denken, sich erinnern; auch Subst. neutr. — Erinnerungsstück
 andeuten	ja	silver			ja	passiv	haben		nein	nein	Verb — etwas in Umrissen, andeutungsweise erkennen lassen
@@ -436,7 +435,7 @@ angaffen	ja	silver			ja	passiv	haben		nein	nein	Verb — (umgangssprachl.) jeman
 angeben	ja	silver			ja	passiv	haben		nein	nein	Verb — 1. nennen, mitteilen; 2. prahlen
 angehen	ja	silver			ja	passiv	haben+sein		nein		Verb — beginnen, betreffen, möglich sein, sich an jemanden wenden
 angehören	ja	weak			ja	passiv	haben		nein	ja	Verb — zu etwas gehören, Teil von etwas sein
-angeln	ja	gold	ja	geangeltem,geangelten,geangelter,geangeltes	ja	passiv	haben		nein	ja	Verb — mit Angelrute und Köder Fische fangen
+angeln	ja	weak		geangeltem,geangelten,geangelter,geangeltes	ja	passiv	haben		nein	ja	Verb — mit Angelrute und Köder Fische fangen
 angeloben	ja	silver			ja	passiv	haben		nein	ja	Verb — feierlich versprechen, vereidigen (z.B. Amtseid)
 anglotzen	ja	silver			ja	passiv	haben		nein	nein	Verb — (umgangssprachlich) anstarren, gaffen
 anglühen	ja	silver			ja	passiv	haben		nein	nein	Verb — (veraltet, techn.) an-, aufglühen
@@ -457,7 +456,7 @@ anheimeln	ja	silver			ja	passiv	haben		nein	nein	Verb — ein behagliches, vertr
 anheizen	ja	silver			ja	passiv	haben		nein	nein	Verb — (ein Feuer) in Gang bringen; (etwas) intensivieren, beschleunigen
 anhetzen	ja	silver			ja	passiv	haben+sein		nein		Verb — (jemanden) zu etwas anstacheln, aufhetzen
 anheuern	ja	weak			ja	passiv	haben		nein	nein	Verb — jemanden für eine Arbeit, besonders auf einem Schiff, einstellen
-anhexen	ja	gold	ja	angehexte,angehextem,angehexten,angehexter,angehextes	ja	passiv	haben		nein	ja	Verb — (veraltet, landschaftl.) jemandem etwas durch Hexerei zufügen, anhexen
+anhexen	ja	silver		angehexte,angehextem,angehexten,angehexter,angehextes	ja	passiv	haben		nein	ja	Verb — (veraltet, landschaftl.) jemandem etwas durch Hexerei zufügen, anhexen
 anhimmeln	ja	weak			ja	passiv	haben		nein	nein	Verb — jemanden oder etwas schwärmerisch verehren
 anhumpeln	ja	weak			ja	passiv	sein		nein		Verb — (umgangssprachlich) humpelnd herankommen
 anhungern	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb — (veraltet/gehoben) — Hunger leiden, hungern
@@ -546,7 +545,7 @@ anpinkeln	ja	silver			ja	passiv	haben		nein	nein	Verb — (umgangssp.) auf etwas
 anpinnen	ja	silver			ja	passiv	haben		nein	nein	Verb (umgangssprachl.) — mit einer Stecknadel, Reißzwecke o.Ä. befestigen
 anpissen	ja	weak			ja	passiv	haben		nein	nein	Verb (umgangssprachlich, vulgär) — mit Urin bespritzen, anpinkeln
 anprallen	ja	weak			ja	passiv	sein		nein		Verb — mit Wucht gegen etwas stoßen, aufprallen
-anpreien	ja	gold	ja	angepreite	ja	passiv	haben		ja	ja	Verb — ein anderes Schiff anrufen
+anpreien	ja	silver		angepreite	ja	passiv	haben		ja	ja	Verb — ein anderes Schiff anrufen
 anpreisen	ja	silver			ja	passiv	haben		nein	nein	Verb — lobend erwähnen, empfehlen
 anpressen	ja	silver			ja	passiv	haben		nein	nein	Verb — mit Druck an etwas fest anlegen
 anpumpen	ja	weak			ja	passiv	haben		nein	nein	Verb — jemanden um ein Darlehen bitten, borgen
@@ -561,7 +560,7 @@ anrechnen	ja	weak			ja	passiv	haben		nein	nein	Verb — etwas (bei einer Berechn
 anreden	ja	silver			ja	passiv	haben		nein	nein	Verb — jemanden ansprechen, anwenden
 anregen	ja	silver			ja	passiv	haben		nein	ja	Verb — Impulse geben, stimulieren; zu etwas veranlassen
 anreichen	ja	silver			ja	passiv	haben		nein	nein	Verb — (etwas) jemandem übergeben, reichen; ausreichen
-anreichern	ja	gold	ja	angereicherte,angereichertem,angereicherten,angereicherter,angereichertes	ja	passiv	haben	reflexiv	nein	ja	Verb — mit etwas anfüllen, versehen; (chemisch) konzentrieren
+anreichern	ja	silver		angereicherte,angereichertem,angereicherten,angereicherter,angereichertes	ja	passiv	haben	reflexiv	nein	ja	Verb — mit etwas anfüllen, versehen; (chemisch) konzentrieren
 anreihen	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — (etwas) in eine Reihe stellen, hinzufügen
 anreisen	ja	weak			ja	passiv	sein		nein		Verb — an einen Ort reisen, sich auf den Weg machen
 anrempeln	ja	weak			ja	passiv	haben		nein	nein	Verb — jemanden absichtlich mit der Schulter stoßen
@@ -605,7 +604,7 @@ anstaunen	ja	silver			ja	passiv	haben		nein	nein	Verb — mit Staunen betrachten
 anstechen	ja	silver			ja	passiv	haben		nein	nein	Verb — (mit Nadel, Stachel) leicht einstechen; (Fass) anzapfen
 anstecken	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — 1. etwas mit einer Stecknadel befestigen; 2. eine Infektion übertragen; 3. etwas in
 anstehen	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. in einer Schlange warten; 2. (etwas) steht an = ist zu erledigen; 3. (veraltet) 
-anstellen	ja	gold	ja	angestellte,angestelltem,angestellten,angestellter,angestelltes	ja	passiv	haben	reflexiv	nein	ja	Verb — in eine Position bringen; beschäftigen; anmachen (Gerät)
+anstellen	ja	weak		angestellte,angestelltem,angestellten,angestellter,angestelltes	ja	passiv	haben	reflexiv	nein	ja	Verb — in eine Position bringen; beschäftigen; anmachen (Gerät)
 ansteuern	ja	silver			ja	passiv	haben		nein	nein	Verb — ein Ziel anpeilen, darauf zusteuern
 anstieren	ja	silver			ja	passiv	haben		nein	nein	Verb — jemanden starr ansehen
 anstiften	ja	silver			ja	passiv	haben		nein	nein	Verb — zu einer (meist strafbaren) Handlung verleiten
@@ -730,8 +729,8 @@ aufmerken	ja	weak			ja	passiv	haben		nein	nein	Verb — aufhorchen, aufpassen, a
 aufmessen	ja	weak			ja	passiv	haben		nein	nein	Verb — (etwas) abmessen, vermessen
 aufmotzen	ja	weak			ja	passiv	haben		nein	nein	Verb — auffällig herrichten, aufpeppen
 aufmucken	ja	weak			ja	passiv	haben		nein	nein	Verb — (umgangssprachlich) Widerstand leisten, widersprechen
-aufmuntern	ja	gold	ja	aufgemunterte,aufgemuntertem,aufgemunterten,aufgemunterter,aufgemuntertes	ja	passiv	haben		ja	ja	Verb — jemanden in eine bessere Stimmung versetzen
-aufmöbeln	ja	gold	ja	aufgemöbelte,aufgemöbeltem,aufgemöbelten,aufgemöbelter,aufgemöbeltes	ja	passiv	haben		nein	ja	Verb — aufheitern, aufmuntern; (umgangssprachl.) renovieren, aufpolieren
+aufmuntern	ja	weak		aufgemunterte,aufgemuntertem,aufgemunterten,aufgemunterter,aufgemuntertes	ja	passiv	haben		ja	ja	Verb — jemanden in eine bessere Stimmung versetzen
+aufmöbeln	ja	weak		aufgemöbelte,aufgemöbeltem,aufgemöbelten,aufgemöbelter,aufgemöbeltes	ja	passiv	haben		nein	ja	Verb — aufheitern, aufmuntern; (umgangssprachl.) renovieren, aufpolieren
 aufnehmen	ja	silver			ja	passiv	haben		nein	nein	Verb — etwas in sich hineinnehmen, empfangen, beginnen, aufzeichnen
 aufnähen	ja	silver			ja	passiv	haben		nein	nein	Verb — (etwas) durch Nähen anbringen oder befestigen
 aufopfern	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb — sich oder etwas für jemanden/etwas hingeben, opfern
@@ -902,7 +901,7 @@ ausrauben	ja	weak			ja	passiv	haben		nein	nein	Verb — jemandem gewaltsam oder 
 ausreden	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. zu Ende reden; 2. (sich) entschuldigen
 ausreifen	nein	silver			nein		sein		nein		Verb — vollständig reifen, sich entwickeln
 ausreiten	ja	weak			ja	passiv	haben+sein		nein		Verb — (ein Pferd) im Freien reiten; einen Ausritt machen
-ausreizen	ja	gold	ja	ausgereizte,ausgereiztem,ausgereizten,ausgereizter,ausgereiztes	ja	passiv	haben		nein	ja	Verb — bis an die Grenze beanspruchen; vollständig nutzen
+ausreizen	ja	weak		ausgereizte,ausgereiztem,ausgereizten,ausgereizter,ausgereiztes	ja	passiv	haben		nein	ja	Verb — bis an die Grenze beanspruchen; vollständig nutzen
 ausrenken	ja	weak			ja	passiv	haben		nein	nein	Verb — (ein Gelenk) aus seiner normalen Lage bringen, verrenken
 ausrollen	ja	weak			ja	passiv	haben+sein		nein		Verb — etwas durch Rollen glätten, ausbreiten; (Flugzeug) nach der Landung weiterrollen
 ausrotten	ja	silver			ja	passiv	haben		nein	nein	Verb — vollständig vernichten, ausmerzen
@@ -1323,7 +1322,7 @@ betrüben	ja	silver			ja	passiv	haben		nein	ja	Verb — traurig machen, bekümme
 betrügen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — jemanden arglistig täuschen, um einen Vorteil zu erlangen
 betteln	ja	weak			ja	passiv	haben		nein	nein	Verb — um Almosen, Geld o.Ä. bitten
 betten	ja	weak			ja	passiv	haben		nein	ja	Verb — um Almosen bitten; Substantiv — Pl. von Bett
-betun	ja	gold	ja	betane,betanem,betanen,betaner,betanes	ja	passiv	haben	reflexiv	nein	ja	Verb — (veraltet/landschaftlich) bedecken, bestreichen, z.B. mit Teer
+betun	ja	weak		betane,betanem,betanen,betaner,betanes	ja	passiv	haben	reflexiv	nein	ja	Verb — (veraltet/landschaftlich) bedecken, bestreichen, z.B. mit Teer
 betupfen	ja	weak			ja	passiv	haben		nein	ja	Verb — mit kleinen Punkten oder Tupfen versehen; leicht berühren
 betuppen	ja	silver			ja	passiv	haben		nein	ja	Verb — jemanden betrügen, übervorteilen
 betutteln	ja	weak			ja	passiv	haben		nein	nein	Verb — (ugs.) übermäßig behüten, umsorgen, bevormunden
@@ -1344,7 +1343,7 @@ bewegen	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — die Lage oder Posi
 bewehren	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — mit einer Wehr, Panzerung oder Bewaffnung versehen
 beweiden	ja	silver			ja	passiv	haben		nein	ja	Verb — (Vieh) auf einer Fläche grasen lassen, abweiden
 beweinen	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — um jemanden oder etwas trauern, betrauern
-beweisen	ja	gold	ja	bewiesenem	ja	passiv	haben	reflexiv	nein	ja	Verb — die Wahrheit einer Aussage durch Argumente belegen
+beweisen	ja	weak		bewiesenem	ja	passiv	haben	reflexiv	nein	ja	Verb — die Wahrheit einer Aussage durch Argumente belegen
 bewenden	nein	silver			nein		haben		nein	ja	Verb — (etwas) dabei bewenden lassen; es dabei belassen
 bewerben	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — sich um eine Stelle, einen Platz o. Ä. bewerben
 bewerfen	ja	weak			ja	passiv	haben		nein	nein	Verb — mit Gegenständen nach jemandem/etwas werfen
@@ -1360,7 +1359,6 @@ bewähren	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — sich als zuverläs
 bewässern	ja	weak			ja	passiv	haben		nein	nein	Verb — mit Wasser versorgen, z.B. Pflanzen oder Felder
 bezahlen	ja	weak			ja	passiv	haben		nein	ja	Verb — einen Geldbetrag für eine Ware oder Leistung entrichten
 bezaubern	ja	silver			ja	passiv	haben		nein	nein	Verb — in seinen Bann ziehen, entzücken
-bezechen	ja	gold	ja	bezechter,bezechtes			haben	reflexiv	nein	ja	Verb — sich betrinken
 bezeigen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — zeigen, beweisen, kundtun
 bezeugen	ja	weak			ja	passiv	haben		nein	ja	Verb — etwas als wahr bestätigen, aussagen
 beziehen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — etwas an sich nehmen, bekommen; eine Fläche mit einem Stoff überziehen
@@ -1447,7 +1445,7 @@ brutzeln	ja	silver			ja	passiv	haben		nein	nein	Verb — (etwas) in heißem Fett
 bräunen	ja	weak			ja	passiv	haben		nein	ja	Verb — braun werden oder machen; sich sonnen
 bröckeln	ja	silver			ja	passiv	haben+sein		nein		Verb — in kleine Stücke zerfallen oder abbrechen
 bröseln	ja	silver			ja	passiv	haben		nein	nein	Verb — in kleine Stücke/Krümel zerfallen oder zerbröckeln
-brücken	ja	gold	ja	gebrücktem,gebrückten,gebrückter,gebrücktes	ja	passiv	haben		nein	ja	Verb — Infinitiv von brücken (überbrücken, verbinden)
+brücken	ja	weak		gebrücktem,gebrückten,gebrückter,gebrücktes	ja	passiv	haben		nein	ja	Verb — Infinitiv von brücken (überbrücken, verbinden)
 brühen	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — mit heißer Flüssigkeit übergießen, kochen
 brüllen	ja	weak			ja	passiv	haben		nein	ja	Verb — laut schreien; ein lautes Geräusch von sich geben
 brünieren	ja	silver			ja	passiv	haben		nein	ja	Verb — Metall durch Erhitzen oder chemische Behandlung bräunlich färben, bräunen
@@ -1474,7 +1472,7 @@ bäumen	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb — sich aufbäumen, e
 bölken	ja	weak			ja	passiv	haben		nein	nein	Verb — laut brüllen, schreien (von Tieren, z.B. Hirschen)
 böllern	ja	weak			ja	passiv	haben		nein	nein	Verb — mit Böllern (Feuerwerkskörpern) schießen, lärmen
 bördeln	ja	weak			ja	passiv	haben		nein	nein	Verb — (Technik) einen Rand, eine Bördelung anfertigen
-böschen	ja	gold	ja	geböschtem	ja	passiv	haben		nein	ja	Verb — abschrägen, abflachen, hauptsächlich im Straßen- und Eisenbahnbau
+böschen	ja	weak		geböschtem	ja	passiv	haben		nein	ja	Verb — abschrägen, abflachen, hauptsächlich im Straßen- und Eisenbahnbau
 büffeln	ja	weak			ja	passiv	haben		nein	nein	Verb — intensiv und mühsam lernen oder arbeiten
 bügeln	ja	weak			ja	passiv	haben		nein	ja	Verb — mit einem Bügeleisen glätten
 bündeln	ja	weak			ja	passiv	haben		nein	nein	Verb — zu einem Bündel zusammenfassen
@@ -1483,7 +1481,7 @@ bürsten	ja	silver			ja	passiv	haben		nein	nein	Verb — mit einer Bürste reini
 cachen	ja	weak			ja	passiv	haben		nein	ja	Verb (EDV) — Daten in einem Zwischenspeicher ablegen
 campen	ja	weak			ja	passiv	haben		nein	nein	Verb — in einem Zelt oder Wohnwagen übernachten, zelten
 campieren	ja	weak			ja	passiv	haben		nein	ja	Verb — in einem Zelt oder Wohnmobil übernachten, lagern
-chartern	ja	gold	ja	gecharterte,gechartertem,gecharterten,gecharterter,gechartertes	ja	passiv	haben		nein	ja	Verb — ein Schiff, Flugzeug o.Ä. mieten
+chartern	ja	weak		gecharterte,gechartertem,gecharterten,gecharterter,gechartertes	ja	passiv	haben		nein	ja	Verb — ein Schiff, Flugzeug o.Ä. mieten
 chatten	ja	weak			ja	passiv	haben		nein	nein	Verb — im Internet schriftlich kommunizieren
 cheaten	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — betrügen, schummeln (bes. bei Spielen)
 checken	ja	weak			ja	passiv	haben		nein	ja	Verb (ugs.) — kontrollieren, prüfen, verstehen
@@ -1496,7 +1494,7 @@ crashen	ja	silver			ja	passiv	haben+sein		nein		Verb — (Computer) abstürzen; 
 crawlen	ja	weak			ja	passiv	haben		nein	ja	Verb (Anglizismus) — im Internet automatisch Daten sammeln; kriechen, robben
 cremen	ja	silver			ja	passiv	haben		nein	ja	Verb — eine weiche oder flüssige Masse mit den Fingern verteilen
 cruisen	ja	weak			ja	passiv	sein		nein		Verb (ugs.) — eine Kreuzfahrt machen; ziellos umherfahren
-cutten	ja	gold	ja	gecuttete,gecuttetem,gecutteten,gecutteter,gecuttetes	ja	passiv	haben		nein	ja	Verb — Film- oder Tonaufnahmen schneiden und zusammenstellen
+cutten	ja	silver		gecuttete,gecuttetem,gecutteten,gecutteter,gecuttetes	ja	passiv	haben		nein	ja	Verb — Film- oder Tonaufnahmen schneiden und zusammenstellen
 dableiben	ja	weak			ja	passiv	sein		nein		Verb — (umgangssprachlich) an einem Ort verweilen, nicht weggehen
 dackeln	ja	weak			ja	passiv	sein		nein		Verb (ugs.) — sich langsam, unbeholfen oder wie ein Dackel fortbewegen
 daddeln	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — spielerisch, unbeschwert herumspielen, tippen oder zocken
@@ -1521,9 +1519,9 @@ dazutun	ja	weak			ja	passiv	haben		nein	ja	Verb — hinzufügen, beisteuern
 dealen	ja	weak			ja	passiv	haben		nein	ja	Verb (ugs.) — Geschäfte machen, handeln, Drogen verkaufen
 deckeln	ja	weak			ja	passiv	haben		nein	nein	Verb — mit einem Deckel verschließen; Subst. — Dativ Plural von Deckel
 decken	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — mit etwas bedecken; Subst. — Pl. von Decke
-definieren	ja	gold	ja	definiertem,definierter,definiertes	ja	passiv	haben		nein	ja	Verb — genau bestimmen, festlegen, erklären
+definieren	ja	weak		definiertem,definierter,definiertes	ja	passiv	haben		nein	ja	Verb — genau bestimmen, festlegen, erklären
 dehnen	ja	weak			ja	passiv	haben		nein	ja	Verb — in die Länge oder Breite ziehen, strecken
-deichen	ja	gold	ja	gedeichte,gedeichtem,gedeichten,gedeichter,gedeichtes	ja	passiv	haben		nein	ja	Verb — einen Deich bauen oder instand halten
+deichen	ja	weak		gedeichte,gedeichtem,gedeichten,gedeichter,gedeichtes	ja	passiv	haben		nein	ja	Verb — einen Deich bauen oder instand halten
 deichseln	ja	weak			ja	passiv	haben		nein	nein	Verb — (etwas) mit Mühe bewerkstelligen, zurechtbiegen
 dellen	ja	weak			ja	passiv	haben		nein	nein	Verb — eine Delle machen, eindrücken
 demütigen	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — jemandes Würde verletzen, erniedrigen
@@ -1550,18 +1548,18 @@ doktern	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — als Arzt behandeln;
 dolchen	ja	weak			ja	passiv	haben		nein	nein	Verb — mit einem Dolch erstechen
 dolieren	ja	weak			ja	passiv	haben		nein	ja	Verb (schweiz., österr.) — betrügen, prellen, übervorteilen
 donnern	ja	weak			ja	passiv	haben+sein		nein		Verb — ein lautes, grollendes Geräusch von sich geben (wie Donner)
-doodeln	ja	gold	ja	gedoodelte,gedoodeltem,gedoodelten,gedoodelter,gedoodeltes	ja	passiv	haben		nein	ja	Verb — 1. den Internetdienst Doodle nutzen 2. nebenbei etwas kritzeln, z. B. beim Telefoni
+doodeln	ja	weak		gedoodelte,gedoodeltem,gedoodelten,gedoodelter,gedoodeltes	ja	passiv	haben		nein	ja	Verb — 1. den Internetdienst Doodle nutzen 2. nebenbei etwas kritzeln, z. B. beim Telefoni
 dopen	ja	weak			ja	passiv	haben		nein	ja	Verb — leistungssteigernde Substanzen einnehmen; aufputschen
 doppeln	ja	weak			ja	passiv	haben		nein	nein	Verb — etwas verdoppeln, zweifach ausführen
 dorren	ja	weak			ja	passiv	sein		nein		Verb — trocknen, dörren
 dosieren	ja	weak			ja	passiv	haben		nein	ja	Verb — eine bestimmte Menge abmessen, zuteilen
 dotieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (bes. österr., schweiz.) mit einer Geldsumme, einer Stiftung ausstatten; besolden
-dotzen	ja	gold	ja	gedotzte,gedotztem,gedotzten,gedotzter,gedotztes	ja	passiv	haben		nein	ja	Verb — (landsch.) aufspringen, aufprallen, besonders einen Ball
+dotzen	ja	weak		gedotzte,gedotztem,gedotzten,gedotzter,gedotztes	ja	passiv	haben		nein	ja	Verb — (landsch.) aufspringen, aufprallen, besonders einen Ball
 dozieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (abwertend) belehrend vortragen, referieren
 dragieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (Kochkunst) Speisen mit einer Glasur überziehen, z.B. mit Zucker oder Schokolade
 drahten	ja	weak			ja	passiv	haben		nein	nein	Verb — mit Draht verbinden oder umwickeln
 drapieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (Stoffe) kunstvoll anordnen, dekorativ hängen oder legen
-drechseln	ja	gold	ja	gedrechselte,gedrechseltem,gedrechselten,gedrechselter,gedrechseltes	ja	passiv	haben		nein	ja	Verb — Holz kunstvoll bearbeiten, drehen
+drechseln	ja	weak		gedrechselte,gedrechseltem,gedrechselten,gedrechselter,gedrechseltes	ja	passiv	haben		nein	ja	Verb — Holz kunstvoll bearbeiten, drehen
 drehen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — etwas um seine Achse bewegen, rotieren lassen
 dreschen	ja	silver			ja	passiv	haben		nein	nein	Verb — Getreide mit einem Dreschflegel bearbeiten
 dressen	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — (Tiere) abrichten, schulen; 1./3. Person Plural Präsens von dressen
@@ -1584,7 +1582,7 @@ dröppeln	ja	weak			ja	passiv	haben		nein	nein	Verb — (landsch., bes. nordd.) 
 dröseln	ja	weak			ja	passiv	haben		nein	nein	Verb — (ugs.) etwas mühsam auseinandernehmen, entwirren
 drücken	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — mit Druck auf etwas ausüben, etwas zusammendrücken
 dublieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (Film, Theater) eine Rolle mit einem Double besetzen; verdoppeln
-dudeln	ja	gold	ja	gedudeltem,gedudelten,gedudelter,gedudeltes	ja	passiv	haben		nein	ja	Verb — (ugs.) auf einem Dudelsack spielen; monoton spielen/summen
+dudeln	ja	weak		gedudeltem,gedudelten,gedudelter,gedudeltes	ja	passiv	haben		nein	ja	Verb — (ugs.) auf einem Dudelsack spielen; monoton spielen/summen
 duften	ja	weak			ja	passiv	haben		nein	ja	Verb — angenehm riechen
 dulden	ja	silver			ja	passiv	haben		nein	ja	Verb — etwas hinnehmen, erdulden, zulassen
 dunkeln	ja	weak			ja	passiv	haben		nein	nein	Verb — dunkel werden oder machen
@@ -1614,7 +1612,7 @@ ebnen	ja	silver			ja	passiv	haben		nein	ja	Verb — eine Fläche glatt oder eben
 echoen	ja	weak			ja	passiv	haben		nein	nein	Verb — widerhallen, ein Echo erzeugen; nachahmen
 edieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (einen Text) bearbeiten, herausgeben
 editieren	ja	silver			ja	passiv	haben		nein	ja	Verb — einen Text bearbeiten, redigieren
-eggen	ja	gold	ja	geeggte,geeggtem,geeggten,geeggter,geeggtes	ja	passiv	haben		nein	ja	Verb — den Boden mit einer Egge bearbeiten
+eggen	ja	weak		geeggte,geeggtem,geeggten,geeggter,geeggtes	ja	passiv	haben		nein	ja	Verb — den Boden mit einer Egge bearbeiten
 ehren	ja	silver			ja	passiv	haben		nein	ja	Verb — jemandem Achtung, Wertschätzung erweisen
 eichen	ja	weak			ja	passiv	haben		nein	ja	Verb — auf Richtigkeit prüfen, kalibrieren; oder Adj. — aus Eichenholz
 eiern	ja	weak			ja	passiv	haben+sein		nein		Verb — 1. Eier legen; 2. (ugs.) unsicher wackeln, torkeln
@@ -1658,7 +1656,7 @@ eingraben	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — etwas in die E
 einhacken	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. mit der Hacke bearbeiten; 2. (ugs.) sich einmischen, dazwischenreden
 einhaken	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb — sich mit einem Haken befestigen; sich in ein Gespräch einschalten
 einhalten	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. sich an Regeln, Vereinbarungen halten; 2. innehalten, stoppen; 3. (veraltet) zur
-einhandeln	ja	gold	ja	eingehandelte,eingehandeltem,eingehandelten,eingehandelter,eingehandeltes	ja	passiv	haben	reflexiv	nein	ja	Verb — durch Handel erwerben, sich etwas verschaffen oder eine Krankheit bekommen
+einhandeln	ja	weak		eingehandelte,eingehandeltem,eingehandelten,eingehandelter,eingehandeltes	ja	passiv	haben	reflexiv	nein	ja	Verb — durch Handel erwerben, sich etwas verschaffen oder eine Krankheit bekommen
 einharken	ja	weak			ja	passiv	haben		nein	nein	Verb — mit einer Harke zusammenrechen, anhäufen
 einhauen	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — 1. mit Wucht einschlagen; 2. zuschlagen; 3. (sich) kräftig essen
 einheben	ja	silver			ja	passiv	haben		nein	nein	Verb — (Gelder, Steuern) erheben, einziehen; (etwas) einziehen, einholen
@@ -1732,7 +1730,7 @@ einreisen	nein	silver			nein		sein		nein		Verb — in ein Land, Gebiet reisen
 einreiten	ja	weak			ja	passiv	haben+sein		nein		Verb (trennbar) — zu Pferd hineinreiten, einreiten
 einrenken	ja	weak			ja	passiv	haben		nein	nein	Verb — (ein Gelenk) wieder in die richtige Lage bringen; (übertragen) eine Angelegenheit i
 einrennen	ja	weak			ja	passiv	haben		nein	nein	Verb — (gegen etwas) mit Wucht laufen; (eine Tür) durch Rammen öffnen
-einrexen	ja	gold	ja	eingerexte,eingerextem,eingerexten,eingerexter,eingerextes	ja	passiv	haben		ja	ja	Verb — (südd. & österr.) einwecken, in Gläsern konservieren
+einrexen	ja	silver		eingerexte,eingerextem,eingerexten,eingerexter,eingerextes	ja	passiv	haben		ja	ja	Verb — (südd. & österr.) einwecken, in Gläsern konservieren
 einritzen	ja	weak			ja	passiv	haben		nein	nein	Verb — mit einem scharfen Gegenstand eine Zeichnung oder Schrift in eine Oberfläche schnei
 einrollen	ja	weak			ja	passiv	haben+sein	reflexiv	nein		Verb — etwas zu einer Rolle zusammenwickeln oder einwickeln
 einräumen	ja	weak			ja	passiv	haben		nein	nein	Verb — etwas in einen Raum stellen; etwas zugestehen, einwilligen
@@ -1744,7 +1742,7 @@ einsagen	ja	silver			ja	passiv	haben		nein	nein	Verb — jemandem etwas zum Nach
 einsalben	ja	silver			ja	passiv	haben		nein	nein	Verb — mit Salbe einreiben, schmieren
 einsalzen	ja	weak			ja	passiv	haben		nein	nein	Verb — mit Salz behandeln oder würzen
 einsargen	ja	weak			ja	passiv	haben		nein	nein	Verb — einen Leichnam in einen Sarg legen; übertragen: etwas endgültig beenden
-einsauen	ja	gold	ja	eingesaute,eingesautem,eingesauten,eingesauter,eingesautes	ja	passiv	haben		nein	ja	Verb — schmutzig machen, verschmutzen
+einsauen	ja	weak		eingesaute,eingesautem,eingesauten,eingesauter,eingesautes	ja	passiv	haben		nein	ja	Verb — schmutzig machen, verschmutzen
 einsaugen	ja	silver			ja	passiv	haben		nein	nein	Verb — durch Saugen in etwas hineinbefördern
 einsehen	ja	weak			ja	passiv	haben		nein	nein	Verb — (etwas) zur Kenntnis nehmen, begreifen; (etwas) prüfend ansehen
 einseifen	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — mit Seife einreiben; (umgangssprachl.) jemanden täuschen, hereinlegen
@@ -1790,13 +1788,13 @@ ekeln	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb — Widerwillen, Abscheu
 elidieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (Sprachw.) einen Laut, eine Silbe auslassen
 eloxieren	ja	weak			ja	passiv	haben		nein	ja	Verb — Aluminium durch anodische Oxidation mit einer Oxidschicht versehen
 emailen	ja	silver			ja	passiv	haben		nein	ja	Verb — eine E-Mail senden
-emden	ja	gold	ja	geemdete,geemdetem,geemdeten,geemdeter,geemdetes	ja	passiv	haben		nein	ja	Verb, Grummet machen
+emden	ja	weak		geemdete,geemdetem,geemdeten,geemdeter,geemdetes	ja	passiv	haben		nein	ja	Verb, Grummet machen
 empfangen	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. entgegennehmen; 2. (einen Gast) begrüßen; 3. (ein Kind) gebären
 empfehlen	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — jemandem etwas als gut, nützlich oder wünschenswert anraten
 empfinden	ja	weak			ja	passiv	haben		nein	nein	Verb — etwas fühlen, wahrnehmen, beurteilen
 empören	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — heftigen Unwillen, Entrüstung erregen
 emulieren	ja	weak			ja	passiv	haben		nein	ja	Verb — nachahmen, imitieren; (EDV) ein System simulieren
-endeln	ja	gold	ja	geendelte,geendeltem,geendelten,geendelter,geendeltes	ja	passiv	haben		nein	ja	Verb — Ränder eines Stoffes einfassen
+endeln	ja	silver		geendelte,geendeltem,geendelten,geendelter,geendeltes	ja	passiv	haben		nein	ja	Verb — Ränder eines Stoffes einfassen
 endigen	ja	weak			ja	passiv	haben		nein	nein	Verb (veraltet/schweiz.) — beenden, zu Ende bringen
 engen	ja	silver			ja	passiv	haben		nein	nein	Verb — 1./3. Person Plural Präsens von engen; Dativ Plural von eng
 entasten	ja	weak			ja	passiv	haben		nein	ja	Verb — die Äste von etwas entfernen, entzweigen
@@ -1934,7 +1932,7 @@ erdauern	ja	weak			ja	passiv	haben		nein	ja	Verb
 erden	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — 2. Person Plural Imperativ von erden (elektr. ableiten; verwurzeln)
 erdenken	ja	silver			ja	passiv	haben		nein	ja	Verb — sich ausdenken, ersinnen, erfinden
 erdichten	ja	weak			ja	passiv	haben		nein	nein	Verb — etwas erfinden, ausdenken
-erdienen	ja	gold	ja	erdiente,erdienten,erdienter,erdientes	ja	passiv	haben	reflexiv	nein	ja	Verb — durch Arbeit verdienen; sich etwas verdienen
+erdienen	ja	silver		erdiente,erdienten,erdienter,erdientes	ja	passiv	haben	reflexiv	nein	ja	Verb — durch Arbeit verdienen; sich etwas verdienen
 erdolchen	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — jemanden mit einem Dolch töten
 erdrücken	ja	weak			ja	passiv	haben		nein	ja	Verb — durch Druck töten, unterdrücken, erdrückend wirken
 erdulden	ja	weak			ja	passiv	haben		nein	ja	Verb — dulden, ertragen, aushalten
@@ -2050,7 +2048,7 @@ erstatten	ja	silver			ja	passiv	haben		nein	nein	Verb — etwas (z.B. Geld, Beri
 erstechen	ja	weak			ja	passiv	haben		nein	nein	Verb — jemanden/etwas mit einem Stich töten oder schwer verletzen
 erstehen	ja	weak			ja	passiv	haben+sein		nein		Verb — (gehoben) entstehen, sich erheben; auch: etwas (durch Kauf) erwerben
 ersteigen	ja	weak			ja	passiv	haben		nein	nein	Verb — durch Klettern erreichen, erklimmen
-erstellen	ja	gold	ja	erstelltem,erstellter,erstelltes	ja	passiv	haben		nein	ja	Verb — anfertigen, herstellen, aufbauen
+erstellen	ja	silver		erstelltem,erstellter,erstelltes	ja	passiv	haben		nein	ja	Verb — anfertigen, herstellen, aufbauen
 ersticken	ja	silver			ja	passiv	haben+sein		nein		Verb — durch Sauerstoffmangel sterben; unterdrücken
 erstreben	ja	silver			ja	passiv	haben		nein	ja	Verb — etwas anstreben, zum Ziel haben
 erstürmen	ja	weak			ja	passiv	haben		nein	ja	Verb — durch Sturm einnehmen, erobern
@@ -2110,7 +2108,7 @@ fallieren	ja	weak			ja	passiv	haben		nein	ja	Verb — bankrottgehen, scheitern
 falten	ja	weak			ja	passiv	haben		nein	ja	Verb — Papier o.Ä. knicken, zusammenlegen; Subst. — Plural von Falte
 falzen	ja	silver			ja	passiv	haben		nein	ja	Verb — Papier, Blech o.Ä. durch Umbiegen und Zusammendrücken verbinden
 fangen	ja	silver			ja	passiv	haben		nein	ja	Verb — ergreifen, einfangen, in Besitz nehmen
-farcieren	ja	gold	ja	farciertem,farcierter,farciertes	ja	passiv	haben		nein	ja	Verb — mit einer Farce füllen
+farcieren	ja	weak		farciertem,farcierter,farciertes	ja	passiv	haben		nein	ja	Verb — mit einer Farce füllen
 faseln	ja	weak			ja	passiv	haben		nein	nein	Verb — (umgangssprachlich) wirr oder unnütz reden, schwafeln
 fassen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — mit den Händen ergreifen, umschließen; begreifen, verstehen
 fasten	ja	weak			ja	passiv	haben		nein	nein	Verb — zeitweilig auf Nahrung oder Genussmittel verzichten
@@ -2129,7 +2127,7 @@ feilschen	ja	weak			ja	passiv	haben		nein	nein	Verb — handeln, um den Preis ve
 feixen	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs., süddt., österr.) — breit grinsen, albern lachen
 fensterln	ja	weak			ja	passiv	haben		nein	nein	Verb (landschaftl., bes. süddt., österr.) — als Liebhaber nachts zum Fenster der Geliebten
 fenstern	ja	silver			ja	passiv	haben		nein	nein	Verb — mit Fenstern versehen; auch: durch Fenster blicken
-fenzen	ja	gold	ja	gefenzte,gefenztem,gefenzten,gefenzter,gefenztes	ja	passiv	haben		nein	ja	Verb — einfrieden; auch Plural von Fenz
+fenzen	ja	weak		gefenzte,gefenztem,gefenzten,gefenzter,gefenztes	ja	passiv	haben		nein	ja	Verb — einfrieden; auch Plural von Fenz
 ferkeln	ja	weak			ja	passiv	haben		nein	nein	Verb — sich schmutzig/unordentlich benehmen; Junge werfen (bei Schweinen)
 fernsehen	ja	weak			ja	passiv	haben		nein	nein	Verb — Sendungen im Fernsehen anschauen; auch subst. das Fernsehen
 fertigen	ja	weak			ja	passiv	haben		nein	nein	Verb — etwas fertigstellen; auch dekl. Form von fertig
@@ -2154,7 +2152,7 @@ filmen	ja	silver			ja	passiv	haben		nein	ja	Verb — mit einer Filmkamera aufneh
 filtern	ja	weak			ja	passiv	haben		nein	nein	Verb — etwas durch einen Filter laufen lassen, auswählen
 filzen	ja	silver			ja	passiv	haben+sein		nein		Verb — 1. durchsuchen, untersuchen; 2. zu Filz verarbeiten
 finden	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — etwas suchend entdecken oder auffinden
-fingern	ja	gold	ja	gefingerte,gefingertem,gefingerten,gefingerter,gefingertes	ja	passiv	haben		nein	ja	Verb — 1. mit den Fingern berühren, betasten; 2. stehlen
+fingern	ja	weak		gefingerte,gefingertem,gefingerten,gefingerter,gefingertes	ja	passiv	haben		nein	ja	Verb — 1. mit den Fingern berühren, betasten; 2. stehlen
 fingieren	ja	weak			ja	passiv	haben		nein	ja	Verb — etwas vortäuschen, erdichten
 finishen	ja	weak			ja	passiv	haben		nein	nein	Verb (aus dem Engl.) — etwas beenden, vollenden, ins Ziel bringen
 firmen	ja	weak			ja	passiv	haben		nein	ja	Verb — (jemanden) in einer Glaubensgemeinschaft aufnehmen; auch: eine Firma gründen/betrei
@@ -2202,16 +2200,16 @@ fluten	ja	weak			ja	passiv	haben+sein		nein		Verb — überfluten, überschwemme
 flutschen	ja	weak			ja	passiv	sein		nein		Verb — (umgangssprachlich) rutschen, gleiten
 flöten	ja	weak			ja	passiv	haben		nein	nein	Verb — pfeifen, einen Ton auf der Flöte erzeugen; oder Subst. — Plural von Flöte
 flüchten	ja	weak			ja	passiv	sein	reflexiv	nein		Verb — sich aus einer Gefahrenzone entfernen, das Weite suchen
-flügeln	ja	gold	ja	geflügelte,geflügeltem,geflügelten,geflügelter,geflügeltes	ja	passiv	haben		nein	ja	Verb — mit Flügeln versehen; poet. für fliegen
+flügeln	ja	weak		geflügelte,geflügeltem,geflügelten,geflügelter,geflügeltes	ja	passiv	haben		nein	ja	Verb — mit Flügeln versehen; poet. für fliegen
 flüstern	ja	weak			ja	passiv	haben		nein	nein	Verb — leise, mit gedämpfter Stimme sprechen
-fodern	ja	gold	ja	gefoderte,gefodertem,gefoderten,gefoderter,gefodertes	ja	passiv	haben		nein	ja	Verb (ostmitteldeutsch) — fordern, einen Anspruch erheben
+fodern	ja	weak		gefoderte,gefodertem,gefoderten,gefoderter,gefodertes	ja	passiv	haben		nein	ja	Verb (ostmitteldeutsch) — fordern, einen Anspruch erheben
 fohlen	nein	gold	nein	gefohlte,gefohltem,gefohlten,gefohlter,gefohltes	ja	passiv	haben		nein	nein	Verb — (von Stuten) ein Fohlen gebären
 folgen	ja	weak			ja	passiv	haben+sein		nein		Verb — hinterhergehen, sich anschließen; sich ergeben
 folgern	ja	weak			ja	passiv	haben		nein	nein	Verb — durch logisches Denken zu einem Schluss kommen
 foltern	ja	weak			ja	passiv	haben		nein	nein	Verb — jemandem Qualen zufügen, um Geständnisse zu erpressen
 foppen	ja	weak			ja	passiv	haben		nein	ja	Verb — jemanden zum Narren halten, täuschen
 forcieren	ja	weak			ja	passiv	haben		nein	ja	Verb — etwas mit Nachdruck betreiben, beschleunigen, erzwingen
-fordern	ja	gold	ja	geforderte,gefordertem,geforderter,gefordertes	ja	passiv	haben		nein	ja	Verb — etwas verlangen, beanspruchen
+fordern	ja	weak		geforderte,gefordertem,geforderter,gefordertes	ja	passiv	haben		nein	ja	Verb — etwas verlangen, beanspruchen
 formen	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — gestalten, prägen, eine Form geben
 formieren	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — bilden, aufstellen, gestalten
 forschen	ja	weak			ja	passiv	haben		nein	nein	Verb — systematisch untersuchen, wissenschaftlich suchen
@@ -2250,7 +2248,7 @@ frönen	ja	weak			ja	passiv	haben		nein	nein	Verb — sich mit Hingabe (oft übe
 frösteln	ja	weak			ja	passiv	haben		nein	nein	Verb — leicht frieren, ein Frösteln empfinden
 fuchsen	ja	weak			ja	passiv	haben		nein	ja	Verb — 1. jmdn. betrügen, überlisten; 2. sich ärgern
 fuchteln	ja	weak			ja	passiv	haben		nein	nein	Verb — mit den Armen heftig gestikulieren, wild herumwedeln
-fuddeln	ja	gold	ja	gefuddelte,gefuddeltem,gefuddelten,gefuddelter,gefuddeltes	ja	passiv	haben		nein	ja	Verb (ugs.) — unsauber arbeiten, herumpfuschen
+fuddeln	ja	weak		gefuddelte,gefuddeltem,gefuddelten,gefuddelter,gefuddeltes	ja	passiv	haben		nein	ja	Verb (ugs.) — unsauber arbeiten, herumpfuschen
 fugen	ja	weak			ja	passiv	haben		nein	ja	Verb — 1. fügen, verbinden; 2. Pl. von Fuge
 fummeln	ja	weak			ja	passiv	haben		nein	nein	Verb — umgangssprachlich für ungeschickt oder tastend hantieren, herumtasten
 fundieren	ja	weak			ja	passiv	haben		nein	ja	Verb — 1. (etwas) begründen, stützen. 2. (Finanzwesen) eine langfristige Anleihe auflegen
@@ -2304,7 +2302,7 @@ gefährden	ja	silver			ja	passiv	haben		nein	nein	Verb — in Gefahr bringen, be
 geheimtun	ja	weak			ja	passiv	haben		nein	nein	Verb — etwas geheim halten, nicht preisgeben
 gehen	ja	weak			ja	passiv	sein		ja		Verb — sich zu Fuß fortbewegen
 gehorchen	ja	weak			ja	passiv	haben		nein	ja	Verb — einem Befehl oder einer Anordnung Folge leisten
-geien	ja	gold	ja	gegeite,gegeitem,gegeiten,gegeiter,gegeites	ja	passiv	haben		nein	ja	Verb- Segel zusammenschnüren
+geien	ja	weak		gegeite,gegeitem,gegeiten,gegeiter,gegeites	ja	passiv	haben		nein	ja	Verb- Segel zusammenschnüren
 geiern	ja	weak			ja	passiv	haben		nein	nein	Verb — wie ein Geier kreisen; gierig auf etwas lauern
 geifern	ja	weak			ja	passiv	haben		nein	nein	Verb — mit Speichel aus dem Mund reden; wütend schimpfen
 geigen	ja	silver			ja	passiv	haben		nein	ja	Verb — Geige spielen
@@ -2340,7 +2338,7 @@ giggeln	ja	weak			ja	passiv	haben		nein	nein	Verb — umgangssprachlich für alb
 gilben	ja	weak			ja	passiv	haben+sein		nein		Verb — gelb werden oder machen; veralten für vergilben
 gipsen	ja	weak			ja	passiv	haben		nein	ja	Verb — mit Gips verputzen, ausbessern oder einen Gipsverband anlegen
 girieren	ja	silver			ja	passiv	haben		nein	ja	Verb — einen Wechsel, eine Anweisung etc. durch Indossament übertragen
-girren	ja	gold	ja	gegirrte,gegirrtem,gegirrten,gegirrter,gegirrtes	ja	passiv	haben		nein	ja	Verb — leise, gurrende Laute von sich geben (bes. von Tauben)
+girren	ja	weak		gegirrte,gegirrtem,gegirrten,gegirrter,gegirrtes	ja	passiv	haben		nein	ja	Verb — leise, gurrende Laute von sich geben (bes. von Tauben)
 gittern	ja	silver			ja	passiv	haben		nein	nein	Verb — mit einem Gitter versehen oder in Gitterform anordnen
 glasen	ja	weak			ja	passiv	haben		nein	ja	Verb — (veraltet) gläsern, glasieren; Adj. — aus Glas
 glasieren	ja	weak			ja	passiv	haben		nein	ja	Verb — mit einer Glasur überziehen
@@ -2562,7 +2560,7 @@ horchen	ja	weak			ja	passiv	haben		nein	ja	Verb — aufmerksam lauschen, zuhöre
 hornen	ja	weak			ja	passiv	haben		nein	ja	Verb — aus Horn bestehend oder hergestellt; mit Horn versehen
 horten	ja	silver			ja	passiv	haben		nein	ja	Verb — Vorräte, Geld o.Ä. sammeln und aufbewahren
 hudeln	ja	silver			ja	passiv	haben		nein	nein	Verb (ugs.) — unsauber, nachlässig arbeiten; pfuschen
-hudern	ja	gold	ja	gehudertem,gehuderten,gehuderter,gehudertes	ja	passiv	haben		nein	ja	Verb- (Tierwelt) wärmen, schützen, im,Sand baden
+hudern	ja	weak		gehudertem,gehuderten,gehuderter,gehudertes	ja	passiv	haben		nein	ja	Verb- (Tierwelt) wärmen, schützen, im,Sand baden
 huldigen	ja	weak			ja	passiv	haben		nein	nein	Verb — Verehrung, Respekt erweisen
 humpeln	ja	weak			ja	passiv	haben+sein		nein		Verb — leicht hinkend gehen
 hungern	ja	weak			ja	passiv	haben		nein	nein	Verb — starken Hunger haben; fasten
@@ -2603,7 +2601,7 @@ hüpfen	ja	weak			ja	passiv	sein		nein		Verb — sich mit einem oder mehreren Sp
 hüsteln	ja	weak			ja	passiv	haben		nein	nein	Verb — leicht und wiederholt husten
 hüten	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — bewachen, beschützen; Vieh beaufsichtigen
 iahen	ja	weak			ja	passiv	haben		nein	ja	Verb — den Laut eines Esels von sich geben
-igeln	ja	gold	ja	geigelte,geigeltem,geigelten,geigelter,geigeltes	ja	passiv	haben		nein	ja	Verb — sich wie ein Igel zusammenrollen; sich einigeln
+igeln	ja	weak		geigelte,geigeltem,geigelten,geigelter,geigeltes	ja	passiv	haben		nein	ja	Verb — sich wie ein Igel zusammenrollen; sich einigeln
 ihrzen	ja	weak			ja	passiv	haben		nein	nein	Verb — jemanden mit 'Ihr' anreden (veraltet/höflich)
 imitieren	ja	silver			ja	passiv	haben		nein	ja	Verb — nachahmen, kopieren
 imkern	ja	weak			ja	passiv	haben		nein	nein	Verb — als Imker tätig sein, Bienen halten
@@ -2653,7 +2651,7 @@ kapern	ja	weak			ja	passiv	haben		nein	ja	Verb — ein Schiff gewaltsam in Besit
 kapieren	ja	silver			ja	passiv	haben		nein	ja	Verb — (umgangssprachlich) verstehen, begreifen
 kappen	ja	silver			ja	passiv	haben		nein	ja	Verb — abschneiden, abtrennen; (Seemannssprache) Tau kürzen oder verbinden
 kapseln	ja	silver			ja	passiv	haben		nein	nein	Verb — in eine Kapsel einschließen; sich einhüllen
-karden	ja	gold	ja	gekardetem,gekardeten,gekardeter,gekardetes	ja	passiv	haben		nein	ja	Verb — Fasern mit einer Karde bearbeiten, kämmen
+karden	ja	weak		gekardetem,gekardeten,gekardeter,gekardetes	ja	passiv	haben		nein	ja	Verb — Fasern mit einer Karde bearbeiten, kämmen
 kardieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (Textilw.) Wolle, Baumwolle mit einer Karde kämmen, auflockern
 karieren	ja	weak			ja	passiv	haben		nein	ja	Verb — mit einem Karomuster versehen; kariert machen
 karren	ja	silver			ja	passiv	haben		nein	ja	Verb — etwas auf einem Karren transportieren; auch Subst. (Pl. von Karre)
@@ -2662,7 +2660,7 @@ kartieren	ja	weak			ja	passiv	haben		nein	ja	Verb — eine Karte (Landkarte, Pla
 kaspern	ja	weak			ja	passiv	haben		nein	nein	Verb — Possen treiben, albern, herumkaspern
 kassibern	ja	weak			ja	passiv	haben		nein	nein	Verb — (umgangssprachl., veraltet) heimlich Nachrichten schreiben oder übermitteln
 kassieren	ja	weak			ja	passiv	haben		nein	ja	Verb — Geld einnehmen, einziehen; (umgangssprachlich) erhalten, bekommen
-kategorisieren	ja	gold	ja	kategorisiertem,kategorisierter,kategorisiertes	ja	passiv	haben		nein	ja	Verb — in Kategorien einteilen, klassifizieren
+kategorisieren	ja	silver		kategorisiertem,kategorisierter,kategorisiertes	ja	passiv	haben		nein	ja	Verb — in Kategorien einteilen, klassifizieren
 katschen	ja	silver			ja	passiv	haben		nein	nein	Verb (ugs., regional) — mit einer Peitsche (Katsche) schlagen
 kaudern	ja	weak			ja	passiv	haben		nein	nein	Verb (landsch.) — betrügen, schachern; auch: unverständlich reden
 kauen	ja	weak			ja	passiv	haben		nein	ja	Verb — mit den Zähnen zerkleinern
@@ -2670,7 +2668,7 @@ kauern	ja	weak			ja	passiv	haben+sein	reflexiv	nein		Verb — in eine geduckte, 
 kaufen	ja	silver			ja	passiv	haben		nein	ja	Verb — gegen Geld erwerben
 kavieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (veraltet/landschaftl.) schwatzen, plaudern; (mus.) eine Kavate spielen
 keckern	ja	weak			ja	passiv	haben		nein	nein	Verb — laut und schrill lachen oder kichern
-kegeln	ja	gold	ja	gekegeltem,gekegelten,gekegelter,gekegeltes	ja	passiv	haben		nein	ja	Verb — eine Sportart mit Kegeln und Kugel ausüben
+kegeln	ja	weak		gekegeltem,gekegelten,gekegelter,gekegeltes	ja	passiv	haben		nein	ja	Verb — eine Sportart mit Kegeln und Kugel ausüben
 kehlen	ja	weak			ja	passiv	haben		nein	ja	Verb — die Kehle durchschneiden (z.B. beim Schlachten)
 kehren	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — mit einem Besen reinigen; wenden, umdrehen
 keifen	ja	weak			ja	passiv	haben		nein	nein	Verb — laut und zänkisch streiten, schimpfen
@@ -2736,7 +2734,7 @@ kleppern	ja	weak			ja	passiv	haben		nein	nein	Verb — klappernd, rasselnd oder 
 klettern	ja	weak			ja	passiv	sein		nein		Verb — sich an einer senkrechten Fläche mit Händen und Füßen hochbewegen
 klicken	ja	weak			ja	passiv	haben		nein	ja	Verb — 1. mit der Maus einen Knopf betätigen; 2. ein kurzes, helles Geräusch erzeugen
 klickern	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. Murmeln spielen; 2. wiederholt klicken
-klieren	ja	gold	ja	geklierte,gekliertem,geklierten,geklierter,gekliertes	ja	passiv	haben		nein	ja	Verb — unleserlich schreiben
+klieren	ja	weak		geklierte,gekliertem,geklierten,geklierter,gekliertes	ja	passiv	haben		nein	ja	Verb — unleserlich schreiben
 klimmen	ja	weak			ja	passiv	sein		nein		Verb — sich mit den Händen an etwas hochziehen, klettern
 klimpern	ja	weak			ja	passiv	haben		nein	nein	Verb — leise, ungeschickt oder unbedeutend auf einem Klavier, einer Gitarre o.Ä. spielen; 
 klingeln	ja	weak			ja	passiv	haben		nein	nein	Verb — ein helles, metallisches Geräusch erzeugen (z.B. Glocke, Telefon)
@@ -2867,7 +2865,7 @@ kungeln	ja	weak			ja	passiv	haben		nein	nein	Verb — (abwertend) heimlich Abspr
 kupieren	ja	weak			ja	passiv	haben		nein	ja	Verb — 1. die Ohren oder den Schwanz eines Tieres (bes. Hundes) stutzen; 2. (österr., sons
 kuppeln	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. (veraltet/umgangssprachlich) Liebesbeziehungen vermitteln. 2. (Technik) verbinde
 kurbeln	ja	weak			ja	passiv	haben		nein	nein	Verb — eine Kurbel drehen; in Bewegung setzen
-kuren	ja	gold	ja	gekurte,gekurtem,gekurten,gekurter,gekurtes	ja	passiv	haben		nein	ja	Verb — (regional/veraltet) kehren, fegen
+kuren	ja	weak		gekurte,gekurtem,gekurten,gekurter,gekurtes	ja	passiv	haben		nein	ja	Verb — (regional/veraltet) kehren, fegen
 kurieren	ja	silver			ja	passiv	haben		nein	ja	Verb — (eine Krankheit) heilen, behandeln
 kuscheln	ja	weak			ja	passiv	haben		nein	nein	Verb — sich eng und liebevoll aneinander schmiegen
 kuschen	ja	weak			ja	passiv	haben		nein	nein	Verb — sich unterwerfen, klein beigeben; (von Hunden) sich hinlegen
@@ -2877,7 +2875,7 @@ kälten	ja	weak			ja	passiv	haben		nein	nein	Verb — kalt machen, abkühlen
 kämmen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — mit einem Kamm durch das Haar fahren, um es zu ordnen
 kämpfen	ja	weak			ja	passiv	haben		nein	ja	Verb — einen Kampf austragen, streiten, ringen
 käsen	ja	silver			ja	passiv	haben+sein		nein		Verb — Käse herstellen
-köcheln	ja	gold	ja	geköchelte,geköcheltem,geköchelten,geköchelter,geköcheltes	ja	passiv	haben		nein	ja	Verb — bei geringer Hitze leicht kochen
+köcheln	ja	weak		geköchelte,geköcheltem,geköchelten,geköchelter,geköcheltes	ja	passiv	haben		nein	ja	Verb — bei geringer Hitze leicht kochen
 ködern	ja	weak			ja	passiv	haben		nein	ja	Verb — mit einem Köder anlocken
 köhlern	ja	weak			ja	passiv	haben		nein	nein	Verb — als Köhler arbeiten, Holzkohle herstellen
 können	ja	weak			ja	passiv	haben		nein	ja	Verb — in der Lage sein, etwas zu tun; Modalverb
@@ -2942,7 +2940,7 @@ lehren	ja	silver			ja	passiv	haben		nein	ja	Verb — jemandem Wissen oder Fähig
 leichtern	ja	silver			ja	passiv	haben		nein	nein	Verb — Jemandem etwas erleichtern, Hilfe leisten
 leiden	ja	weak			ja	passiv	haben		nein	ja	Verb — Schmerzen, Kummer oder Unannehmlichkeiten ertragen
 leidtun	ja	weak			ja	passiv	haben		nein	nein	Verb (unpersönlich) — jemandem leidtun: Mitleid, Bedauern empfinden
-leiern	ja	gold	ja	geleiertem,geleierten,geleierter,geleiertes	ja	passiv	haben		nein	ja	Verb — eintönig sprechen oder singen; eine Drehleier spielen
+leiern	ja	weak		geleiertem,geleierten,geleierter,geleiertes	ja	passiv	haben		nein	ja	Verb — eintönig sprechen oder singen; eine Drehleier spielen
 leihen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — etwas gegen Rückgabe oder Entgelt zeitweise überlassen oder erhalten
 leimen	ja	silver			ja	passiv	haben		nein	ja	Verb — mit Leim zusammenkleben, bestreichen
 leisten	ja	weak			ja	passiv	haben		nein	nein	Verb — eine Handlung ausführen, erbringen, vollbringen
@@ -2967,7 +2965,7 @@ liniieren	ja	weak			ja	passiv	haben		nein	ja	Verb — mit Linien versehen, Linie
 linken	ja	silver			ja	passiv	haben		nein	nein	Verb — betrügen, übervorteilen; auch: nach links lenken
 linsen	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. Linsen essen; 2. (ugs.) schauen, spähen
 lispeln	ja	weak			ja	passiv	haben		nein	nein	Verb — undeutlich, mit Zungenspitzenlaut sprechen
-lizenzieren	ja	gold	ja	lizenziertem,lizenzierter,lizenziertes	ja	passiv	haben		nein	ja	Verb — eine Lizenz erteilen, genehmigen
+lizenzieren	ja	silver		lizenziertem,lizenzierter,lizenziertes	ja	passiv	haben		nein	ja	Verb — eine Lizenz erteilen, genehmigen
 loben	ja	silver			ja	passiv	haben		nein	ja	Verb — jemandem oder etwas Anerkennung aussprechen
 lobhudeln	ja	weak			ja	passiv	haben		nein	nein	Verb — übertrieben loben, schmeicheln
 lobsingen	ja	weak			ja	passiv	haben		nein	nein	Verb — jemandem mit Gesang loben, preisen
@@ -2977,8 +2975,8 @@ lockern	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — etwas weniger fe
 lodern	ja	weak			ja	passiv	haben+sein		nein		Verb — hell und heftig brennen, flackern
 loggen	ja	silver			ja	passiv	haben		nein	ja	Verb — (Daten, Ereignisse) systematisch aufzeichnen; sich einloggen
 logieren	ja	silver			ja	passiv	haben		nein	ja	Verb — (in einer Unterkunft) wohnen, absteigen
-lohen	ja	gold	ja	gelohtes	ja	passiv	haben		nein	ja	Verb — 1. brennen 2. gerben
-lohnen	ja	conflict	ja	gelohnte,gelohntem,gelohnten,gelohnter,gelohntes	nein		haben	reflexiv	nein	ja	Verb — sich als wertvoll, nützlich erweisen; bezahlen
+lohen	ja	weak		gelohtes	ja	passiv	haben		nein	ja	Verb — 1. brennen 2. gerben
+lohnen	nein	silver		gelohnte,gelohntem,gelohnten,gelohnter,gelohntes	nein		haben	reflexiv	nein	ja	Verb — sich als wertvoll, nützlich erweisen; bezahlen
 longieren	ja	silver			ja	passiv	haben		nein	ja	Verb — ein Pferd an der Longe führen, im Kreis gehen lassen
 loopen	ja	weak			ja	passiv	haben		nein	nein	Verb (aus dem Engl.) — etwas in einer Schleife abspielen oder wiederholen
 losen	ja	weak			ja	passiv	haben		nein	ja	Verb — durch Los entscheiden; umgangssprachlich auch für lauschen, horchen
@@ -3003,7 +3001,7 @@ ludern	ja	weak			ja	passiv	haben		nein	nein	Verb — umgangssprachlich für unor
 lugen	ja	weak			ja	passiv	haben		nein	nein	Verb — (veraltet/landschaftlich) schauen, spähen
 lukrieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (umgangssprachlich) ergattern, sich verschaffen
 lullen	ja	weak			ja	passiv	haben		nein	nein	Verb — umgangssprachlich für masturbieren
-lungern	ja	gold	ja	gelungerte,gelungertem,gelungerten,gelungerter,gelungertes	ja	passiv	haben		nein	ja	Verb — untätig herumstehen, faulenzen, sich herumtreiben
+lungern	ja	weak		gelungerte,gelungertem,gelungerten,gelungerter,gelungertes	ja	passiv	haben		nein	ja	Verb — untätig herumstehen, faulenzen, sich herumtreiben
 lupfen	ja	silver			ja	passiv	haben		nein	ja	Verb — (regional/schweiz.) leicht anheben, lupfen
 luschern	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — schlaff herumhängen, trödeln
 lutschen	ja	weak			ja	passiv	haben		nein	nein	Verb — etwas im Mund zergehen lassen
@@ -3026,7 +3024,7 @@ lösen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — eine Verbindung, eine
 löten	ja	weak			ja	passiv	haben		ja	ja	Verb — Metallteile mit Lot verbinden
 lüften	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — für Luftaustausch sorgen; aufdecken, enthüllen
 lügen	ja	weak			ja	passiv	haben		nein	ja	Verb — bewusst die Unwahrheit sagen
-lümmeln	ja	gold	ja	gelümmelte,gelümmeltem,gelümmelten,gelümmelter,gelümmeltes	ja	passiv	haben		nein	ja	Verb (ugs.) — sich flegelhaft benehmen; sich lässig hinsetzen/lehnen
+lümmeln	ja	weak		gelümmelte,gelümmeltem,gelümmelten,gelümmelter,gelümmeltes	ja	passiv	haben		nein	ja	Verb (ugs.) — sich flegelhaft benehmen; sich lässig hinsetzen/lehnen
 lüpfen	ja	weak			ja	passiv	haben		nein	nein	Verb — (regional/schweiz.) leicht anheben, lupfen
 machen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — eine Tätigkeit ausführen, herstellen
 magern	ja	weak			ja	passiv	haben+sein		nein		Verb — dünn werden oder machen; abnehmen
@@ -3036,7 +3034,7 @@ mailen	ja	weak			ja	passiv	haben		nein	ja	Verb — eine E-Mail senden
 maischen	ja	weak			ja	passiv	haben		nein	nein	Verb — (Brauerei) Getreide zur Bierherstellung einweichen und erhitzen
 makeln	ja	weak			ja	passiv	haben		nein	nein	Verb — (umgangssprachlich) kleinliche Fehler suchen, nörgeln
 malen	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — mit Farben ein Bild gestalten
-malern	ja	gold	ja	gemalerte,gemalertem,gemalerten,gemalerter,gemalertes	ja	passiv	haben		nein	ja	Verb — Tätigkeit eines Malers ausüben; mit Farbe gestalten
+malern	ja	weak		gemalerte,gemalertem,gemalerten,gemalerter,gemalertes	ja	passiv	haben		nein	ja	Verb — Tätigkeit eines Malers ausüben; mit Farbe gestalten
 mallen	ja	silver			ja	passiv	haben		nein	nein	Verb — (regional, veraltet) schlagen, prügeln; auch: (fachsprachl.) mit einem Mallet bearb
 malmen	ja	weak			ja	passiv	haben		nein	nein	Verb — (ugs./landsch.) ermüden, erschöpfen; (Bergbau) Gestein zerkleinern
 malnehmen	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — in Anspruch nehmen, beanspruchen
@@ -3075,13 +3073,12 @@ meistern	ja	silver			ja	passiv	haben		nein	nein	Verb — eine schwierige Aufgabe
 melden	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — etwas bekannt geben, anzeigen; sich zu Wort melden
 melieren	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — (Haare) färben, um eine natürliche Farbmischung zu erzielen; mischen, marmorieren
 melken	ja	weak			ja	passiv	haben		nein	ja	Verb — einer Kuh oder anderen Milchtieren die Milch entnehmen
-mendeln	ja	gold	ja	gemendelte,gemendeltem,gemendelten,gemendelter,gemendeltes			haben		nein	ja	Verb (Bio.) — Merkmale, die nach bestimmten Gesetzmäßigkeiten in den nächsten Generationen
 merkeln	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs., polit.) — zögerlich, abwartend handeln wie Angela Merkel
 merken	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — im Gedächtnis behalten, wahrnehmen
 messen	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — Größe, Menge, Wert einer Sache mit einem Maß bestimmen
 messern	ja	silver			ja	passiv	haben		nein	nein	Verb — mit einem Messer schneiden oder stechen
 metzeln	ja	weak			ja	passiv	haben		nein	nein	Verb — (grausam) massakrieren, niedermetzeln
-metzgen	ja	gold	ja	gemetzgtem,gemetzgten,gemetzgter,gemetzgtes	ja	passiv	haben		nein	ja	Verb — (landschaftl. & schweiz.) schlachten
+metzgen	ja	weak		gemetzgtem,gemetzgten,gemetzgter,gemetzgtes	ja	passiv	haben		nein	ja	Verb — (landschaftl. & schweiz.) schlachten
 meucheln	ja	weak			ja	passiv	haben		nein	nein	Verb — heimtückisch, aus dem Hinterhalt töten
 meutern	ja	weak			ja	passiv	haben		nein	nein	Verb — sich gegen eine Autorität (bes. auf einem Schiff) auflehnen
 miauen	ja	weak			ja	passiv	haben		nein	ja	Verb — den Laut 'miau' von sich geben (Katze)
@@ -3091,12 +3088,12 @@ migrieren	ja	weak			ja	passiv	haben		nein	ja	Verb — seinen Wohnsitz, Aufenthal
 miktieren	ja	weak			ja	passiv	haben		nein	ja	Verb (med.) — Wasser lassen, urinieren
 mildern	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — abschwächen, lindern
 mimen	ja	weak			ja	passiv	haben		nein	ja	Verb — etwas durch Gestik und Mimik darstellen, nachahmen
-mimsen	ja	gold	ja	gemimste,gemimstem,gemimsten,gemimster,gemimstes	ja	passiv	haben		nein	ja	Verb — (schweiz.) eine MMS verschicken
-mindern	ja	gold	ja	geminderte,gemindertem,geminderten,geminderter,gemindertes	ja	passiv	haben		nein	ja	Verb — verringern, vermindern
+mimsen	ja	silver		gemimste,gemimstem,gemimsten,gemimster,gemimstes	ja	passiv	haben		nein	ja	Verb — (schweiz.) eine MMS verschicken
+mindern	ja	weak		geminderte,gemindertem,geminderten,geminderter,gemindertes	ja	passiv	haben		nein	ja	Verb — verringern, vermindern
 minieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (Bergbau) abbauen, fördern; (Militär) unterminieren, untergraben
 mischen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — verschiedene Bestandteile vereinigen, vermengen
 missen	ja	silver			ja	passiv	haben		nein	ja	Verb — vermissen, entbehren
-missionieren	ja	gold	ja	missioniertem,missionierter,missioniertes	ja	passiv	haben		nein	ja	Verb — für einen Glauben zu gewinnen suchen, werben
+missionieren	ja	weak		missioniertem,missionierter,missioniertes	ja	passiv	haben		nein	ja	Verb — für einen Glauben zu gewinnen suchen, werben
 misten	ja	weak			ja	passiv	haben		nein	nein	Verb — Stall ausmisten; düngen
 mitbauen	ja	weak			ja	passiv	haben		nein	nein	Verb — gemeinsam oder zusätzlich zu etwas anderem bauen
 mitbieten	ja	weak			ja	passiv	haben		nein	nein	Verb — bei einer Auktion oder einem Wettbewerb gleichzeitig bieten
@@ -3143,11 +3140,10 @@ morden	ja	weak			ja	passiv	haben		nein	ja	Verb — einen Mord begehen, töten
 morsen	ja	weak			ja	passiv	haben		nein	ja	Verb — Nachrichten mithilfe des Morsealphabets übermitteln
 mosern	ja	weak			ja	passiv	haben		nein	nein	Verb — (ugs.) nörgeln, sich beschweren, meckern
 motzen	ja	weak			ja	passiv	haben		nein	nein	Verb — (ugs.) nörgeln, schimpfen, sich beschweren
-moussieren	ja	gold	ja	moussiertem,moussierter,moussiertes			haben		nein	ja	Verb — sprudeln, perlen (von Getränken, vor allem Wein und Sekt)
 muckeln	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — leise, undeutlich sprechen; nörgeln
 mucken	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb (ugs.) — Widerstand leisten, sich widersetzen
 mucksen	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb (ugs.) — einen leisen Laut von sich geben, sich rühren
-muddeln	ja	gold	ja	gemuddelte,gemuddeltem,gemuddelten,gemuddelter,gemuddeltes	ja	passiv	haben		nein	ja	Verb — (ostmitteldt.) eine Tätigkeit ausüben, ohne große Erwartungen zu haben oder einen b
+muddeln	ja	weak		gemuddelte,gemuddeltem,gemuddelten,gemuddelter,gemuddeltes	ja	passiv	haben		nein	ja	Verb — (ostmitteldt.) eine Tätigkeit ausüben, ohne große Erwartungen zu haben oder einen b
 muffeln	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. muffig riechen; 2. (ugs.) mürrisch sein/schmollen
 muffen	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. (ugs.) muffig riechen; 2. (Bergbau) Sprengladung zünden
 muhen	ja	weak			ja	passiv	haben		nein	nein	Verb — Lautäußerung einer Kuh von sich geben
@@ -3157,7 +3153,7 @@ mummen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — (veraltet/landschaftl
 mumpeln	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs., regional) — langsam, träge oder mürrisch sein/arbeiten; nörgeln
 mundieren	ja	weak			ja	passiv	haben		nein	ja	Verb (veraltet) — münden, ausmünden; auch: mundgerecht machen
 munkeln	ja	weak			ja	passiv	haben		nein	nein	Verb — im Geheimen reden, flüstern, Gerüchte verbreiten
-muren	ja	gold	ja	gemurte,gemurtem,gemurten,gemurter,gemurtes	ja	passiv	haben		nein	ja	Verb — ein Schiff mit einer Muring verankern
+muren	ja	silver		gemurte,gemurtem,gemurten,gemurter,gemurtes	ja	passiv	haben		nein	ja	Verb — ein Schiff mit einer Muring verankern
 murksen	ja	weak			ja	passiv	haben		nein	ja	Verb (ugs.) — unsauber, stümperhaft arbeiten; pfuschen
 murmeln	ja	silver			ja	passiv	haben		nein	nein	Verb — leise, undeutlich oder vor sich hin sprechen
 murren	ja	weak			ja	passiv	haben		nein	ja	Verb — leise, missmutig oder unwillig reden; sich beschweren
@@ -3214,7 +3210,7 @@ nebeln	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. (intrans.) Nebel aufstei
 necken	ja	silver			ja	passiv	haben		nein	ja	Verb — scherzhaft ärgern, hänseln
 negieren	ja	silver			ja	passiv	haben		nein	ja	Verb — verneinen, bestreiten
 nehmen	ja	weak			ja	passiv	haben		nein	ja	Verb — etwas an sich bringen, in Besitz bringen
-neiden	ja	gold	ja	geneidete,geneidetem,geneideten,geneideter,geneidetes	ja	passiv	haben		nein	ja	Verb — jemandem etwas missgönnen, neidisch sein
+neiden	ja	silver		geneidete,geneidetem,geneideten,geneideter,geneidetes	ja	passiv	haben		nein	ja	Verb — jemandem etwas missgönnen, neidisch sein
 neigen	ja	weak			ja	passiv	haben		nein	ja	Verb — schräg stellen, beugen; sich verneigen
 nennen	ja	weak			ja	passiv	haben		nein	ja	Verb — einen Namen geben, bezeichnen
 neppen	ja	weak			ja	passiv	haben		nein	ja	Verb (ugs.) — betrügen, übervorteilen
@@ -3236,7 +3232,7 @@ notieren	ja	weak			ja	passiv	haben		nein	ja	Verb — schriftlich festhalten, auf
 notlanden	ja	weak			ja	passiv	haben+sein		nein		Verb — ein Flugzeug in einer Notsituation landen
 nubbeln	ja	weak			ja	passiv	haben		nein	nein	Verb — umgangssprachlich für knabbern, naschen oder herumspielen
 nuckeln	ja	silver			ja	passiv	haben		nein	nein	Verb — (an etwas) saugen, lutschen
-nudeln	ja	gold	ja	genudeltem,genudelten,genudelter,genudeltes	ja	passiv	haben		nein	ja	Verb — (umgangssprachlich) Teigwaren essen; sich langsam bewegen
+nudeln	ja	weak		genudeltem,genudelten,genudelter,genudeltes	ja	passiv	haben		nein	ja	Verb — (umgangssprachlich) Teigwaren essen; sich langsam bewegen
 nullen	ja	silver			ja	passiv	haben		nein	ja	Verb — auf Null stellen, wertlos machen; (Sport) mit Null besiegen
 nummern	ja	weak			ja	passiv	haben		nein	nein	Verb — (veraltet) mit Nummern versehen, nummerieren
 nuscheln	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — undeutlich, verwaschen sprechen
@@ -3275,7 +3271,7 @@ paffen	ja	weak			ja	passiv	haben		nein	ja	Verb — (ugs.) stark rauchen, qualmen
 paktieren	ja	silver			ja	passiv	haben		nein	ja	Verb — einen Pakt schließen, sich verbünden
 palavern	ja	weak			ja	passiv	haben		nein	ja	Verb (ugs.) — lange und unnötig reden; verhandeln, diskutieren
 palen	ja	silver			ja	passiv	haben		nein	ja	Verb — mit Pfählen einfrieden, umzäunen
-palpieren	ja	gold	ja	palpiertem,palpierter,palpiertes	ja	passiv	haben		nein	ja	Verb — (med.) mit den Fingern abtasten, untersuchen
+palpieren	ja	weak		palpiertem,palpierter,palpiertes	ja	passiv	haben		nein	ja	Verb — (med.) mit den Fingern abtasten, untersuchen
 pampfen	ja	silver			ja	passiv	haben		nein	ja	Verb — (ugs.) gierig essen, schlingen
 panieren	ja	silver			ja	passiv	haben		nein	ja	Verb — Speisen mit Panade umhüllen
 panschen	ja	silver			ja	passiv	haben		nein	nein	Verb (ugs.) — schlampig arbeiten, pfuschen; Getränke (bes. mit Wasser) mischen
@@ -3364,7 +3360,7 @@ plätten	ja	weak			ja	passiv	haben		nein	nein	Verb — glatt drücken, bügeln; 
 plündern	ja	silver			ja	passiv	haben		nein	nein	Verb — durch gewaltsames Durchsuchen und Wegnehmen von Sachen rauben
 pochen	ja	weak			ja	passiv	haben		nein	ja	Verb — mit den Fingern oder einem Gegenstand klopfend schlagen; auf etwas beharren
 pochieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (bes. Gastronomie) etwas, z.B. ein Ei, in heißer, nicht kochender Flüssigkeit garen
-podcasten	ja	gold	ja	gepodcastete,gepodcastetem,gepodcasteten,gepodcasteter,gepodcastetes	ja	passiv	haben		nein	ja	Verb — Podcasts erstellen oder hören
+podcasten	ja	silver		gepodcastete,gepodcastetem,gepodcasteten,gepodcasteter,gepodcastetes	ja	passiv	haben		nein	ja	Verb — Podcasts erstellen oder hören
 pokern	ja	weak			ja	passiv	haben		nein	nein	Verb — Das Kartenglücksspiel Poker spielen; übertragen: bluffen, risikoreich taktieren
 poldern	ja	weak			ja	passiv	haben		nein	nein	Verb — einen Polder anlegen oder bewirtschaften
 polieren	ja	silver			ja	passiv	haben		nein	ja	Verb — glätten, glänzend machen
@@ -3390,7 +3386,7 @@ prellen	ja	weak			ja	passiv	haben+sein		nein		Verb — 1. betrügen, übervortei
 preppen	ja	weak			ja	passiv	haben		nein	nein	Verb (aus dem Englischen entlehnt) — sich vorbereiten, insbesondere auf eine Krise
 pressen	ja	weak			ja	passiv	haben		nein	ja	Verb — mit Druck zusammenquetschen, ausdrücken
 prickeln	ja	weak			ja	passiv	haben		nein	nein	Verb — ein leichtes, kribbelndes Gefühl auf der Haut verursachen
-pricken	ja	gold	ja	geprickte,gepricktem,geprickten,geprickter,gepricktes	ja	passiv	haben		nein	ja	Verb (Seemannssprache) — die Position eines Schiffes auf der Seekarte mit einer Nadel mark
+pricken	ja	weak		geprickte,gepricktem,geprickten,geprickter,gepricktes	ja	passiv	haben		nein	ja	Verb (Seemannssprache) — die Position eines Schiffes auf der Seekarte mit einer Nadel mark
 priemen	ja	silver			ja	passiv	haben		nein	nein	Verb (ugs., veraltet) — mit einem Zahnstocher hantieren; stochern
 pritschen	ja	weak			ja	passiv	haben		nein	nein	Verb — laut schlagen, klatschen; (Sport) den Ball mit der Pritsche spielen
 proben	ja	silver			ja	passiv	haben		nein	ja	Verb — eine Probe machen, üben; oder Pl. von Probe
@@ -3456,7 +3452,7 @@ quälen	ja	weak			ja	passiv	haben		nein	ja	Verb — jmdm. Schmerzen, Qualen zuf�
 rackern	ja	weak			ja	passiv	haben		nein	nein	Verb — (ugs.) sich abmühen, schwer arbeiten, schuften
 radeln	ja	weak			ja	passiv	sein		nein		Verb — mit dem Fahrrad fahren
 radieren	ja	weak			ja	passiv	haben		nein	ja	Verb — mit einem Radiergummi entfernen
-raffeln	ja	gold	ja	geraffelte,geraffeltem,geraffelten,geraffelter,geraffeltes	ja	passiv	haben		nein	ja	Verb — (landschaftlich) röcheln, keuchen; auch: hastig arbeiten
+raffeln	ja	silver		geraffelte,geraffeltem,geraffelten,geraffelter,geraffeltes	ja	passiv	haben		nein	ja	Verb — (landschaftlich) röcheln, keuchen; auch: hastig arbeiten
 raffen	ja	weak			ja	passiv	haben		nein	ja	Verb — schnell an sich reißen, zusammenraffen
 ragen	nein	silver			nein		haben		nein	nein	Verb — hoch aufragen, emporragen
 rahmen	ja	weak			ja	passiv	haben		nein	ja	Verb — mit Rahm (Sahne) versehen; Subst. — Pl. von Rahmen
@@ -3519,20 +3515,19 @@ reizen	ja	weak			ja	passiv	haben		nein	ja	Verb — 1. jemanden provozieren, hera
 relaxen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb (engl. Lehnwort) — sich entspannen
 rempeln	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — anstoßen, schubsen, drängeln
 rendern	ja	weak			ja	passiv	haben		nein	nein	Verb (EDV) — ein Bild oder eine Animation aus Rohdaten berechnen
-renken	ja	gold	ja	gerenkte,gerenktem,gerenkten,gerenkter,gerenktes	ja	passiv	haben		nein	ja	Verb — (ein Gelenk) einrenken, verdrehen
+renken	ja	weak		gerenkte,gerenktem,gerenkten,gerenkter,gerenktes	ja	passiv	haben		nein	ja	Verb — (ein Gelenk) einrenken, verdrehen
 rennen	ja	weak			ja		sein		nein		Verb — sich schnell zu Fuß fortbewegen
 rentieren	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — sich lohnen, einen Gewinn abwerfen
 resetten	ja	weak			ja	passiv	haben		nein	ja	Verb (EDV) — zurücksetzen, neu starten
-residieren	ja	gold	ja	residiertem,residierter,residiertes	ja	passiv	haben		nein	ja	Verb — seinen Wohnsitz haben, ansässig sein
+residieren	ja	weak		residiertem,residierter,residiertes	ja	passiv	haben		nein	ja	Verb — seinen Wohnsitz haben, ansässig sein
 retten	ja	silver			ja	passiv	haben		nein	ja	Verb — aus einer Gefahr befreien, vor Schaden bewahren
-reuen	ja	gold	ja	gereutem,gereutes			haben		nein	ja	Verb — (etwas) bereuen, Leid tun
 revieren	ja	weak			ja	passiv	haben		nein	ja	Verb — 1. ein Gebiet durchstreifen; 2. Dativ Plural von Revier
 ribbeln	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb (ugs., regional) — mit den Fingern reiben, kratzen; leicht reißen (z.B. von Stoff)
 richten	ja	weak			ja	passiv	haben		nein	nein	Verb — etwas in eine bestimmte Lage, Richtung oder Ordnung bringen; einstellen; zurechtwei
 riechen	ja	silver			ja	passiv	haben		nein	ja	Verb — einen Geruch wahrnehmen
 riegeln	ja	weak			ja	passiv	haben		nein	nein	Verb — mit einem Riegel verschließen, sperren
 rigolen	ja	weak			ja	passiv	haben		nein	nein	Verb (fachspr.) — den Boden tief umgraben/lockern
-rindern	ja	conflict	ja	gerinderte,gerindertem,gerinderten,gerinderter,gerindertes	nein		haben		nein	ja	Verb — sich wie Rinder verhalten; umgangssprachlich für langsam, schwerfällig gehen
+rindern	nein	silver		gerinderte,gerindertem,gerinderten,gerinderter,gerindertes	nein		haben		nein	ja	Verb — sich wie Rinder verhalten; umgangssprachlich für langsam, schwerfällig gehen
 ringeln	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb — sich winden, krümmen; auch: (von Raupen) Blätter einrollen
 ringen	ja	weak			ja	passiv	haben		nein	ja	Verb — 1. Kampfsport ausüben; 2. sich abmühen; 3. (veraltet) winden, drehen
 rinnen	nein	silver			nein		sein		nein		Verb — (Wasser) in dünnem Strahl fließen
@@ -3616,10 +3611,10 @@ sauen	ja	weak			ja	passiv	haben		nein	nein	Verb — 1. (derb) Geschlechtsverkehr
 saufen	ja	silver			ja	passiv	haben		nein	ja	Verb — (derb/ugs.) alkoholische Getränke in großen Mengen trinken
 saugen	ja	weak			ja	passiv	haben		nein	ja	Verb — durch Unterdruck Flüssigkeit oder Luft anziehen, aufnehmen
 saunen	ja	weak			ja	passiv	haben		nein	nein	Verb — eine Sauna besuchen, in der Sauna schwitzen
-saunieren	ja	gold	ja	sauniertem,saunierter,sauniertes	ja	passiv	haben		nein	ja	Verb — eine Sauna besuchen, in der Sauna schwitzen
+saunieren	ja	weak		sauniertem,saunierter,sauniertes	ja	passiv	haben		nein	ja	Verb — eine Sauna besuchen, in der Sauna schwitzen
 sausen	ja	weak			ja	passiv	haben+sein		nein		Verb — sich sehr schnell bewegen; brausen
 sautieren	ja	weak			ja	passiv	haben		nein	ja	Verb (Kochkunst) — kurz und scharf in Fett braten, schwenken
-scannen	ja	gold	ja	gescanntem,gescannten,gescannter,gescanntes	ja	passiv	haben		nein	ja	Verb — mit einem Scanner digital erfassen
+scannen	ja	weak		gescanntem,gescannten,gescannter,gescanntes	ja	passiv	haben		nein	ja	Verb — mit einem Scanner digital erfassen
 schaben	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — mit einem Werkzeug (Schabe) abkratzen, abschaben
 schachern	ja	weak			ja	passiv	haben		nein	nein	Verb — feilschen, handeln, besonders auf unehrliche oder kleinliche Weise
 schachten	ja	weak			ja	passiv	haben		nein	nein	Verb — (veraltet/landschaftl.) schlachten, rituell schächten
@@ -3669,7 +3664,7 @@ schlafen	ja	weak			ja	passiv	haben		nein	nein	Verb — sich im Schlafzustand bef
 schlagen	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — mit der Hand oder einem Gegenstand einen heftigen Stoß versetzen
 schlammen	ja	weak			ja	passiv	haben		nein	nein	Verb — mit Schlamm bedecken, durch Schlamm fahren; auch reflexiv: sich im Schlamm wälzen
 schlampen	ja	weak			ja	passiv	haben		nein	nein	Verb — (umg.) nachlässig, unsauber arbeiten oder leben
-schlauchen	ja	gold	ja	geschlauchte,geschlauchtem,geschlauchten,geschlauchter,geschlauchtes	ja	passiv	haben		nein	ja	Verb — jdn. stark beanspruchen, ermüden; anstrengen
+schlauchen	ja	weak		geschlauchte,geschlauchtem,geschlauchten,geschlauchter,geschlauchtes	ja	passiv	haben		nein	ja	Verb — jdn. stark beanspruchen, ermüden; anstrengen
 schlecken	ja	weak			ja	passiv	haben		nein	nein	Verb — (etwas Süßes) mit der Zunge aufnehmen, lecken
 schleiern	ja	weak			ja	passiv	haben		nein	nein	Verb — mit einem Schleier bedecken; verschleiern
 schleifen	ja	silver			ja	passiv	haben		nein	nein	Verb — 1. etwas durch Reibung glätten oder schärfen; 2. etwas oder jemanden mitziehen, sch
@@ -3689,7 +3684,7 @@ schlägern	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — (ugs./regiona
 schlämmen	ja	weak			ja	passiv	haben		nein	nein	Verb — (techn.) durch Schlämmen reinigen, auswaschen
 schlüpfen	ja	weak			ja	passiv	sein		nein		Verb — sich schnell und behende durch etwas Enges bewegen
 schlürfen	ja	silver			ja	passiv	haben		nein	nein	Verb — beim Trinken ein saugendes Geräusch machen
-schmalten	ja	gold	ja	geschmaltete,geschmaltetem,geschmalteten,geschmalteter,geschmaltetes	ja	passiv	haben		nein	ja	Verb — emaillieren
+schmalten	ja	silver		geschmaltete,geschmaltetem,geschmalteten,geschmalteter,geschmaltetes	ja	passiv	haben		nein	ja	Verb — emaillieren
 schmalzen	ja	weak			ja	passiv	haben		nein	nein	Verb — mit Schmalz oder Fett bestreichen, einfetten
 schmatzen	ja	weak			ja	passiv	haben		nein	nein	Verb — beim Essen oder Küssen ein lautes Geräusch machen
 schmausen	ja	weak			ja	passiv	haben		nein	nein	Verb — üppig und genussvoll essen
@@ -3816,9 +3811,8 @@ sedieren	ja	weak			ja	passiv	haben		nein	ja	Verb — durch Medikamente in einen 
 segeln	ja	weak		gesegeltem,gesegelten,gesegelter,gesegeltes	ja	passiv	haben+sein		nein		Verb — ein Segelboot führen; sich segelnd fortbewegen
 segnen	ja	weak			ja	passiv	haben		nein	ja	Verb — einen Segen erteilen, göttlichen Schutz herabwünschen
 sehen	ja	weak			ja	passiv	haben		ja	ja	Verb — visuell wahrnehmen, erblicken
-sehren	ja	gold	ja	gesehrte,gesehrtem,gesehrten,gesehrter,gesehrtes			haben		nein	ja	Verb — veraltet: verwunden, verletzen
 seichen	ja	weak			ja	passiv	haben		nein	nein	Verb (derb) — urinieren
-seiern	ja	gold	ja	geseierte,geseiertem,geseierten,geseierter,geseiertes	ja	passiv	haben		nein	ja	Verb — 1. Unsinn reden 2. nörgeln, jammern
+seiern	ja	weak		geseierte,geseiertem,geseierten,geseierter,geseiertes	ja	passiv	haben		nein	ja	Verb — 1. Unsinn reden 2. nörgeln, jammern
 seihen	ja	silver			ja	passiv	haben		nein	ja	Verb — (Flüssigkeit) durch ein Sieb gießen, filtrieren
 seilen	ja	weak			ja	passiv	haben		nein	ja	Verb — sich mit einem Seil sichern oder abseilen
 sekkieren	ja	weak			ja	passiv	haben		nein	ja	Verb — jmdn. belästigen, quälen, plagen
@@ -3836,7 +3830,7 @@ shoppen	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs./Denglisch) — einkaufen
 sicheln	ja	silver			ja	passiv	haben		nein	nein	Verb — mit einer Sichel mähen
 sichern	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb — gegen Gefahr schützen, festmachen, garantieren
 sichten	ja	weak			ja	passiv	haben		nein	nein	Verb — etwas aus der Ferne wahrnehmen, entdecken; Material prüfend durchsehen
-sicken	ja	gold	ja	gesickte,gesicktem,gesickten,gesickter,gesicktes	ja	passiv	haben		nein	ja	Verb — mit Sicken versehen
+sicken	ja	weak		gesickte,gesicktem,gesickten,gesickter,gesicktes	ja	passiv	haben		nein	ja	Verb — mit Sicken versehen
 sickern	ja	weak			ja	passiv	sein		nein		Verb — langsam durch eine feine Öffnung fließen, tröpfeln
 sieben	ja	silver			ja	passiv	haben		nein	ja	Verb — die Zahl 7 darstellen; durch ein Sieb geben. / Zahlwort — die Kardinalzahl 7
 siechen	ja	weak			ja	passiv	haben		nein	nein	Verb — langsam und qualvoll dahinsiechen, krank sein
@@ -3947,11 +3941,11 @@ staunen	ja	weak			ja	passiv	haben		nein	ja	Verb — in Erstaunen, Verwunderung g
 stechen	ja	weak			ja	passiv	haben		nein	nein	Verb — mit einem spitzen Gegenstand eindringen, verletzen
 stecken	ja	silver			ja	passiv	haben		nein	ja	Verb — etwas an einen Ort bringen, wo es festgehalten wird; sich an einem Ort befinden
 stehen	ja	weak			ja	passiv	haben+sein		nein		Verb — sich in aufrechter Position befinden; sich an einem Ort befinden
-stehlen	ja	gold	ja	gestohlene,gestohlenem,gestohlenen,gestohlener,gestohlenes	ja	passiv	haben	reflexiv	nein	ja	Verb — etwas widerrechtlich an sich nehmen, entwenden
-steifen	ja	gold	ja	gesteiftem,gesteiften,gesteifter,gesteiftes	ja	passiv	haben	reflexiv	nein	ja	Verb — 1. steif machen, steif werden 2. Wäsche stärken; auch deklinierte Form des Adjektiv
+stehlen	ja	silver		gestohlene,gestohlenem,gestohlenen,gestohlener,gestohlenes	ja	passiv	haben	reflexiv	nein	ja	Verb — etwas widerrechtlich an sich nehmen, entwenden
+steifen	ja	silver		gesteiftem,gesteiften,gesteifter,gesteiftes	ja	passiv	haben	reflexiv	nein	ja	Verb — 1. steif machen, steif werden 2. Wäsche stärken; auch deklinierte Form des Adjektiv
 steigen	nein	silver			nein		sein		nein		Verb — sich nach oben bewegen, ansteigen
 steigern	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — erhöhen, vergrößern, intensivieren
-steinen	ja	gold	ja	gesteintem,gesteinten,gesteinter,gesteintes	ja	passiv	haben		nein	ja	Verb — mit Grenzsteinen versehen
+steinen	ja	silver		gesteintem,gesteinten,gesteinter,gesteintes	ja	passiv	haben		nein	ja	Verb — mit Grenzsteinen versehen
 steinigen	ja	silver			ja	passiv	haben		nein	nein	Verb — mit Steinen bewerfen, töten; oder deklinierte Form von steinig (Dat. Pl.)
 stellen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — 1. hinstellen, positionieren; 2. einstellen (z.B. Uhr); 3. sich stellen (sich einfi
 stelzen	ja	weak			ja	passiv	sein		nein		Verb — auf Stelzen gehen; sich steif, hochmütig bewegen
@@ -4005,7 +3999,7 @@ strullen	ja	weak			ja	passiv	haben		nein	nein	Verb (landsch.) — leise, gleichm
 strängen	ja	silver			ja	passiv	haben		nein	nein	Verb — (veraltet/landschaftl.) strangulieren, erdrosseln
 stuckern	ja	weak			ja	passiv	haben+sein		nein		Verb — (landschaftlich) stottern, stockend sprechen oder gehen
 studieren	ja	silver			ja	passiv	haben		nein	ja	Verb — an einer Hochschule eine Wissenschaft oder ein Fach lernen; etwas genau untersuchen
-stunden	ja	gold	ja	gestundete,gestundetem,gestundeten,gestundeter,gestundetes	ja	passiv	haben		nein	ja	Verb — eine Frist gewähren, aufschieben; auch Subst. Pl. von Stunde
+stunden	ja	silver		gestundete,gestundetem,gestundeten,gestundeter,gestundetes	ja	passiv	haben		nein	ja	Verb — eine Frist gewähren, aufschieben; auch Subst. Pl. von Stunde
 stupfen	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs., südd., österr.) — stoßen, stupsen
 stupsen	ja	silver			ja	passiv	haben		nein	ja	Verb — leicht mit dem Finger oder Ellenbogen stoßen
 stutzen	ja	silver			ja	passiv	haben		nein	ja	Verb — 1. kürzen, beschneiden; 2. stutzen, verwundert innehalten
@@ -4040,7 +4034,7 @@ sumpfen	ja	weak			ja	passiv	haben		nein	ja	Verb — (landschaftlich) sumpfig wer
 sumsen	ja	weak			ja	passiv	haben+sein		nein		Verb — ein leises, surrendes oder brummendes Geräusch von sich geben
 suppen	ja	weak			ja	passiv	haben		nein	nein	Verb — (ugs.) langsam, lustlos essen; (regional) schlürfen
 supporten	ja	weak			ja	passiv	haben		nein	nein	Verb (engl. Lehnwort) — unterstützen, fördern
-suren	ja	gold	ja	gesurte,gesurtem,gesurten,gesurter,gesurtes	ja	passiv	haben		nein	ja	Verb (südd. & österr.) - pökeln
+suren	ja	weak		gesurte,gesurtem,gesurten,gesurter,gesurtes	ja	passiv	haben		nein	ja	Verb (südd. & österr.) - pökeln
 surfen	ja	weak			ja	passiv	haben+sein		nein		Verb — 1. sich auf einer Welle mit einem Surfbrett fortbewegen; 2. im Internet browsen
 surren	ja	weak			ja	passiv	haben		nein	ja	Verb — ein summendes, brummendes Geräusch von sich geben
 switchen	ja	weak			ja	passiv	haben		nein	nein	Verb — (EDV) umschalten, wechseln
@@ -4091,7 +4085,7 @@ teilen	ja	weak			ja	passiv	haben		nein	ja	Verb — in Teile zerlegen, gemeinsam 
 teilhaben	nein	silver			nein		haben		nein	nein	Verb — an etwas beteiligt sein, Anteil haben
 tell	ja	weak			ja				nein		Verb — befehlen, anweisen; (veraltet) zählen, erzählen
 tempern	ja	weak			ja	passiv	haben		nein	nein	Verb — (Fachsprache, veraltet) mäßigen, mildern; (Metallurgie) härten, anlassen
-tempieren	ja	gold	ja	tempiertem,tempierten,tempierter,tempiertes	ja	passiv	haben		nein	ja	Verb (veraltet) — bei Geschossen den Zündzeitpunkt anhand der berechneten Flugdauer einste
+tempieren	ja	silver		tempiertem,tempierten,tempierter,tempiertes	ja	passiv	haben		nein	ja	Verb (veraltet) — bei Geschossen den Zündzeitpunkt anhand der berechneten Flugdauer einste
 tendieren	ja	weak			ja	passiv	haben		nein	ja	Verb — eine Neigung, Richtung aufweisen; sich zu etw. hin entwickeln
 testen	ja	silver			ja	passiv	haben		nein	ja	Verb — etwas auf seine Eigenschaften, Funktion o.Ä. prüfen
 testieren	ja	weak			ja	passiv	haben		nein	ja	Verb — 1. ein Testament errichten; 2. (veraltet) bezeugen, beglaubigen
@@ -4182,7 +4176,7 @@ tschilpen	ja	weak			ja	passiv	haben		nein	nein	Verb — zwitschern, piepsen (wie
 tuckeln	ja	weak			ja	passiv	sein		nein		Verb — (ugs., regional) langsam, gemächlich fahren oder gehen
 tuckern	ja	weak			ja	passiv	haben+sein		nein		Verb — 1. (von Motoren) gleichmäßig, leise laufen; 2. (ugs.) langsam, aber stetig vorankom
 tummeln	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb — sich lebhaft bewegen, sich beeilen
-tun	ja	gold	ja	getaner,getanes	ja	passiv	haben	reflexiv	nein	ja	Verb — eine Tätigkeit ausführen, handeln
+tun	ja	silver		getaner,getanes	ja	passiv	haben	reflexiv	nein	ja	Verb — eine Tätigkeit ausführen, handeln
 tunen	ja	weak			ja	passiv	haben		nein	ja	Verb (ugs.) — technisch modifizieren, leistungssteigern (z.B. Motor)
 tunken	ja	silver			ja	passiv	haben		nein	ja	Verb — etwas kurz in eine Flüssigkeit eintauchen
 tunneln	ja	weak			ja	passiv	haben		nein	nein	Verb — einen Tunnel bauen oder durch einen Tunnel fahren
@@ -4190,7 +4184,7 @@ tupfen	ja	weak			ja	passiv	haben		nein	ja	Verb — leicht mit der Fingerspitze b
 turnen	ja	weak			ja	passiv	haben+sein		nein		Verb — gymnastische Übungen ausführen
 turteln	ja	weak			ja	passiv	haben		nein	nein	Verb — zärtlich miteinander schwatzen, liebeln (wie Turteltauben)
 tuscheln	ja	weak			ja	passiv	haben		nein	nein	Verb — leise, heimlich miteinander sprechen; flüstern
-tuschen	ja	gold	ja	getuschtem,getuschten,getuschter,getuschtes	ja	passiv	haben	reflexiv	nein	ja	Verb — mit Tusche malen oder zeichnen
+tuschen	ja	weak		getuschtem,getuschten,getuschter,getuschtes	ja	passiv	haben	reflexiv	nein	ja	Verb — mit Tusche malen oder zeichnen
 tuten	ja	weak			ja	passiv	haben		nein	nein	Verb — ein hupendes, schmetterndes Geräusch erzeugen (z.B. ein Horn)
 twerken	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — den Twerk-Tanz ausführen
 twisten	ja	weak			ja	passiv	haben		nein	nein	Verb (engl. Lehnwort) — den Twist tanzen; drehen, verdrehen
@@ -4373,8 +4367,8 @@ urgieren	ja	weak			ja	passiv	haben		nein	ja	Verb — (veraltet, schweiz., öster
 urinieren	ja	weak			ja	passiv	haben		nein	ja	Verb — Harn lassen, Wasser lassen
 urlauben	ja	weak			ja	passiv	haben		nein	nein	Verb — seinen Urlaub verbringen; veraltend für 'Urlaub machen'
 urteilen	ja	weak			ja	passiv	haben		nein	nein	Verb — eine Beurteilung fällen, ein Urteil sprechen
-uzen	ja	gold	ja	geuzte,geuztem,geuzten,geuzter,geuztes	ja	passiv	haben		nein	ja	Verb — necken, foppen
-vagieren	ja	gold	ja	vagiertem,vagierter,vagiertes	ja	passiv	haben		nein	ja	Verb — umherschweifen, ziellos umhergehen
+uzen	ja	weak		geuzte,geuztem,geuzten,geuzter,geuztes	ja	passiv	haben		nein	ja	Verb — necken, foppen
+vagieren	ja	weak		vagiertem,vagierter,vagiertes	ja	passiv	haben		nein	ja	Verb — umherschweifen, ziellos umhergehen
 variieren	ja	silver			ja	passiv	haben		nein	ja	Verb — in bestimmten Grenzen verändern, abwandeln
 verachten	ja	weak			ja	passiv	haben		nein	nein	Verb — geringachten, missachten
 veralbern	ja	weak			ja	passiv	haben		nein	nein	Verb — jemanden zum Narren halten, necken
@@ -4478,7 +4472,7 @@ verhallen	ja	weak			ja		haben+sein		nein		Verb — allmählich verklingen, verha
 verhalten	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — 1. sich in bestimmter Weise benehmen; 2. reflexiv: sich zurückhalten; 3. transitiv:
 verharren	ja	weak			ja	passiv	haben		nein	ja	Verb — in einer bestimmten Haltung, Lage oder Meinung beharren, verweilen
 verhauen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — 1. jmdn. durchprügeln; 2. etwas durch Schläge beschädigen; 3. (ugs.) eine Aufgabe s
-verheeren	ja	gold	ja	verheertem,verheerten,verheerter,verheertes	ja	passiv	haben		nein	ja	Verb — verwüsten, zerstören
+verheeren	ja	silver		verheertem,verheerten,verheerter,verheertes	ja	passiv	haben		nein	ja	Verb — verwüsten, zerstören
 verhehlen	ja	silver			ja	passiv	haben		nein	ja	Verb — verbergen, geheim halten
 verheilen	nein	silver			nein		sein		nein		Verb — (eine Wunde) heilen lassen, abheilen
 verheizen	ja	silver			ja	passiv	haben		nein	ja	Verb — (etwas) als Brennstoff verwenden; verschwenden
@@ -4566,7 +4560,7 @@ vermerken	ja	weak			ja	passiv	haben		nein	ja	Verb — etwas notieren, zur Kenntn
 vermessen	ja	silver			ja	passiv	haben	reflexiv	nein	nein	Verb — 1. abmessen, ausmessen; 2. Adj. — übermütig, anmaßend
 vermiesen	ja	weak			ja	passiv	haben		nein	ja	Verb — jemandem die Freude verderben, etwas verleiden
 vermieten	ja	silver			ja	passiv	haben		nein	nein	Verb — etwas gegen Entgelt zur Nutzung überlassen
-vermissen	ja	gold	ja	vermisstem,vermisster,vermisstes	ja	passiv	haben		nein	ja	Verb — jemanden oder etwas schmerzlich entbehren; nicht auffinden können
+vermissen	ja	silver		vermisstem,vermisster,vermisstes	ja	passiv	haben		nein	ja	Verb — jemanden oder etwas schmerzlich entbehren; nicht auffinden können
 vermummen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — sich oder jemanden verhüllen, maskieren, unkenntlich machen
 vermuten	ja	silver			ja	passiv	haben		nein	ja	Verb — annehmen, für wahrscheinlich halten
 vermählen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — (gehoben) heiraten, die Ehe eingehen
@@ -4885,7 +4879,7 @@ wegätzen	ja	weak			ja	passiv	haben		nein	nein	Verb — durch Ätzen entfernen, 
 wehen	ja	weak			ja		haben+sein		ja		Verb — (Wind) blasen; sich im Wind bewegen
 wehklagen	ja	weak			ja	passiv	haben		nein	nein	Verb — laut klagen, jammern
 wehtun	ja	weak			ja	passiv	haben		nein	nein	Verb — Schmerzen verursachen, weh tun
-weibeln	ja	gold	ja	geweibelte,geweibeltem,geweibelten,geweibelter,geweibeltes	ja	passiv	haben		nein	ja	Verb — lobbyieren, werben
+weibeln	ja	weak		geweibelte,geweibeltem,geweibelten,geweibelter,geweibeltes	ja	passiv	haben		nein	ja	Verb — lobbyieren, werben
 weiden	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb — 1. Vieh auf der Weide grasen lassen. 2. Subst. (Pl.) — Bäume der Gattung Salix
 weigern	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb — sich einer Sache widersetzen, ablehnen
 weihen	ja	weak			ja	passiv	haben		nein	ja	Verb — 1. (religiös) segnen, weihen; 2. (einem Zweck) widmen
@@ -4895,7 +4889,7 @@ weisen	ja	weak			ja	passiv	haben		nein	ja	Verb — anweisen, zeigen, verweisen; 
 weissagen	ja	weak			ja	passiv	haben		nein	nein	Verb — die Zukunft vorhersagen, prophezeien
 weiten	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — breiter, weiter machen; sich ausdehnen; auch: Deklinationsform von weit
 weitern	ja	weak			ja	passiv	haben		nein	nein	Verb — (selten) weiter machen, fortsetzen; auch: sich ausdehnen (Schmerz)
-wenden	ja	gold	ja	gewendetes	ja	passiv	haben	reflexiv	nein	ja	Verb — (1) die Richtung ändern; (2) sich an jemanden/etwas richten; (3) historisch: das Vo
+wenden	ja	silver		gewendetes	ja	passiv	haben	reflexiv	nein	ja	Verb — (1) die Richtung ändern; (2) sich an jemanden/etwas richten; (3) historisch: das Vo
 werben	ja	weak			ja	passiv	haben		nein	ja	Verb — für etwas Reklame machen, um etwas bitten oder werben
 werfen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — einen Gegenstand durch die Luft schleudern
 werkeln	ja	weak			ja	passiv	haben		nein	nein	Verb — (umgangssprachlich) an etwas herumbasteln, ohne großen Eifer arbeiten
@@ -4911,7 +4905,7 @@ widern	ja	silver			ja	passiv	haben		nein	nein	Verb — (umgangssprachlich) Wider
 widmen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — etwas einer Person, Sache oder einem Zweck zueignen, übergeben
 wiegen	ja	silver			ja	passiv	haben		nein	ja	Verb — (etwas) Gewicht haben; (jemanden) schaukeln
 wiehern	ja	weak			ja	passiv	haben		nein	nein	Verb — das charakteristische Geräusch eines Pferdes von sich geben
-wienern	ja	gold	ja	gewienertem,gewienerten,gewienerter,gewienertes	ja	passiv	haben		nein	ja	Verb — (österr., ugs.) sich wie ein Wiener benehmen; auch für bestimmte Tanzbewegungen
+wienern	ja	weak		gewienertem,gewienerten,gewienerter,gewienertes	ja	passiv	haben		nein	ja	Verb — (österr., ugs.) sich wie ein Wiener benehmen; auch für bestimmte Tanzbewegungen
 wieseln	ja	weak			ja	passiv	sein		nein		Verb — sich schnell und flink bewegen
 wildeln	ja	weak			ja	passiv	haben		nein	nein	Verb — umgangssprachlich für ungezügelt, ausgelassen sein oder handeln
 wildern	ja	weak			ja	passiv	haben		nein	nein	Verb — unbefugt jagen oder fischen; Plündern
@@ -4919,7 +4913,7 @@ wimmeln	ja	weak			ja	passiv	haben		nein	nein	Verb — in großer Zahl vorhanden 
 wimmern	ja	weak			ja	passiv	haben		nein	nein	Verb — leise, klagend weinen oder stöhnen
 wimpeln	ja	weak			ja	passiv	haben		nein	nein	Verb — (selten) schwach, kraftlos sein; zögern
 windeln	ja	weak			ja	passiv	haben		nein	nein	Verb — (ein Baby) wickeln, eine Windel anlegen
-winden	ja	gold	ja	gewundenem,gewundenen,gewundener,gewundenes	ja	passiv	haben	reflexiv	nein	ja	Verb — 1. sich drehen, schlängeln; 2. Infinitiv von winden
+winden	ja	silver		gewundenem,gewundenen,gewundener,gewundenes	ja	passiv	haben	reflexiv	nein	ja	Verb — 1. sich drehen, schlängeln; 2. Infinitiv von winden
 winkeln	ja	weak			ja	passiv	haben	reflexiv	nein	nein	Verb — einen Winkel bilden; abwinkeln, abknicken
 winken	ja	weak			ja	passiv	haben		nein	ja	Verb — durch Hand- oder Armbewegung ein Zeichen geben
 wintern	nein	silver			nein		haben		nein	nein	Verb — den Winter verbringen; überwintern
@@ -4982,7 +4976,7 @@ zehnteln	ja	silver			ja	passiv	haben		nein	nein	Verb — in zehn Teile teilen; d
 zehren	ja	silver			ja	passiv	haben		nein	ja	Verb — 1. (von etwas) leben, sich (von etwas) ernähren; 2. (an etwas) nagen, (etwas) aufbr
 zeichnen	ja	silver			ja	passiv	haben		nein	nein	Verb — mit Stift Linien auf Papier bringen; unterzeichnen
 zeigen	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — etwas sichtbar machen, vorführen, hinweisen
-zeihen	ja	gold	ja	geziehenem,geziehenen,geziehener,geziehenes	ja	passiv	haben		nein	ja	Verb (veraltet) — beschuldigen, anklagen
+zeihen	ja	weak		geziehenem,geziehenen,geziehener,geziehenes	ja	passiv	haben		nein	ja	Verb (veraltet) — beschuldigen, anklagen
 zeitigen	ja	weak			ja	passiv	haben		nein	nein	Verb — hervorbringen, bewirken; auch Infinitiv von zeitigen
 zelten	ja	weak			ja	passiv	haben		nein	nein	Verb — in einem Zelt wohnen/übernachten
 zensieren	ja	silver			ja	passiv	haben		nein	ja	Verb — (Schriftliches) prüfen und gegebenenfalls unerwünschte Teile unterdrücken
@@ -5031,7 +5025,6 @@ zicken	ja	weak			ja	passiv	haben		nein	nein	Verb (ugs.) — unnötige Schwierigk
 ziegeln	ja	silver			ja	passiv	haben		nein	nein	Verb — mit Ziegeln bedecken oder bauen
 ziehen	ja	weak			ja	passiv	haben+sein	reflexiv	nein		Verb — etwas mit Kraft zu sich her bewegen; sich fortbewegen
 zielen	ja	weak			ja	passiv	haben		nein	ja	Verb — auf ein Ziel richten; anstreben
-ziemen	ja	gold	ja	geziemtem,geziemter,geziemtes			haben	reflexiv	nein	ja	Verb (veraltet) — geziemen, sich ziemen; angemessen sein
 ziepen	ja	weak			ja	passiv	haben		nein	nein	Verb — einen kurzen, hohen Ton von sich geben,auch: jemanden an der Haut, den Haaren ziehe
 zieren	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — mit Zierrat versehen, schmücken; sich geziert benehmen
 zigeunern	ja	weak			ja	passiv	haben+sein		nein		Verb — umgangssprachlich — wie ein Zigeuner leben, herumziehen
@@ -5225,15 +5218,15 @@ zürnen	ja	weak			ja	passiv	haben		nein	ja	Verb — (gehoben) Groll hegen, verä
 ärgern	ja	silver			ja	passiv	haben	reflexiv	nein	ja	Verb — Unmut, Verdruss erregen; in Wut versetzen
 äschern	ja	weak			ja	passiv	haben		nein	nein	Verb — zu Asche verbrennen, einäschern
 äsen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — (von Wild) fressen, weiden
-ätherisieren	ja	gold	ja	ätherisiertem,ätherisierter,ätherisiertes	ja	passiv	haben		nein	ja	Verb — mit Äther behandeln oder in Äther überführen
-äthern	ja	gold	ja	geätherte,geäthertem,geätherten,geätherter,geäthertes	ja	passiv	haben		nein	ja	Verb — mit Äther behandeln oder betäuben
+ätherisieren	ja	weak		ätherisiertem,ätherisierter,ätherisiertes	ja	passiv	haben		nein	ja	Verb — mit Äther behandeln oder in Äther überführen
+äthern	ja	weak		geätherte,geäthertem,geätherten,geätherter,geäthertes	ja	passiv	haben		nein	ja	Verb — mit Äther behandeln oder betäuben
 ätzen	ja	silver			ja	passiv	haben		nein	ja	Verb — mit einer ätzenden Substanz bearbeiten, Material wegbeizen
 äugeln	ja	weak			ja	passiv	haben		nein	ja	Verb — schielen; verstohlen oder schmeichelnd blicken
 äugen	ja	weak			ja	passiv	haben		nein	ja	Verb — beobachten, anblicken; (veraltet) die Augen gebrauchen
 öffnen	ja	weak			ja	passiv	haben		nein	ja	Verb — etwas aufmachen, zugänglich machen
 ölen	ja	weak			ja	passiv	haben		nein	ja	Verb — mit Öl behandeln, schmieren. Subst. — substantivierter Infinitiv von ölen
 örtern	ja	weak			ja	passiv	haben		nein	nein	Verb — (selten) orten, lokalisieren; auch: mit Orten versehen
-ösen	ja	gold	ja	geöste,geöstem,geösten,geöster,geöstes	ja	passiv	haben		nein	ja	Verb — Wasser ausschöpfen, z. B. aus einem Boot
+ösen	ja	weak		geöste,geöstem,geösten,geöster,geöstes	ja	passiv	haben		nein	ja	Verb — Wasser ausschöpfen, z. B. aus einem Boot
 üben	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — etwas wiederholen, um es zu erlernen oder zu verbessern
 überbauen	ja	weak			ja	passiv	haben		nein	ja	Verb — 1. mit einem Bauwerk überdecken; 2. (fig.) überlagern, verdrängen
 übereilen	ja	weak			ja	passiv	haben	reflexiv	nein	ja	Verb — sich überstürzen, zu schnell handeln
