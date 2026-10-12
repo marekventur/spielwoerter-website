@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import type Database from "better-sqlite3";
 import { createTopic, insertPost, mailAllowlist, MAX_MESSAGE_LENGTH, type Recipient } from "./topics.js";
 import { screenName } from "./screen-name.js";
+import { upper } from "./normalise.js";
 
 /**
  * Word threads ("Wortgespräche"): private threads between the moderation and
@@ -185,7 +186,7 @@ export function openWordThread(
     if (!s) return { ok: false, status: 404, error: "Vorschlag nicht gefunden" };
     word = s.word;
     recipientId = s.user_id;
-    title = `${s.word.toUpperCase()}: ${ACTION_LABEL[s.action] ?? s.action}`;
+    title = `${upper(s.word)}: ${ACTION_LABEL[s.action] ?? s.action}`;
 
     const existing = db
       .prepare("SELECT id FROM topics WHERE suggestion_id = ?")
@@ -208,7 +209,7 @@ export function openWordThread(
     if (!r) return { ok: false, status: 404, error: "Nicht gefunden" };
     word = opts.word;
     recipientId = r.id;
-    title = `${word.toUpperCase()}: Gespräch mit ${screenName(r.display_name, r.id)}`;
+    title = `${upper(word)}: Gespräch mit ${screenName(r.display_name, r.id)}`;
   }
 
   if (recipientId === moderator.id)

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
+import { upper } from "../../lib/normalise.js";
 
 export const sitemapRouter = Router();
 
@@ -96,7 +97,7 @@ sitemapRouter.get("/sitemap-:letter.xml", (req, res) => {
 
   const urls = words
     .map((w) => {
-      const loc = `${base}/wort/${encodeURIComponent(w.toUpperCase())}`;
+      const loc = `${base}/wort/${encodeURIComponent(upper(w))}`;
       return `  <url>\n    <loc>${xmlEscape(loc)}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>`;
     })
     .join("\n");

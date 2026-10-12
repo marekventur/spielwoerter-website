@@ -9,6 +9,7 @@ import { SearchControls, ALL_FIELDS, type SearchMode, type SearchField } from "~
 import { useLocalStorageChangeset } from "~/hooks/useLocalStorageChangeset";
 import { usePowerSearch } from "~/hooks/usePowerSearch";
 import type { Route } from "./+types/power-edit";
+import { upper } from "../../lib/normalise.js";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Wörterbuch bearbeiten – Spielwoerter.de" }];
@@ -84,7 +85,7 @@ export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
       if (!res.ok && data.requiresConfirmation && data.conflicts) {
         // Settled decisions stick: overriding earlier decisions needs a comment.
         const list = data.conflicts
-          .map((c) => `• ${c.word.toUpperCase()}: ${c.message}`)
+          .map((c) => `• ${upper(c.word)}: ${c.message}`)
           .join("\n");
         const comment = window.prompt(
           `Einige Änderungen widersprechen früheren Entscheidungen:\n\n${list}\n\n` +

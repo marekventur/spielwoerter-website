@@ -7,6 +7,7 @@ import { Input } from "~/components/ui/input";
 import { screenName } from "../../lib/screen-name.js";
 import type { Route } from "./+types/moderation";
 import { MessageToSubmitter } from "~/components/MessageToSubmitter";
+import { upper } from "../../lib/normalise.js";
 
 type ModerationItem = {
   id: number;
@@ -405,10 +406,10 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                   <div className="px-5 py-3 bg-gray-50 border-b flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <Link
-                        to={`/wort/${encodeURIComponent(group.base.toUpperCase())}`}
+                        to={`/wort/${encodeURIComponent(upper(group.base))}`}
                         className="font-bold text-gray-700 uppercase tracking-wide hover:text-orange-600"
                       >
-                        {group.base.toUpperCase()}
+                        {upper(group.base)}
                       </Link>
                       {isMixed && (
                         <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
@@ -458,7 +459,7 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                             className="px-5 py-3 flex items-center gap-2 bg-gray-50"
                           >
                             <span className="font-bold text-gray-400 uppercase">
-                              {item.word.toUpperCase()}
+                              {upper(item.word)}
                             </span>
                             <span
                               className={`text-xs px-2 py-0.5 rounded-full font-medium opacity-60 ${meta.pillClass}`}
@@ -494,10 +495,10 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <Link
-                                to={`/wort/${encodeURIComponent(item.word.toUpperCase())}`}
+                                to={`/wort/${encodeURIComponent(upper(item.word))}`}
                                 className="font-bold text-gray-900 uppercase hover:text-orange-600"
                               >
-                                {item.word.toUpperCase()}
+                                {upper(item.word)}
                               </Link>
                               <span
                                 className={`text-xs px-2 py-0.5 rounded-full font-medium ${meta.pillClass}`}
@@ -750,10 +751,10 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                 return (
                   <div key={r.id} className="px-5 py-3 flex items-center gap-2">
                     <Link
-                      to={`/wort/${encodeURIComponent(r.word.toUpperCase())}`}
+                      to={`/wort/${encodeURIComponent(upper(r.word))}`}
                       className="font-bold text-gray-700 uppercase hover:text-orange-600"
                     >
-                      {r.word.toUpperCase()}
+                      {upper(r.word)}
                     </Link>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full font-medium ${meta.pillClass}`}

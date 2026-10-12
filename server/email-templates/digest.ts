@@ -1,4 +1,5 @@
 import type { DigestUser } from "../../lib/sync.js";
+import { upper } from "../../lib/normalise.js";
 
 const ACTION_LABELS: Record<string, string> = {
   add: "Hinzufügen",
@@ -16,7 +17,7 @@ function escapeHtml(s: string): string {
 
 function approvedItem(item: DigestUser["approved"][number]): string {
   const action = ACTION_LABELS[item.action] ?? item.action;
-  let html = `${escapeHtml(item.word.toUpperCase())} <span style="color:#6b7280">(${escapeHtml(action)})</span>`;
+  let html = `${escapeHtml(upper(item.word))} <span style="color:#6b7280">(${escapeHtml(action)})</span>`;
   if (item.changed) {
     const details: string[] = [];
     if (item.description) details.push(escapeHtml(item.description));
@@ -28,7 +29,7 @@ function approvedItem(item: DigestUser["approved"][number]): string {
 
 function rejectedItem(item: DigestUser["rejected"][number]): string {
   const action = ACTION_LABELS[item.action] ?? item.action;
-  let html = `${escapeHtml(item.word.toUpperCase())} <span style="color:#6b7280">(${escapeHtml(action)})</span>`;
+  let html = `${escapeHtml(upper(item.word))} <span style="color:#6b7280">(${escapeHtml(action)})</span>`;
   if (item.comment) {
     html += `<br><span style="color:#6b7280;font-size:13px">Kommentar der Moderation: ${escapeHtml(item.comment)}</span>`;
   }

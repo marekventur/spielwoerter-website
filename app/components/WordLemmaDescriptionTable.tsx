@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { WordBadge, type WordBadgeStatus } from "~/components/WordBadge";
+import { upper } from "../../lib/normalise.js";
 
 export type WordLemmaDescriptionRow = {
   word: string;
@@ -19,7 +20,7 @@ export function WordLemmaDescriptionTable({ rows }: { rows: WordLemmaDescription
           className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-x-6 sm:gap-y-0"
         >
           <Link
-            to={`/wort/${encodeURIComponent(word.toUpperCase())}`}
+            to={`/wort/${encodeURIComponent(upper(word))}`}
             className={
               badgeStatus
                 ? "w-fit max-w-full shrink-0 transition-opacity hover:opacity-80"
@@ -27,9 +28,9 @@ export function WordLemmaDescriptionTable({ rows }: { rows: WordLemmaDescription
             }
           >
             {badgeStatus ? (
-              <WordBadge word={word.toUpperCase()} status={badgeStatus} size="sm" />
+              <WordBadge word={upper(word)} status={badgeStatus} size="sm" />
             ) : (
-              word.toUpperCase()
+              upper(word)
             )}
           </Link>
           <span className="min-w-0 flex-1 text-sm text-gray-600 whitespace-pre-wrap break-words">

@@ -8,6 +8,7 @@ import {
   type Decision,
 } from "../../lib/pruefliste";
 import type { Route } from "./+types/pruefliste";
+import { upper } from "../../lib/normalise.js";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Prüfliste – Spielwoerter.de" }, { name: "robots", content: "noindex" }];
@@ -93,7 +94,7 @@ export default function PrueflistePage({ loaderData }: Route.ComponentProps) {
       body: JSON.stringify({ decision }),
     });
     if (!res.ok) {
-      setError(`Speichern für ${word.toUpperCase()} fehlgeschlagen.`);
+      setError(`Speichern für ${upper(word)} fehlgeschlagen.`);
       setLocal((l) => {
         const { [word]: _, ...rest } = l;
         return rest;
@@ -149,7 +150,7 @@ export default function PrueflistePage({ loaderData }: Route.ComponentProps) {
                   : "border-gray-300 text-gray-700 hover:bg-orange-50"
             }`}
           >
-            {l.letter.toUpperCase()}
+            {upper(l.letter)}
           </button>
         ))}
       </div>
@@ -176,11 +177,11 @@ export default function PrueflistePage({ loaderData }: Route.ComponentProps) {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-2">
                     <Link
-                      to={`/wort/${encodeURIComponent(e.w.toUpperCase())}`}
+                      to={`/wort/${encodeURIComponent(upper(e.w))}`}
                       target="_blank"
                       className="font-mono font-semibold text-gray-900 hover:text-orange-600"
                     >
-                      {e.w.toUpperCase()}
+                      {upper(e.w)}
                     </Link>
                     <a
                       href={`https://www.duden.de/suchen/dudenonline/${encodeURIComponent(e.w)}`}

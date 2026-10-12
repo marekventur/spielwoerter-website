@@ -1,3 +1,4 @@
+import { upper } from "../../lib/normalise.js";
 export type VariantNotice = {
   word: string;
   reason: "in_list" | "rejected" | "in_review";
@@ -27,7 +28,7 @@ export function LlmVariantNotices({ notices }: LlmVariantNoticesProps) {
           key={n.word}
           className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-left text-sm"
         >
-          <p className="font-mono font-bold text-gray-800">{n.word.toUpperCase()}</p>
+          <p className="font-mono font-bold text-gray-800">{upper(n.word)}</p>
           <p className="text-gray-600 mt-1">{REASON_COPY[n.reason]}</p>
           {n.description ? (
             <p className="text-gray-500 text-xs mt-2 leading-relaxed">{n.description}</p>

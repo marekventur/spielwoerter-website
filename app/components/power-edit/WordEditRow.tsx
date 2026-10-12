@@ -3,6 +3,7 @@ import { Trash2, RotateCcw } from "lucide-react";
 import type { Changeset } from "~/hooks/useLocalStorageChangeset";
 import { Checkbox } from "~/components/ui/checkbox";
 import type { WordRow } from "./WordEditTable";
+import { upper } from "../../../lib/normalise.js";
 
 type RowProps = {
   row: WordRow;
@@ -79,10 +80,10 @@ export function WordEditRow({ row, changeset, onChangesetChange, limitReached, s
       )}
       <td className="py-1.5 pr-3">
         <Link
-          to={`/wort/${encodeURIComponent(row.word.toUpperCase())}`}
+          to={`/wort/${encodeURIComponent(upper(row.word))}`}
           className="font-mono uppercase text-sky-700 hover:underline text-xs"
         >
-          {row.word.toUpperCase()}
+          {upper(row.word)}
         </Link>
       </td>
       <td className="py-1.5 pr-3">
@@ -93,11 +94,11 @@ export function WordEditRow({ row, changeset, onChangesetChange, limitReached, s
           onChange={(e) =>
             onChangesetChange((prev) => updateField(prev, row.word, row, "base", e.target.value))
           }
-          className={`w-full rounded border px-2 py-1 text-xs font-mono uppercase focus:outline-none focus:ring-1 focus:ring-sky-400 disabled:bg-gray-50 disabled:text-gray-400 ${baseChanged ? "border-green-300 bg-green-50" : "border-gray-200"}`}
+          className={`w-full rounded border px-2 py-1 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-sky-400 disabled:bg-gray-50 disabled:text-gray-400 ${baseChanged ? "border-green-300 bg-green-50" : "border-gray-200"}`}
         />
         {showOriginalBase && (
-          <p className="mt-0.5 px-2 text-xs font-mono uppercase text-gray-400 line-through">
-            {originalBase}
+          <p className="mt-0.5 px-2 text-xs font-mono text-gray-400 line-through">
+            {upper(originalBase)}
           </p>
         )}
       </td>

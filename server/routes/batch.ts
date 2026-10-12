@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
-import { normalise } from "../../lib/normalise.js";
+import { normalise, upper } from "../../lib/normalise.js";
 import { priorDecision } from "../../lib/prior-decisions.js";
 import { requireUser } from "../http-auth.js";
 
@@ -127,7 +127,7 @@ batchRouter.post("/", (req, res) => {
         if (sibling) {
           conflicts.push({
             word,
-            message: `Sieht wie eine Ersatzschreibweise von „${sibling.word.toUpperCase()}" aus — Wörter werden immer mit Umlauten und ß aufgenommen.`,
+            message: `Sieht wie eine Ersatzschreibweise von „${upper(sibling.word)}" aus — Wörter werden immer mit Umlauten und ß aufgenommen.`,
           });
         }
       }

@@ -1,5 +1,5 @@
 import { data, Link, redirect } from "react-router";
-import { normalise } from "../../lib/normalise.js";
+import { normalise, upper } from "../../lib/normalise.js";
 import { wordHistory } from "../../lib/history.js";
 import { IN_PIPELINE_SQL } from "../../lib/pipeline.js";
 import { listWordThreads } from "../../lib/conversations.js";
@@ -61,9 +61,9 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const noRedirect = url.searchParams.get("no_redirect") === "1";
   const decoded = decodeURIComponent(params.word);
-  if (decoded !== decoded.toUpperCase()) {
+  if (decoded !== upper(decoded)) {
     // Keep the query string: ?no_redirect / ?redirect_from must survive case canonicalisation.
-    throw redirect(`/wort/${encodeURIComponent(decoded.toUpperCase())}${url.search}`);
+    throw redirect(`/wort/${encodeURIComponent(upper(decoded))}${url.search}`);
   }
   let wordLower = decoded.toLowerCase();
   const db = context.db;
@@ -87,8 +87,8 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
       // uppercase URL containing SS. When a user lands on that SS URL, lowercasing gives
       // 'ss' (not 'ß'), the direct lookup fails, and the normalise redirect would point
       // back to the same SS URL — an infinite loop. Detect this and serve directly instead.
-      if (normalisedMatch.word.toUpperCase() !== decoded) {
-        const target = normalisedMatch.word.toUpperCase();
+      if (upper(normalisedMatch.word) !== decoded) {
+        const target = upper(normalisedMatch.word);
         if (noRedirect) {
           suppressedTarget = target;
         } else {
@@ -111,7 +111,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   // Only trust ?redirect_from if it really is another spelling of this word — the value
   // ends up in the page, so an arbitrary attacker-supplied string must not be shown.
   const redirectFromRaw = url.searchParams.get("redirect_from");
-  const redirectFromUpper = redirectFromRaw ? redirectFromRaw.toUpperCase() : null;
+  const redirectFromUpper = redirectFromRaw ? upper(redirectFromRaw) : null;
   const redirectedFrom =
     redirectFromUpper &&
     redirectFromUpper !== decoded &&
@@ -210,7 +210,7 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
     removeInReviewByOthers,
     history,
   } = loaderData;
-  const word = decodeURIComponent(params.word).toUpperCase();
+  const word = upper(decodeURIComponent(params.word));
   const wordLower = word.toLowerCase();
   const status = toStatus(wordRow?.in_list);
 
@@ -259,10 +259,10 @@ export default function WortPage({ params, loaderData }: Route.ComponentProps) {
             <p className="text-gray-600 mt-3 text-base max-w-xl mx-auto">
               Grundform:{" "}
               <Link
-                to={`/wort/${encodeURIComponent(wordRow.base.toUpperCase())}`}
+                to={`/wort/${encodeURIComponent(upper(wordRow.base))}`}
                 className="font-mono font-semibold text-orange-600 hover:text-orange-700 hover:underline"
               >
-                {wordRow.base.toUpperCase()}
+                {upper(wordRow.base)}
               </Link>
             </p>
           )}

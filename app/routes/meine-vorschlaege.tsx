@@ -4,6 +4,7 @@ import { Pencil, X } from "lucide-react";
 import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import type { Route } from "./+types/meine-vorschlaege";
+import { upper } from "../../lib/normalise.js";
 
 type Suggestion = {
   id: number;
@@ -54,12 +55,12 @@ function parsePayload(s: Suggestion): Record<string, string> | null {
 }
 
 function wortHref(word: string) {
-  return `/wort/${encodeURIComponent(word.toUpperCase())}`;
+  return `/wort/${encodeURIComponent(upper(word))}`;
 }
 
 function SuggestionMainCell({ s }: { s: Suggestion }) {
   const payload = parsePayload(s);
-  const wordUpper = s.word.toUpperCase();
+  const wordUpper = upper(s.word);
 
   if (s.action === "add") {
     return (

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { EyeOff, Mail } from "lucide-react";
 import type { HistoryItem, HistoryActor } from "../../lib/history";
+import { upper } from "../../lib/normalise.js";
 
 // SQLite UTC timestamps, formatted by string slicing so server and client
 // render identically (no timezone-dependent hydration mismatch).
@@ -182,10 +183,10 @@ export function WordHistoryList({
             </span>
             {showWord && (
               <Link
-                to={`/wort/${encodeURIComponent(item.word.toUpperCase())}`}
+                to={`/wort/${encodeURIComponent(upper(item.word))}`}
                 className="font-mono font-semibold text-gray-800 hover:text-orange-600"
               >
-                {item.word.toUpperCase()}
+                {upper(item.word)}
               </Link>
             )}
             {item.kind === "suggestion" ? (

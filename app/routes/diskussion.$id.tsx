@@ -15,6 +15,7 @@ import {
 import { screenName } from "../../lib/screen-name";
 import { canSeeTopic, threadParticipants } from "../../lib/conversations";
 import type { Route } from "./+types/diskussion.$id";
+import { upper } from "../../lib/normalise.js";
 
 export function meta({ data }: Route.MetaArgs) {
   return [
@@ -197,10 +198,10 @@ export default function TopicPage({ loaderData }: Route.ComponentProps) {
         <p className="text-sm text-sky-800 bg-sky-50 border border-sky-200 rounded-lg px-3 py-2 mb-6">
           Privates Gespräch zu{" "}
           <Link
-            to={`/wort/${encodeURIComponent((topic.word ?? "").toUpperCase())}`}
+            to={`/wort/${encodeURIComponent(upper(topic.word ?? ""))}`}
             className="font-mono font-semibold underline"
           >
-            {(topic.word ?? "").toUpperCase()}
+            {upper(topic.word ?? "")}
           </Link>
           . Sichtbar nur für die Moderation und {participants.join(", ")}.
         </p>

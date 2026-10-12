@@ -1,4 +1,5 @@
 import type Database from "better-sqlite3";
+import { upper } from "./normalise.js";
 
 /**
  * Advisory warnings for removal suggestions. Nearly all wrongly removed words
@@ -33,7 +34,7 @@ export function removalHints(db: Database.Database, wordLower: string): string[]
     const expanded = wordLower.slice(0, i) + "e" + wordLower.slice(i);
     if (expanded !== wordLower && exists.get(expanded)) {
       hints.push(
-        `Möglicherweise verkürzte Form von „${expanded.toUpperCase()}" (e-Tilgung) — laut Regeln oft zulässig.`
+        `Möglicherweise verkürzte Form von „${upper(expanded)}" (e-Tilgung) — laut Regeln oft zulässig.`
       );
       break;
     }
@@ -48,7 +49,7 @@ export function removalHints(db: Database.Database, wordLower: string): string[]
     exists.get(wordLower.slice(0, -1))
   ) {
     hints.push(
-      `Könnte eine Dativ-e-Form von „${wordLower.slice(0, -1).toUpperCase()}" sein — das Dativ-e ist laut Regeln weiterhin zulässig.`
+      `Könnte eine Dativ-e-Form von „${upper(wordLower.slice(0, -1))}" sein — das Dativ-e ist laut Regeln weiterhin zulässig.`
     );
   }
 

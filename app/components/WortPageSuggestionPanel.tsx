@@ -331,7 +331,7 @@ export function WortPageSuggestionPanel({
                 type="text"
                 value={editBase}
                 onChange={(e) => setEditBase(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-400 uppercase"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-400"
               />
             </div>
             <div className="flex gap-2 pt-1">

@@ -1,5 +1,6 @@
 import { Button } from "~/components/ui/button";
 import { Link } from "react-router";
+import { upper } from "../../lib/normalise.js";
 
 type MorphCandidate = {
   word: string;
@@ -50,7 +51,7 @@ export function AddWordSuggestionDoneState({
                   onChange={(e) => onToggleMorphWord(r.word, e.target.checked)}
                 />
                 <span className="text-sm font-mono font-bold text-gray-800">
-                  {r.word.toUpperCase()}
+                  {upper(r.word)}
                 </span>
                 {removalHints[r.word] && (
                   <span

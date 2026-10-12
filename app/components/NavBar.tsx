@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { ChevronDown, Search, User } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { upper } from "../../lib/normalise.js";
 
 type NavUser = {
   email: string;
@@ -25,7 +26,7 @@ export function NavBar({ user }: Props) {
     e.preventDefault();
     const term = search.trim();
     if (!term) return;
-    navigate(`/wort/${encodeURIComponent(term.toUpperCase())}`);
+    navigate(`/wort/${encodeURIComponent(upper(term))}`);
     setSearch("");
   };
 
@@ -158,7 +159,7 @@ export function NavBar({ user }: Props) {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value.toUpperCase())}
+            onChange={(e) => setSearch(upper(e.target.value))}
             placeholder="Wort nachschlagen…"
             aria-label="Wort nachschlagen"
             className="h-9 w-full rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm leading-5 text-gray-800 transition-colors placeholder:text-gray-400 focus:border-orange-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-200"

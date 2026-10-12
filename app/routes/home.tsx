@@ -6,6 +6,7 @@ import { HomeRandomWords } from "~/components/HomeRandomWords";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import type { Route } from "./+types/home";
+import { upper } from "../../lib/normalise.js";
 
 export async function loader({ context }: Route.LoaderArgs) {
   return {
@@ -29,7 +30,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchWord.trim()) {
-      navigate(`/wort/${encodeURIComponent(searchWord.trim().toUpperCase())}`);
+      navigate(`/wort/${encodeURIComponent(upper(searchWord.trim()))}`);
     }
   };
 
@@ -54,7 +55,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <Input
               type="text"
               value={searchWord}
-              onChange={(e) => setSearchWord(e.target.value.toUpperCase())}
+              onChange={(e) => setSearchWord(upper(e.target.value))}
               placeholder="Wort nachschlagen..."
               className="h-full w-full text-2xl pl-6 pr-[4rem] border-0 bg-gray-50 rounded-xl  placeholder:text-gray-500 focus:ring-0 focus:ring-offset-0 focus:border-0 focus:bg-white shadow-none transition-colors duration-200 "
             />

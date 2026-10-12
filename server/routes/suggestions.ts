@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
-import { normalise } from "../../lib/normalise.js";
+import { normalise, upper } from "../../lib/normalise.js";
 import { priorDecision } from "../../lib/prior-decisions.js";
 import { IN_PIPELINE_SQL } from "../../lib/pipeline.js";
 import { requireUser } from "../http-auth.js";
@@ -136,8 +136,8 @@ suggestionsRouter.post("/", (req, res) => {
         res.status(409).json({
           requiresConfirmation: true,
           error:
-            `„${wordLower.toUpperCase()}" sieht wie eine Ersatzschreibweise von ` +
-            `„${sibling.word.toUpperCase()}" aus — Wörter werden immer mit Umlauten und ß aufgenommen.`,
+            `„${upper(wordLower)}" sieht wie eine Ersatzschreibweise von ` +
+            `„${upper(sibling.word)}" aus — Wörter werden immer mit Umlauten und ß aufgenommen.`,
         });
         return;
       }
