@@ -112,6 +112,7 @@ export function cleanDb(): void {
   db.exec("DELETE FROM topics");
   db.exec("DELETE FROM word_comments");
   db.exec("DELETE FROM review_decisions");
+  db.exec("DELETE FROM ss_decisions");
   db.exec("DELETE FROM suggestions");
   db.exec("DELETE FROM batches");
   db.exec("DELETE FROM mcp_tokens");

@@ -133,6 +133,10 @@ export default function PrueflistePage({ loaderData }: Route.ComponentProps) {
           <Download className="w-3.5 h-3.5" />
           Entscheidungen herunterladen
         </a>
+        {" · "}
+        <Link to="/pruefliste/ss" className="text-orange-600 hover:underline">
+          Prüfliste ss/ß
+        </Link>
       </p>
 
       <div className="flex flex-wrap gap-1 mb-4">

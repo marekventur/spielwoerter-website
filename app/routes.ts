@@ -17,5 +17,6 @@ export default [
   route("admin", "routes/admin.tsx"),
   route("power-edit", "routes/power-edit.tsx"),
   route("pruefliste", "routes/pruefliste.tsx"),
+  route("pruefliste/ss", "routes/pruefliste.ss.tsx"),
   route("gespraeche", "routes/gespraeche.tsx"),
 ] satisfies RouteConfig;

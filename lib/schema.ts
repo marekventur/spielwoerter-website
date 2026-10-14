@@ -88,6 +88,15 @@ export function initSchema(db: Database.Database): void {
       decided_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    -- One-off (2026-10): decisions on ASCII duplicates such as abgiessen next to
+    -- abgießen (lib/pruefliste-ss.ts, /pruefliste/ss). word = the ASCII spelling.
+    CREATE TABLE IF NOT EXISTS ss_decisions (
+      word TEXT PRIMARY KEY,
+      decision TEXT NOT NULL CHECK (decision IN ('behalten', 'streichen')),
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      decided_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS topics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id),
