@@ -92,7 +92,7 @@ export function initSchema(db: Database.Database): void {
     -- abgießen (lib/pruefliste-ss.ts, /pruefliste/ss). word = the ASCII spelling.
     CREATE TABLE IF NOT EXISTS ss_decisions (
       word TEXT PRIMARY KEY,
-      decision TEXT NOT NULL CHECK (decision IN ('behalten', 'streichen')),
+      decision TEXT NOT NULL CHECK (decision IN ('behalten', 'streichen', 'b_streichen', 'beide')),
       user_id INTEGER NOT NULL REFERENCES users(id),
       decided_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -254,6 +254,29 @@ export function initSchema(db: Database.Database): void {
   }
   if (!suggCols.includes("decided_at")) {
     db.prepare("ALTER TABLE suggestions ADD COLUMN decided_at TEXT").run();
+  }
+
+  // ss_decisions first shipped allowing only behalten/streichen; SQLite cannot
+  // widen a CHECK in place, so rebuild it once, keeping the decisions made.
+  const ssSql = (
+    db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'ss_decisions'").get() as
+      | { sql: string }
+      | undefined
+  )?.sql;
+  if (ssSql && !ssSql.includes("b_streichen")) {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE ss_decisions_new (
+          word TEXT PRIMARY KEY,
+          decision TEXT NOT NULL CHECK (decision IN ('behalten', 'streichen', 'b_streichen', 'beide')),
+          user_id INTEGER NOT NULL REFERENCES users(id),
+          decided_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        INSERT INTO ss_decisions_new SELECT word, decision, user_id, decided_at FROM ss_decisions;
+        DROP TABLE ss_decisions;
+        ALTER TABLE ss_decisions_new RENAME TO ss_decisions;
+      `);
+    })();
   }
 
   // Ensure bootstrap admin always has full privileges

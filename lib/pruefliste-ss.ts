@@ -3,6 +3,10 @@ import rows from "./pruefliste-ss-2026-10.json";
 import { screenName } from "./screen-name.js";
 import type { Decision } from "./pruefliste.js";
 
+/** streichen = ASCII form goes, b_streichen = the ß/umlaut form goes, beide = both go. */
+export type SsDecision = Decision | "b_streichen" | "beide";
+export const SS_DECISIONS: SsDecision[] = ["behalten", "streichen", "b_streichen", "beide"];
+
 /**
  * One-off review (2026-10): ASCII spellings in the accepted list whose
  * umlaut/ß sibling is accepted too (abgiessen next to abgießen). Built by
@@ -30,7 +34,7 @@ export function ssEntry(word: string): SsEntry | undefined {
   return BY_WORD.get(word);
 }
 
-export type SsDecisionRow = { decision: Decision; decided_by: string };
+export type SsDecisionRow = { decision: SsDecision; decided_by: string };
 
 export function ssDecisions(db: Database.Database): Map<string, SsDecisionRow> {
   const list = db
@@ -38,11 +42,11 @@ export function ssDecisions(db: Database.Database): Map<string, SsDecisionRow> {
       `SELECT d.word, d.decision, u.id AS u_id, u.display_name AS u_name
        FROM ss_decisions d JOIN users u ON u.id = d.user_id`
     )
-    .all() as { word: string; decision: Decision; u_id: number; u_name: string | null }[];
+    .all() as { word: string; decision: SsDecision; u_id: number; u_name: string | null }[];
   return new Map(list.map((r) => [r.word, { decision: r.decision, decided_by: screenName(r.u_name, r.u_id) }]));
 }
 
-export function setSsDecision(db: Database.Database, word: string, decision: Decision | null, userId: number) {
+export function setSsDecision(db: Database.Database, word: string, decision: SsDecision | null, userId: number) {
   if (decision === null) {
     db.prepare("DELETE FROM ss_decisions WHERE word = ?").run(word);
     return;
@@ -70,7 +74,8 @@ export function exportSsDecisionsTsv(db: Database.Database): string {
   const decisions = ssDecisions(db);
   const lines = [
     "# Export von spielwoerter.de/pruefliste/ss: Entscheidungen zu ASCII-Doppelungen.",
-    "# Spalten: ASCII-Form, Entscheidung (streichen = ASCII-Form entfernen), Schreibung mit ß/Umlaut, Gruppe.",
+    "# Spalten: ASCII-Form, Entscheidung, Schreibung mit ß/Umlaut, Gruppe.",
+    "# streichen = ASCII-Form entfernen, b_streichen = Form mit ß/Umlaut entfernen, beide = beide entfernen, behalten = beide bleiben.",
   ];
   for (const e of SS_ENTRIES) {
     const d = decisions.get(e.s);

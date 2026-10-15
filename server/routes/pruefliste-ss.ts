@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
 import { requireModerator } from "../http-auth.js";
-import { acceptGroupSuggestion, exportSsDecisionsTsv, setSsDecision, ssEntry, SS_GROUPS, type SsGroup } from "../../lib/pruefliste-ss.js";
+import { acceptGroupSuggestion, exportSsDecisionsTsv, setSsDecision, ssEntry, SS_DECISIONS, SS_GROUPS, type SsDecision, type SsGroup } from "../../lib/pruefliste-ss.js";
 
 /** One-off review of ASCII duplicates (abgiessen/abgießen); see lib/pruefliste-ss.ts. */
 export const ssPrueflisteRouter = Router();
@@ -27,7 +27,7 @@ ssPrueflisteRouter.post("/gruppe/:group", (req, res) => {
   res.json({ ok: true, count: acceptGroupSuggestion(getDb(), group, user.id) });
 });
 
-// { decision: "behalten" | "streichen" | null } — null undoes a decision.
+// { decision: "behalten" | "streichen" | "b_streichen" | "beide" | null } — null undoes a decision.
 ssPrueflisteRouter.post("/:word", (req, res) => {
   const user = requireModerator(req, res);
   if (!user) return;
@@ -37,10 +37,10 @@ ssPrueflisteRouter.post("/:word", (req, res) => {
     return;
   }
   const decision = (req.body as { decision?: unknown })?.decision;
-  if (decision !== null && decision !== "behalten" && decision !== "streichen") {
+  if (decision !== null && !SS_DECISIONS.includes(decision as SsDecision)) {
     res.status(400).json({ error: "Ungültige Entscheidung" });
     return;
   }
-  setSsDecision(getDb(), word, decision, user.id);
+  setSsDecision(getDb(), word, decision as SsDecision | null, user.id);
   res.json({ ok: true });
 });
