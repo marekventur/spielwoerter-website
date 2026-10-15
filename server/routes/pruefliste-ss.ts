@@ -6,13 +6,13 @@ import { acceptGroupSuggestion, setSsDecision, ssEntry, SS_DECISIONS, SS_GROUPS,
 /** One-off review of ASCII duplicates (abgiessen/abgießen); see lib/pruefliste-ss.ts. */
 export const ssPrueflisteRouter = Router();
 
-// Record the group's suggested decision for all of its undecided words.
+// Mark a "keep both" group's undecided pairs as kept.
 ssPrueflisteRouter.post("/gruppe/:group", (req, res) => {
   const user = requireModerator(req, res);
   if (!user) return;
   const group = String(req.params.group) as SsGroup;
-  if (!SS_GROUPS.some((g) => g.id === group && g.suggest)) {
-    res.status(404).json({ error: "Gruppe ohne Vorschlag" });
+  if (!SS_GROUPS.some((g) => g.id === group && g.suggest === "behalten")) {
+    res.status(404).json({ error: "Gruppe ohne Behalten-Vorschlag" });
     return;
   }
   res.json({ ok: true, count: acceptGroupSuggestion(getDb(), group, user.id) });

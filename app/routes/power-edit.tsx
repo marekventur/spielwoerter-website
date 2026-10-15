@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { redirect } from "react-router";
+import { redirect, useSearchParams } from "react-router";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { WordEditTable, type WordRow } from "~/components/power-edit/WordEditTable";
@@ -23,7 +23,11 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function PowerEditPage({ loaderData }: Route.ComponentProps) {
   const { user } = loaderData;
 
-  const [activeTab, setActiveTab] = useState<"search" | "checkout" | "export-import">("search");
+  // ?tab=checkout opens the collected changes directly (linked from the Prüfliste).
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"search" | "checkout" | "export-import">(
+    searchParams.get("tab") === "checkout" ? "checkout" : "search"
+  );
 
   // Search state
   const [query, setQuery] = useState("");

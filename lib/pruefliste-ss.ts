@@ -14,11 +14,13 @@ export const SS_DECISIONS: SsDecision[] = ["behalten", "streichen", "b_streichen
  * scripts/ss-pruefliste/build.py from Wiktionary; each pair carries a group
  * with a suggested decision for the ASCII form.
  *
- * The page is a front end to PowerEdit: removals and edits become ordinary
- * suggestions via /api/batch (moderator removals wait 72 h like any other).
- * ss_decisions only records which pair a moderator has reviewed, so the page
- * can hide finished ones. Delete this module, its JSON, the route and the
- * table once done.
+ * The page is a front end to PowerEdit: removals and edits go into the
+ * PowerEdit changeset in the browser and are submitted from there as one
+ * batch of ordinary suggestions (moderator removals wait 72 h like any other).
+ * A pair counts as decided once a removal of either spelling is in the
+ * pipeline or done, or when a moderator marked it "behalten" (ss_decisions;
+ * earlier rows there also stem from the first, export-based version).
+ * Delete this module, its JSON, the route and the table once done.
  */
 export type SsEntry = { s: string; b: string; g: SsGroup; why: string; d: string };
 export type SsGroup = "schweiz" | "diphthong" | "lang" | "umlaut" | "eigen" | "unklar";
@@ -63,10 +65,14 @@ export function setSsDecision(db: Database.Database, word: string, decision: SsD
   ).run(word, decision, userId);
 }
 
-/** Records the group's suggestion for its still-undecided words (the page sends the removals). */
+/**
+ * Marks a "keep both" group's undecided pairs as kept. Groups suggesting a
+ * removal are handled in the browser: their removals go to the PowerEdit
+ * changeset and count as decided once submitted.
+ */
 export function acceptGroupSuggestion(db: Database.Database, group: SsGroup, userId: number): number {
   const suggest = SS_GROUPS.find((g) => g.id === group)?.suggest;
-  if (!suggest) return 0;
+  if (suggest !== "behalten") return 0;
   const decided = ssDecisions(db);
   const open = SS_ENTRIES.filter((e) => e.g === group && !decided.has(e.s));
   db.transaction(() => {

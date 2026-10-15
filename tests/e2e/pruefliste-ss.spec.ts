@@ -1,6 +1,6 @@
 /**
- * /pruefliste/ss is a front end to PowerEdit: decisions become ordinary
- * suggestions via /api/batch right away; ss_decisions only tracks review.
+ * /pruefliste/ss is a front end to PowerEdit: removals and edits are queued
+ * in PowerEdit's changeset and only written when submitted there.
  */
 import { test, expect, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
@@ -52,56 +52,77 @@ test("non-moderators cannot use the ss list", async ({ request }) => {
   expect((await request.post("/api/pruefliste-ss/gruppe/schweiz", { headers })).status()).toBe(403);
 });
 
-test("a decision files the removal right away; switching and undoing withdraw it", async ({ page }) => {
+const changesetOf = (page: Page) =>
+  page.evaluate(() => JSON.parse(localStorage.getItem("power-edit-changeset-v1") ?? "[]") as [string, { pending: unknown }][]);
+
+test("decisions are queued in the PowerEdit changeset and only written on submit", async ({ page }) => {
   seedUser(TEST_MOD_EMAIL, { isModerator: true });
   seedPairs([own]);
   await loginAs(page, TEST_MOD_EMAIL, "/pruefliste/ss?g=eigen");
+  await page.waitForLoadState("networkidle");
   const row = rowOf(page, own.s);
 
   await row.getByRole("button", { name: "ss-Form streichen", exact: true }).click();
-  await expect(row.getByText("Löschung geplant")).toBeVisible();
-  expect(removals(own.s)).toBe(1);
-  expect(decision(own.s)).toBe("streichen");
-  await expect(row.getByRole("link", { name: own.s.toUpperCase(), exact: true })).toHaveClass(/line-through/);
+  await expect(row.getByText("zum Löschen vorgemerkt")).toBeVisible();
+  expect(await changesetOf(page)).toEqual([[own.s, expect.objectContaining({ pending: null })]]);
+  expect(removals(own.s)).toBe(0); // nothing written yet
 
-  // Switching withdraws the ss removal and files the ß one instead.
+  // Switching moves the queued removal to the other spelling.
   await row.getByRole("button", { name: "ß-Form streichen", exact: true }).click();
   await expect(row.getByRole("link", { name: upper(own.b), exact: true })).toHaveClass(/line-through/);
-  await expect.poll(() => removals(own.s)).toBe(0);
+  expect((await changesetOf(page)).map(([w]) => w)).toEqual([own.b]);
+
+  // Submitting in PowerEdit files it as an ordinary removal.
+  await page.getByRole("link", { name: "In PowerEdit prüfen und einreichen" }).click();
+  await expect(page).toHaveURL(/power-edit\?tab=checkout/);
+  await page.getByRole("button", { name: "Einreichen" }).click();
+  await expect(page.getByText("Änderungen erfolgreich eingereicht.")).toBeVisible();
   expect(removals(own.b)).toBe(1);
 
-  // Clicking the active decision again undoes it entirely.
-  await row.getByRole("button", { name: "ß-Form streichen", exact: true }).click();
+  await page.goto("/pruefliste/ss?g=eigen&alle=1");
+  await expect(rowOf(page, own.s).getByText("Löschung geplant")).toBeVisible();
+
+  // Undoing a submitted removal withdraws the moderator's own draft.
+  await rowOf(page, own.s).getByRole("button", { name: "ß-Form streichen", exact: true }).click();
   await expect.poll(() => removals(own.b)).toBe(0);
-  await expect.poll(() => decision(own.s)).toBe(null);
 });
 
-test("umlaut rows say ae/oe/ue; description and base can be edited in place", async ({ page }) => {
+test("umlaut rows say ae/oe/ue; edits are queued like PowerEdit edits; Behalten is recorded", async ({ page }) => {
   seedUser(TEST_MOD_EMAIL, { isModerator: true });
   seedPairs([umlaut]);
   await loginAs(page, TEST_MOD_EMAIL, "/pruefliste/ss?g=umlaut");
+  await page.waitForLoadState("networkidle");
   const row = rowOf(page, umlaut.s);
   await expect(row.getByRole("button", { name: "ae/oe/ue-Form streichen", exact: true })).toBeVisible();
   await expect(row.getByRole("button", { name: "ss-Form streichen", exact: true })).toHaveCount(0);
 
   await row.getByRole("button", { name: "Bearbeiten" }).last().click();
   await row.getByLabel(`Beschreibung von ${upper(umlaut.b)}`).fill("Neue Beschreibung");
-  await row.getByRole("button", { name: "Speichern" }).click();
-  await expect
-    .poll(() => getTestDb().prepare("SELECT payload FROM suggestions WHERE word = ? AND action = 'change_description'").get(umlaut.b))
-    .toEqual({ payload: JSON.stringify({ description: "Neue Beschreibung" }) });
+  await row.getByRole("button", { name: "Vormerken" }).click();
+  await expect(row.getByText("Änderung vorgemerkt")).toBeVisible();
+  expect(await changesetOf(page)).toEqual([
+    [umlaut.b, expect.objectContaining({ pending: { description: "Neue Beschreibung" } })],
+  ]);
+
+  await row.getByRole("button", { name: "Behalten", exact: true }).click();
+  await expect.poll(() => decision(umlaut.s)).toBe("behalten");
 });
 
-test("accepting a group's suggestion files the removals and records the review", async ({ page }) => {
+test("a removal group's suggestion is queued, a keep group's is recorded", async ({ page, request }) => {
   seedUser(TEST_MOD_EMAIL, { isModerator: true });
   seedPairs(swiss.slice(0, 2));
+  const headers = { Cookie: `session=${await loginViaApi(TEST_MOD_EMAIL)}` };
   await loginAs(page, TEST_MOD_EMAIL, "/pruefliste/ss?g=schweiz");
+  await page.waitForLoadState("networkidle");
   page.on("dialog", (d) => void d.accept());
   await page.getByRole("button", { name: /Vorschlag für alle/ }).click();
-  await expect(page.locator("p", { hasText: "entschieden" }).locator("strong")).toHaveText(String(swiss.length));
-  expect(removals(swiss[0].s)).toBe(1);
-  expect(removals(swiss[1].s)).toBe(1);
-  expect(removals(swiss[0].b)).toBe(0);
+  await expect(page.getByText("2 Änderungen vorgemerkt")).toBeVisible();
+  expect((await changesetOf(page)).map(([w]) => w).sort()).toEqual([swiss[0].s, swiss[1].s].sort());
+  expect(removals(swiss[0].s)).toBe(0);
+
+  expect((await request.post("/api/pruefliste-ss/gruppe/schweiz", { headers })).status()).toBe(404);
+  const kept = await request.post("/api/pruefliste-ss/gruppe/eigen", { headers });
+  expect((await kept.json()).count).toBe(entries.filter((e) => e.g === "eigen").length);
 });
 
 test("the first ss_decisions schema is widened without losing decisions", () => {
