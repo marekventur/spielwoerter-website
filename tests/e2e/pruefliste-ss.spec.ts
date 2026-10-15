@@ -5,6 +5,7 @@ import { loginAs, loginViaApi } from "../helpers/auth";
 import { TEST_USER_EMAIL, TEST_MOD_EMAIL } from "../helpers/test-config";
 import { getTestDb } from "../helpers/db";
 import { initSchema } from "../../lib/schema";
+import { upper } from "../../lib/normalise";
 
 const entries = JSON.parse(
   readFileSync(new URL("../../lib/pruefliste-ss-2026-10.json", import.meta.url), "utf8")
@@ -51,8 +52,12 @@ test("the ß form or both can be struck, umlaut rows say ae/oe/ue", async ({ pag
   const headers = { Cookie: `session=${await loginViaApi(TEST_MOD_EMAIL)}` };
 
   await loginAs(page, TEST_MOD_EMAIL, "/pruefliste/ss?g=eigen");
-  await page.locator("li", { hasText: own.s.toUpperCase() }).first().getByRole("button", { name: "ß-Form streichen", exact: true }).click();
+  const ownRow = page.locator("li", { hasText: own.s.toUpperCase() }).first();
+  await ownRow.getByRole("button", { name: "ß-Form streichen", exact: true }).click();
   await expect(page.locator("p", { hasText: "entschieden" }).locator("strong")).toHaveText("1");
+  // Only the spelling that goes is struck through.
+  await expect(ownRow.getByRole("link", { name: own.s.toUpperCase(), exact: true })).not.toHaveClass(/line-through/);
+  await expect(ownRow.getByRole("link", { name: upper(own.b), exact: true })).toHaveClass(/line-through/);
 
   await page.goto("/pruefliste/ss?g=umlaut");
   const row = page.locator("li", { hasText: umlaut.s.toUpperCase() }).first();

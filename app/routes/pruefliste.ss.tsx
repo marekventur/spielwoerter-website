@@ -166,15 +166,19 @@ export default function SsPrueflistePage({ loaderData }: Route.ComponentProps) {
         <ul className="divide-y divide-gray-100 border-t border-b border-gray-100">
           {shown.map((e) => {
             const cur = e.s in local ? local[e.s] : (e.decision?.decision ?? null);
+            // Strike through whichever spelling the current decision removes.
+            const struck = "line-through decoration-2 text-red-600";
+            const sGone = cur === "streichen" || cur === "beide";
+            const bGone = cur === "b_streichen" || cur === "beide";
             return (
               <li key={e.s} className="py-3 flex items-start gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-2">
-                    <Link to={`/wort/${encodeURIComponent(upper(e.s))}`} target="_blank" className="font-mono font-semibold text-gray-900 hover:text-orange-600">
+                    <Link to={`/wort/${encodeURIComponent(upper(e.s))}`} target="_blank" className={`font-mono font-semibold hover:text-orange-600 ${sGone ? struck : "text-gray-900"}`}>
                       {upper(e.s)}
                     </Link>
                     <span className="text-gray-400">neben</span>
-                    <Link to={`/wort/${encodeURIComponent(upper(e.b))}`} target="_blank" className="font-mono font-semibold text-gray-700 hover:text-orange-600">
+                    <Link to={`/wort/${encodeURIComponent(upper(e.b))}`} target="_blank" className={`font-mono font-semibold hover:text-orange-600 ${bGone ? struck : "text-gray-700"}`}>
                       {upper(e.b)}
                     </Link>
                     <DictLinks word={e.b} />
