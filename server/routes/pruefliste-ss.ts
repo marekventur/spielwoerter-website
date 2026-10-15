@@ -1,21 +1,12 @@
 import { Router } from "express";
 import { getDb } from "../../lib/db.js";
 import { requireModerator } from "../http-auth.js";
-import { acceptGroupSuggestion, exportSsDecisionsTsv, setSsDecision, ssEntry, SS_DECISIONS, SS_GROUPS, type SsDecision, type SsGroup } from "../../lib/pruefliste-ss.js";
+import { acceptGroupSuggestion, setSsDecision, ssEntry, SS_DECISIONS, SS_GROUPS, type SsDecision, type SsGroup } from "../../lib/pruefliste-ss.js";
 
 /** One-off review of ASCII duplicates (abgiessen/abgießen); see lib/pruefliste-ss.ts. */
 export const ssPrueflisteRouter = Router();
 
-ssPrueflisteRouter.get("/export", (req, res) => {
-  const user = requireModerator(req, res);
-  if (!user) return;
-  res
-    .type("text/tab-separated-values; charset=utf-8")
-    .attachment("ss_pruefliste_entscheidungen.tsv")
-    .send(exportSsDecisionsTsv(getDb()));
-});
-
-// Apply the group's suggested decision to all of its undecided words.
+// Record the group's suggested decision for all of its undecided words.
 ssPrueflisteRouter.post("/gruppe/:group", (req, res) => {
   const user = requireModerator(req, res);
   if (!user) return;
