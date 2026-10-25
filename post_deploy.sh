@@ -18,6 +18,16 @@ export NAME
 export PORT
 
 echo "=== Post-deploy: $NAME (port $PORT) ==="
+# Secrets at rest: .env* files here hold production credentials and are read
+# only by the app, which pm2-root runs as root. Keep them root-only (600), even
+# ones that were placed by hand or written before this was enforced.
+for f in .env* */.env*; do
+  if [[ -f "$f" ]]; then
+    if [[ $EUID -eq 0 ]]; then chown root:root "$f"; fi
+    chmod 600 "$f"
+  fi
+done
+
 npm ci
 npm run build
 

@@ -6,6 +6,9 @@ import morgan from "morgan";
 const BUILD_PATH = "./build/server/index.js";
 const DEVELOPMENT = process.env.NODE_ENV === "development";
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
+// Loopback only: Caddy proxies to 127.0.0.1, so a wider bind only puts the app
+// on the public interface with the firewall as the sole thing in front of it.
+const HOST = process.env.HOST || "127.0.0.1";
 
 const app = express();
 
@@ -43,8 +46,8 @@ if (DEVELOPMENT) {
       next(error);
     }
   });
-  server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  server.listen(PORT, HOST, () => {
+    console.log(`Server is running on http://${HOST}:${PORT}`);
   });
 } else {
   console.log("Starting production server");
@@ -58,7 +61,7 @@ if (DEVELOPMENT) {
   app.use(express.static("build/client", { maxAge: "1h" }));
   const mod = await import(BUILD_PATH);
   app.use(mod.app);
-  app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  app.listen(PORT, HOST, () => {
+    console.log(`Server is running on http://${HOST}:${PORT}`);
   });
 }

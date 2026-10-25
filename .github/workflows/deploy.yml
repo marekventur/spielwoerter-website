@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20"
           cache: "npm"
@@ -76,6 +76,8 @@ jobs:
           done
           NAME=$(grep '^NAME=' app.config | cut -d= -f2-)
           SSH_OPTS=(-i "$key_file" -o StrictHostKeyChecking=accept-new)
-          ssh "${SSH_OPTS[@]}" root@vps3.marekventur.com "cat > /var/www/$NAME/.env" < "$env_file"
+          # Root-only at rest (600); chmod too, as umask does not touch an existing file.
+          ssh "${SSH_OPTS[@]}" root@vps3.marekventur.com \
+            "umask 077 && f=/var/www/$NAME/.env && cat > \$f && chown root:root \$f && chmod 600 \$f" < "$env_file"
           echo "=== .env written to VPS ==="
           ./deploy.sh "$key_file"
