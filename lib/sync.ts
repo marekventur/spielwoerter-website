@@ -48,7 +48,8 @@ async function fetchJsonl(url: string): Promise<JsonlWord[]> {
   // can read mixed-freshness lists (e.g. a re-added word still in the stale
   // rejected list, which would win the INSERT OR REPLACE). Bust the CDN cache.
   const res = await fetch(`${url}?${Date.now()}`);
-  if (res.status === 404) return [];
+  // A 404 is never "empty list": a private or renamed repo answers 404 too,
+  // and treating that as empty once wiped the lists (2026-10-25).
   if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
   const text = await res.text();
   return text
@@ -56,6 +57,32 @@ async function fetchJsonl(url: string): Promise<JsonlWord[]> {
     .filter((line) => line.trim())
     .map((line) => JSON.parse(line) as JsonlWord);
 }
+
+/**
+ * Lists below this size cannot be real: the accepted list holds ~240k words.
+ * Guards both directions of the sync against a truncated or stale download.
+ */
+export const MIN_ACCEPTED = 100_000;
+
+/**
+ * Throws instead of letting a broken download overwrite anything: the repo
+ * (syncPush) or the local words table (syncPull). `currentAccepted` is what
+ * the words table holds now; a drop of more than 10% against it is refused
+ * too, since legitimate removals come in hundreds, not tens of thousands.
+ */
+export function assertPlausibleLists(accepted: number, currentAccepted: number): void {
+  if (accepted < MIN_ACCEPTED) {
+    throw new Error(`Refusing to sync: accepted list has only ${accepted} words (minimum ${MIN_ACCEPTED}).`);
+  }
+  if (currentAccepted > 0 && accepted < currentAccepted * 0.9) {
+    throw new Error(
+      `Refusing to sync: accepted list shrank from ${currentAccepted} to ${accepted} words.`
+    );
+  }
+}
+
+const acceptedInTable = (db: Database.Database) =>
+  (db.prepare("SELECT count(*) AS n FROM words WHERE in_list = 'accepted'").get() as { n: number }).n;
 
 function toJsonl(words: JsonlWord[]): string {
   return words.map((w) => JSON.stringify(w)).join("\n") + "\n";
@@ -89,6 +116,7 @@ export async function syncPull(
   console.log(
     `  accepted: ${accepted.length}, uncertain: ${uncertain.length}, rejected: ${rejected.length}`
   );
+  assertPlausibleLists(accepted.length, acceptedInTable(db));
 
   const insert = db.prepare(
     `INSERT OR REPLACE INTO words (word, description, base, source, verified_by, in_list, normalised)
@@ -154,6 +182,8 @@ export async function syncPush(
       fetchJsonl(`${base}/wordlist_uncertain.jsonl`),
       fetchJsonl(`${base}/wordlist_rejected.jsonl`),
     ]);
+    // Never commit lists built on a broken download (see assertPlausibleLists).
+    assertPlausibleLists(accepted.length, acceptedInTable(db));
 
     // Apply changes
     for (const s of unsynced) {
