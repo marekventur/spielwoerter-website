@@ -24,7 +24,27 @@ jobs:
       - name: Deploy
         env:
           SSH_PRIVATE_KEY_CONTENT: ${{ secrets.SSH_PRIVATE_KEY }}
-          ENV_FILE_CONTENT: ${{ vars.ENV_FILE }}
+          # Secrets are masked in the log; vars are printed in full, so only
+          # non-secret settings may live in vars.
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          # GitHub reserves the GITHUB_ prefix for secret names
+          GITHUB_TOKEN: ${{ secrets.SPIELWOERTER_GITHUB_TOKEN }}
+          DEEPSEEK_API_KEY_SUGGESTIONS: ${{ secrets.DEEPSEEK_API_KEY_SUGGESTIONS }}
+          DEEPSEEK_API_KEY_VERIFICATION: ${{ secrets.DEEPSEEK_API_KEY_VERIFICATION }}
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          APPROVED_THIRD_PARTY_API_KEYS: ${{ secrets.APPROVED_THIRD_PARTY_API_KEYS }}
+          INBOUND_SECRET: ${{ secrets.INBOUND_SECRET }}
+          DISKUSSION_ADDRESS: ${{ secrets.DISKUSSION_ADDRESS }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MAILGUN_API_URL: ${{ vars.MAILGUN_API_URL }}
+          MAILGUN_DOMAIN: ${{ vars.MAILGUN_DOMAIN }}
+          MAILGUN_FROM: ${{ vars.MAILGUN_FROM }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          DATABASE_PATH: ${{ vars.DATABASE_PATH }}
+          SPIELWOERTER_GITHUB_REPO: ${{ vars.SPIELWOERTER_GITHUB_REPO }}
+          GCP_BACKUP_BUCKET: ${{ vars.GCP_BACKUP_BUCKET }}
+          SUGGESTIONS_LLM_PROVIDER: ${{ vars.SUGGESTIONS_LLM_PROVIDER }}
+          SUGGESTIONS_LLM_MODEL: ${{ vars.SUGGESTIONS_LLM_MODEL }}
         run: |
           if [[ -z "$SSH_PRIVATE_KEY_CONTENT" ]]; then
             echo "ERROR: SSH_PRIVATE_KEY secret is not set"
@@ -34,13 +54,28 @@ jobs:
           printf '%s\n' "$SSH_PRIVATE_KEY_CONTENT" > "$key_file"
           chmod 600 "$key_file"
           # Write .env first (rsync excludes it), so the restart in post_deploy.sh
-          # picks up a changed ENV_FILE in the same deploy.
-          if [[ -z "$ENV_FILE_CONTENT" ]]; then
-            echo "ERROR: ENV_FILE secret is not set"
-            exit 1
-          fi
+          # picks up changed secrets in the same deploy. Every key is required:
+          # a missing one fails the deploy rather than blanking it in prod.
+          ENV_KEYS=(
+            MAILGUN_API_KEY MAILGUN_API_URL MAILGUN_DOMAIN MAILGUN_FROM
+            SITE_URL DATABASE_PATH
+            SPIELWOERTER_GITHUB_REPO GITHUB_TOKEN
+            DEEPSEEK_API_KEY_SUGGESTIONS DEEPSEEK_API_KEY_VERIFICATION
+            GCP_SERVICE_ACCOUNT_KEY GCP_BACKUP_BUCKET
+            APPROVED_THIRD_PARTY_API_KEYS INBOUND_SECRET DISKUSSION_ADDRESS
+            ANTHROPIC_API_KEY SUGGESTIONS_LLM_PROVIDER SUGGESTIONS_LLM_MODEL
+          )
+          env_file="$RUNNER_TEMP/env"
+          : > "$env_file"
+          for k in "${ENV_KEYS[@]}"; do
+            if [[ -z "${!k}" ]]; then
+              echo "ERROR: $k is not set (secret or variable)"
+              exit 1
+            fi
+            printf '%s=%s\n' "$k" "${!k}" >> "$env_file"
+          done
           NAME=$(grep '^NAME=' app.config | cut -d= -f2-)
           SSH_OPTS=(-i "$key_file" -o StrictHostKeyChecking=accept-new)
-          printf '%s' "$ENV_FILE_CONTENT" | ssh "${SSH_OPTS[@]}" root@vps3.marekventur.com "cat > /var/www/$NAME/.env"
+          ssh "${SSH_OPTS[@]}" root@vps3.marekventur.com "cat > /var/www/$NAME/.env" < "$env_file"
           echo "=== .env written to VPS ==="
           ./deploy.sh "$key_file"
