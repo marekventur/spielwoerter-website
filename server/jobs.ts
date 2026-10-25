@@ -5,7 +5,8 @@ import { Storage } from "@google-cloud/storage";
 import { getDb } from "../lib/db.js";
 import { promoteEligibleDrafts } from "../lib/promotion.js";
 import { syncPull, syncPush } from "../lib/sync.js";
-import { sendDigestEmails } from "./mailgun.js";
+import { applyPermanentFailures } from "../lib/mail-limits.js";
+import { fetchPermanentFailures, sendDigestEmails } from "./mailgun.js";
 import { sweepUnmailedPosts } from "./topic-mail.js";
 
 // Jobs with external side effects (GitHub push, digest emails, GCS backup) must
@@ -53,6 +54,14 @@ export function startSyncJob() {
       await sweepUnmailedPosts(getDb());
     } catch (err) {
       console.error("[diskussion] Sweep error:", err instanceof Error ? err.message : err);
+    }
+
+    // Before the digest below, so this run already skips new hard bounces.
+    try {
+      const added = applyPermanentFailures(getDb(), await fetchPermanentFailures());
+      if (added > 0) console.log(`[mail] ${added} address(es) suppressed after permanent failures`);
+    } catch (err) {
+      console.error("[mail] Bounce poll error:", err instanceof Error ? err.message : err);
     }
 
     const githubRepo = process.env.SPIELWOERTER_GITHUB_REPO;

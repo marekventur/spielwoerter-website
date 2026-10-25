@@ -2,7 +2,14 @@ import { Router } from "express";
 import crypto from "crypto";
 import rateLimit from "express-rate-limit";
 import { getDb } from "../../lib/db.js";
+import {
+  claimDailyAlert,
+  maskEmail,
+  OTP_NEW_ADDRESSES_PER_DAY,
+  recordOtpRequest,
+} from "../../lib/mail-limits.js";
 import { sendOtpEmail } from "../mailgun.js";
+import { pushover } from "../pushover.js";
 
 export const authRouter = Router();
 
@@ -37,6 +44,29 @@ authRouter.post("/request-code", requestCodeLimiter, async (req, res) => {
   }
 
   const db = getDb();
+
+  const outcome = recordOtpRequest(db, email);
+  if (outcome !== "sent") {
+    console.warn("[auth] request-code capped, no mail sent", {
+      reason: outcome,
+      ip: req.ip,
+      email: maskEmail(email),
+    });
+    if (outcome === "global_cap" && claimDailyAlert(db, "otp_global_cap")) {
+      void pushover(
+        `Login codes to new addresses hit today's cap (${OTP_NEW_ADDRESSES_PER_DAY}). ` +
+          "Further codes to unknown addresses are dropped until midnight UTC. " +
+          "Likely bots submitting strangers' addresses: check the [auth] lines in the pm2 log."
+      );
+    }
+    // Indistinguishable from a real send, so the response cannot be used to
+    // probe which addresses have accounts. The jitter stands in for the
+    // Mailgun round-trip a real send would take. Any earlier code stays valid.
+    await new Promise((resolve) => setTimeout(resolve, 150 + Math.random() * 350));
+    res.json({ ok: true });
+    return;
+  }
+
   const code = String(crypto.randomInt(100000, 1000000));
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 

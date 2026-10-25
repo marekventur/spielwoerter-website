@@ -65,6 +65,10 @@ draft ──(idle, lib/promotion.ts job)──► pending_review ──► needs
 
 **Emails must never render in any UI, moderator pages included.** Every user has a screen name — `display_name` (unique, validated, no `@`) or the automatic `Besucher-<id>` (`lib/screen-name.ts`). The only exceptions: a user's own email on their own `/konto` page and NavBar, and the admin-only `/admin` user management. `lib/history.ts` builds the public event stream (suggestions + `word_comments`) for the word-page history expander and the `/aenderungen` changelog; its `forModerator` flag only reveals hidden comments.
 
+### Mail guards
+
+`lib/mail-limits.ts`. Login codes are capped at 5 per address per rolling 24 h and 30 per UTC day to addresses without an account (counted in `otp_requests`, so restarts don't reset them, and applied in every environment — dev sends codes through the production Mailgun domain). A capped request answers exactly like a real send. The first global-cap trip of the day pushes an alert (`server/pushover.ts`, production only, `PUSHOVER_TOKEN`/`PUSHOVER_USER`). `mailgunSend` drops mail to `mail_suppressions`; the hourly job fills that table from Mailgun's permanent failures, and `npm run mail:suppressions -- list|pull|add|remove` manages it by hand. Codes are only logged outside production. Tests that request more than 5 codes for one address in one test will hit the cap.
+
 ### Schema migrations
 
 `lib/schema.ts` runs on every startup: `CREATE TABLE IF NOT EXISTS` plus pragma-guarded `ALTER TABLE ADD COLUMN` blocks. Add new columns the same way. When adding a table with a foreign key, also add it to `cleanDb()` in `tests/helpers/seed.ts` *before* its referenced tables (FK delete order).
