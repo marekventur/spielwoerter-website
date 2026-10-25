@@ -23,7 +23,15 @@ if (DEVELOPMENT) {
       hmr: { server },
     },
   });
-  app.use(viteDevServer.middlewares);
+  // Vite serves anything under the project root: data/app.db, server.js,
+  // .env via `?raw`. dev.spielwoerter.de served all three publicly until
+  // 2026-10-25. Hand Vite only the paths a browser needs; everything else
+  // falls through to the app and 404s.
+  const VITE_PATH = /^\/(@vite\/|@id\/|@fs\/|@react-refresh|node_modules\/|app\/|lib\/)/;
+  app.use(express.static("public"));
+  app.use((req, res, next) =>
+    VITE_PATH.test(req.path) ? viteDevServer.middlewares(req, res, next) : next()
+  );
   app.use(async (req, res, next) => {
     try {
       const source = await viteDevServer.ssrLoadModule("./server/app.ts");
