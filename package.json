@@ -11,6 +11,7 @@
     "pm2:stop": "pm2 stop default-app",
     "pm2:restart": "pm2 restart default-app",
     "sync:pull": "tsx scripts/sync-pull.ts",
+    "mail:suppressions": "tsx scripts/mail-suppressions.ts",
     "test:e2e": "playwright test --config tests/playwright.config.ts"
   },
   "dependencies": {

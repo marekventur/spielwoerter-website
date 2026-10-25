@@ -118,6 +118,9 @@ export function cleanDb(): void {
   db.exec("DELETE FROM mcp_tokens");
   db.exec("DELETE FROM rejected_words");
   db.exec("DELETE FROM otp_codes");
+  db.exec("DELETE FROM otp_requests");
+  db.exec("DELETE FROM daily_alerts");
+  db.exec("DELETE FROM mail_suppressions");
   db.exec("DELETE FROM sessions");
   db.exec("DELETE FROM users");
   db.exec("DELETE FROM words");

@@ -1,4 +1,6 @@
 import type { DigestUser } from "../lib/sync.js";
+import { getDb } from "../lib/db.js";
+import { isSuppressed, maskEmail, type PermanentFailure } from "../lib/mail-limits.js";
 import { renderDigestHtml } from "./email-templates/digest.js";
 
 /**
@@ -30,6 +32,14 @@ async function mailgunSend(
   form: FormData,
   kind: MailKind = "broadcast"
 ): Promise<void> {
+  // Hard-bounced addresses (lib/mail-limits.ts). Treated as a success, so
+  // callers neither retry nor report it. The subject is left out of the log:
+  // a login code's subject contains the code.
+  if (isSuppressed(getDb(), to)) {
+    console.log(`[mail] Suppressed address, not sent (${kind}) → ${maskEmail(to)}`);
+    return;
+  }
+
   if (!mailEnabled(kind)) {
     console.log(`[mail] Skipped (${kind}, not production): "${subject}" → ${to}`);
     return;
@@ -92,9 +102,14 @@ export async function sendOtpEmail(email: string, code: string): Promise<void> {
   const siteUrl = process.env.SITE_URL || "https://spielwoerter.de";
   const isProduction = process.env.NODE_ENV === "production";
 
-  // Always log it too: without Mailgun credentials this is the only way in, and
-  // with them it is still the fastest way to log in on a dev box.
-  console.log(`[auth] OTP-Code für ${email}: ${code}`);
+  // Outside production, log the code: without Mailgun credentials this is the
+  // only way in, and with them it is still the fastest way to log in on a dev
+  // box. Never in production — anyone reading the log could log in as anyone.
+  if (isProduction) {
+    console.log(`[auth] OTP-Code angefordert für ${maskEmail(email)}`);
+  } else {
+    console.log(`[auth] OTP-Code für ${email}: ${code}`);
+  }
 
   if (!mailEnabled("transactional")) return;
 
@@ -117,6 +132,62 @@ export async function sendOtpEmail(email: string, code: string): Promise<void> {
   form.append("t:variables", JSON.stringify({ code, site_url: siteUrl }));
 
   await mailgunSend(email, subject, form, "transactional");
+}
+
+/**
+ * Permanent delivery failures of the last `days` days, from Mailgun's events
+ * API (read-only). Bounces only ever reach Mailgun, never this app, so the
+ * hourly job polls them into the suppression list (lib/mail-limits.ts).
+ */
+export async function fetchPermanentFailures(days = 7): Promise<PermanentFailure[]> {
+  const domain = process.env.MAILGUN_DOMAIN;
+  const apiKey = process.env.MAILGUN_API_KEY;
+  if (!domain || !apiKey) return [];
+
+  const apiUrl = process.env.MAILGUN_API_URL || "https://api.mailgun.net";
+  const begin = Math.floor(Date.now() / 1000) - days * 24 * 60 * 60;
+  const failures: PermanentFailure[] = [];
+  let url: string | undefined =
+    `${apiUrl}/v3/${domain}/events?event=failed&severity=permanent` +
+    `&begin=${begin}&ascending=yes&limit=300`;
+
+  // Bounded: a runaway pager must not stall the hourly job.
+  for (let page = 0; url && page < 20; page++) {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
+      },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) {
+      throw new Error(`Mailgun events ${response.status}: ${await response.text()}`);
+    }
+    const body = (await response.json()) as {
+      items: {
+        recipient?: string;
+        reason?: string;
+        message?: { headers?: Record<string, string> };
+        "delivery-status"?: { message?: string; description?: string; code?: number };
+      }[];
+      paging?: { next?: string };
+    };
+    if (body.items.length === 0) break;
+    for (const item of body.items) {
+      if (!item.recipient) continue;
+      const status = item["delivery-status"];
+      failures.push({
+        recipient: item.recipient,
+        reason: item.reason ?? "unknown",
+        messageId: item.message?.headers?.["message-id"] ?? "",
+        description: [status?.code, status?.message || status?.description]
+          .filter(Boolean)
+          .join(" ")
+          .trim(),
+      });
+    }
+    url = body.paging?.next;
+  }
+  return failures;
 }
 
 /**

@@ -123,6 +123,34 @@ export function initSchema(db: Database.Database): void {
     );
     CREATE INDEX IF NOT EXISTS idx_topic_posts_topic ON topic_posts(topic_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_topic_posts_msgid ON topic_posts(message_id);
+
+    -- Every login-code request and what became of it, for the per-address and
+    -- daily caps in lib/mail-limits.ts. Pruned after 7 days by the same code.
+    CREATE TABLE IF NOT EXISTS otp_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email_key TEXT NOT NULL,
+      has_account INTEGER NOT NULL,
+      outcome TEXT NOT NULL CHECK (outcome IN ('sent', 'address_cap', 'global_cap')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_otp_requests_key ON otp_requests(email_key, created_at);
+    CREATE INDEX IF NOT EXISTS idx_otp_requests_created ON otp_requests(created_at);
+
+    -- One row per (kind, UTC day) an owner alert went out: makes alerts once-a-day.
+    CREATE TABLE IF NOT EXISTS daily_alerts (
+      kind TEXT NOT NULL,
+      day TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (kind, day)
+    );
+
+    -- Addresses no mail is sent to any more (hard bounces). email = lower-cased.
+    CREATE TABLE IF NOT EXISTS mail_suppressions (
+      email TEXT PRIMARY KEY,
+      reason TEXT,
+      source TEXT NOT NULL CHECK (source IN ('mailgun', 'manual')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
   // Migrations: add columns if missing
