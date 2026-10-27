@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Link, redirect, useRevalidator, useSearchParams } from "react-router";
-import { Download, ExternalLink } from "lucide-react";
+import { Download } from "lucide-react";
 import {
   REVIEW_ENTRIES,
   reviewDecisions,
   reviewLetter,
   type Decision,
 } from "../../lib/pruefliste";
+import { formStates } from "../../lib/form-state";
+import { useLocalStorageChangeset } from "~/hooks/useLocalStorageChangeset";
+import { FormLine } from "~/components/ChangesetFormLine";
 import type { Route } from "./+types/pruefliste";
 import { upper } from "../../lib/normalise.js";
 
@@ -33,9 +36,14 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const letter = url.searchParams.get("b") ?? firstOpen;
   const openOnly = url.searchParams.get("alle") === null;
 
-  const rows = REVIEW_ENTRIES.filter((e) => reviewLetter(e.w) === letter).map((e) => ({
+  const entries = REVIEW_ENTRIES.filter((e) => reviewLetter(e.w) === letter);
+  // Live description/base from the words table (the snapshot's may be stale),
+  // editable on the page through the PowerEdit changeset.
+  const states = formStates(context.db, entries.map((e) => e.w), context.user.id);
+  const rows = entries.map((e) => ({
     ...e,
     decision: decisions.get(e.w) ?? null,
+    state: states.get(e.w)!,
   }));
 
   return {
@@ -84,6 +92,7 @@ export default function PrueflistePage({ loaderData }: Route.ComponentProps) {
   const revalidator = useRevalidator();
   const [local, setLocal] = useState<Record<string, Decision | null>>({});
   const [error, setError] = useState<string | null>(null);
+  const { changeset, setChangeset } = useLocalStorageChangeset(true);
 
   const decide = async (word: string, decision: Decision | null) => {
     setError(null);
@@ -125,7 +134,8 @@ export default function PrueflistePage({ loaderData }: Route.ComponentProps) {
       <p className="text-gray-500 mt-1">
         Grundformen, die nur in Wörterbüchern vorkommen, nicht in echten Texten. Behalten heißt: ihre
         langen Formen (10+ Buchstaben) werden ergänzt. Streichen heißt: das Wort kommt samt aller seiner
-        Formen auf die Sperrliste.
+        Formen auf die Sperrliste. Beschreibung und Grundform lassen sich über „Bearbeiten“ korrigieren;
+        die Änderungen werden wie in PowerEdit gesammelt und dort eingereicht.
       </p>
       <p className="text-sm text-gray-600 mt-3 mb-6">
         <strong>{decided}</strong> von {total} entschieden.{" "}
@@ -138,6 +148,17 @@ export default function PrueflistePage({ loaderData }: Route.ComponentProps) {
           Prüfliste ss/ß
         </Link>
       </p>
+
+      {changeset.size > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          <span>
+            {changeset.size} Änderung{changeset.size !== 1 ? "en" : ""} vorgemerkt (auch aus PowerEdit).
+          </span>
+          <Link to="/power-edit?tab=checkout" className="font-medium underline hover:no-underline">
+            In PowerEdit prüfen und einreichen
+          </Link>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-1 mb-4">
         {letters.map((l) => (
@@ -179,37 +200,10 @@ export default function PrueflistePage({ loaderData }: Route.ComponentProps) {
             return (
               <li key={e.w} className="py-3 flex items-start gap-4">
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-baseline gap-x-2">
-                    <Link
-                      to={`/wort/${encodeURIComponent(upper(e.w))}`}
-                      target="_blank"
-                      className="font-mono font-semibold text-gray-900 hover:text-orange-600"
-                    >
-                      {upper(e.w)}
-                    </Link>
-                    <a
-                      href={`https://www.duden.de/suchen/dudenonline/${encodeURIComponent(e.w)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-0.5 text-xs text-gray-400 hover:text-orange-600"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      Duden
-                    </a>
-                    <a
-                      href={`https://www.dwds.de/wb/${encodeURIComponent(e.w)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-0.5 text-xs text-gray-400 hover:text-orange-600"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      DWDS
-                    </a>
-                    {e.decision && !(e.w in local) && (
-                      <span className="text-xs text-gray-400">· {e.decision.decided_by}</span>
-                    )}
-                  </div>
-                  {e.d && <p className="text-sm text-gray-600 mt-0.5">{e.d}</p>}
+                  <FormLine word={e.w} state={e.state} changeset={changeset} setChangeset={setChangeset} />
+                  {e.decision && !(e.w in local) && (
+                    <p className="text-xs text-gray-400">entschieden von {e.decision.decided_by}</p>
+                  )}
                   <p className="text-xs text-gray-400 mt-1 break-words">{e.f.join(", ")}</p>
                 </div>
                 <DecisionButtons word={e.w} current={current} onDecide={(w, d) => void decide(w, d)} />
