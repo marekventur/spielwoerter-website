@@ -211,6 +211,128 @@ type ModerationChanges = {
   base?: string;
 };
 
+/** Inline "approve with changes" form; keeps its own field state (see editingId). */
+function EditForm({
+  item,
+  disabled,
+  onCancel,
+  onSubmit,
+}: {
+  item: ModerationItem;
+  disabled: boolean;
+  onCancel: () => void;
+  onSubmit: (changes: ModerationChanges) => void;
+}) {
+  const payload = item.payload ? (JSON.parse(item.payload) as Record<string, string>) : null;
+  const [word, setWord] = useState(item.word);
+  const [description, setDescription] = useState(
+    item.action === "change_description"
+      ? (payload?.description ?? item.current_description ?? "")
+      : (payload?.description ?? "")
+  );
+  const [base, setBase] = useState(payload?.base ?? item.base ?? "");
+  return (
+    <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+        <div className="w-40 shrink-0">
+          <label htmlFor={`mod-word-${item.id}`} className="mb-1 block text-xs font-medium text-gray-600">
+            Wort
+          </label>
+          <Input
+            id={`mod-word-${item.id}`}
+            value={word}
+            onChange={(e) => setWord(e.target.value)}
+            disabled={disabled}
+            className="w-full min-w-0 py-1.5 font-mono text-sm"
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <label htmlFor={`mod-desc-${item.id}`} className="mb-1 block text-xs font-medium text-gray-600">
+            Beschreibung
+          </label>
+          <Input
+            id={`mod-desc-${item.id}`}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            disabled={disabled}
+            className="w-full min-w-0 py-1.5 text-sm"
+          />
+        </div>
+        <div className="w-36 shrink-0">
+          <label htmlFor={`mod-base-${item.id}`} className="mb-1 block text-xs font-medium text-gray-600">
+            Grundform
+          </label>
+          <Input
+            id={`mod-base-${item.id}`}
+            value={base}
+            onChange={(e) => setBase(e.target.value)}
+            disabled={disabled}
+            className="w-full min-w-0 py-1.5 font-mono text-sm"
+          />
+        </div>
+      </div>
+      <div className="mt-3 flex justify-end gap-2">
+        <Button size="default" variant="outline" disabled={disabled} onClick={onCancel}>
+          Abbrechen
+        </Button>
+        <Button
+          size="default"
+          className="bg-green-600 hover:bg-green-700 text-white"
+          disabled={disabled}
+          onClick={() => onSubmit({ word, description, base })}
+        >
+          Mit Änderungen genehmigen
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Inline rejection prompt; keeps its own comment state (see rejectingId). */
+function RejectForm({
+  id,
+  disabled,
+  onCancel,
+  onSubmit,
+}: {
+  id: number;
+  disabled: boolean;
+  onCancel: () => void;
+  onSubmit: (comment: string) => void;
+}) {
+  const [comment, setComment] = useState("");
+  return (
+    <div className="mt-3 rounded-lg border border-red-100 bg-red-50/50 p-3">
+      <label htmlFor={`mod-reject-${id}`} className="mb-1 block text-xs font-medium text-gray-600">
+        Grund der Ablehnung (optional, nur für die einreichende Person sichtbar)
+      </label>
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          id={`mod-reject-${id}`}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          disabled={disabled}
+          placeholder="z. B. Eigenname, kein Duden-Eintrag …"
+          className="w-full min-w-0 flex-1 py-1.5 text-sm"
+        />
+        <div className="flex shrink-0 gap-2">
+          <Button size="default" variant="outline" disabled={disabled} onClick={onCancel}>
+            Abbrechen
+          </Button>
+          <Button
+            size="default"
+            className="bg-red-600 hover:bg-red-700 text-white"
+            disabled={disabled}
+            onClick={() => onSubmit(comment)}
+          >
+            Ablehnen
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ModerationPage({ loaderData }: Route.ComponentProps) {
   const { user, items: initialItems, recent, scheduledCount, moderators } = loaderData;
   const [decided, setDecided] = useState<Map<number, "approved" | "rejected">>(
@@ -220,14 +342,13 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
   const revalidator = useRevalidator();
 
   // Inline editor for "approve with changes"
+  // Only *which* row is being edited/rejected lives here. The typed text lives
+  // in EditForm/RejectForm, so a keystroke re-renders one form, not the whole
+  // queue (with a few hundred items that made typing crawl).
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editWord, setEditWord] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editBase, setEditBase] = useState("");
 
   // Inline comment prompt for rejections
   const [rejectingId, setRejectingId] = useState<number | null>(null);
-  const [rejectComment, setRejectComment] = useState("");
 
   const decide = async (
     ids: number[],
@@ -282,34 +403,13 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
   };
 
   const openEditor = (item: ModerationItem) => {
-    const payload = item.payload
-      ? (JSON.parse(item.payload) as Record<string, string>)
-      : null;
     setRejectingId(null);
     setEditingId(item.id);
-    setEditWord(item.word);
-    setEditDescription(
-      item.action === "change_description"
-        ? (payload?.description ?? item.current_description ?? "")
-        : (payload?.description ?? "")
-    );
-    setEditBase(payload?.base ?? item.base ?? "");
-  };
-
-  const approveWithChanges = (item: ModerationItem) => {
-    void decide([item.id], "approve", {
-      changes: {
-        word: editWord,
-        description: editDescription,
-        base: editBase,
-      },
-    });
   };
 
   const openRejectPrompt = (id: number) => {
     setEditingId(null);
     setRejectingId(id);
-    setRejectComment("");
   };
 
   const undo = async (id: number, source: "queue" | "recent") => {
@@ -613,116 +713,21 @@ export default function ModerationPage({ loaderData }: Route.ComponentProps) {
                           )}
 
                           {editingId === item.id && (
-                            <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                              <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
-                                <div className="w-40 shrink-0">
-                                  <label
-                                    htmlFor={`mod-word-${item.id}`}
-                                    className="mb-1 block text-xs font-medium text-gray-600"
-                                  >
-                                    Wort
-                                  </label>
-                                  <Input
-                                    id={`mod-word-${item.id}`}
-                                    value={editWord}
-                                    onChange={(e) => setEditWord(e.target.value)}
-                                    disabled={isLoading}
-                                    className="w-full min-w-0 py-1.5 font-mono text-sm"
-                                  />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <label
-                                    htmlFor={`mod-desc-${item.id}`}
-                                    className="mb-1 block text-xs font-medium text-gray-600"
-                                  >
-                                    Beschreibung
-                                  </label>
-                                  <Input
-                                    id={`mod-desc-${item.id}`}
-                                    value={editDescription}
-                                    onChange={(e) => setEditDescription(e.target.value)}
-                                    disabled={isLoading}
-                                    className="w-full min-w-0 py-1.5 text-sm"
-                                  />
-                                </div>
-                                <div className="w-36 shrink-0">
-                                  <label
-                                    htmlFor={`mod-base-${item.id}`}
-                                    className="mb-1 block text-xs font-medium text-gray-600"
-                                  >
-                                    Grundform
-                                  </label>
-                                  <Input
-                                    id={`mod-base-${item.id}`}
-                                    value={editBase}
-                                    onChange={(e) => setEditBase(e.target.value)}
-                                    disabled={isLoading}
-                                    className="w-full min-w-0 py-1.5 font-mono text-sm"
-                                  />
-                                </div>
-                              </div>
-                              <div className="mt-3 flex justify-end gap-2">
-                                <Button
-                                  size="default"
-                                  variant="outline"
-                                  disabled={isLoading}
-                                  onClick={() => setEditingId(null)}
-                                >
-                                  Abbrechen
-                                </Button>
-                                <Button
-                                  size="default"
-                                  className="bg-green-600 hover:bg-green-700 text-white"
-                                  disabled={isLoading}
-                                  onClick={() => approveWithChanges(item)}
-                                >
-                                  Mit Änderungen genehmigen
-                                </Button>
-                              </div>
-                            </div>
+                            <EditForm
+                              item={item}
+                              disabled={isLoading}
+                              onCancel={() => setEditingId(null)}
+                              onSubmit={(changes) => void decide([item.id], "approve", { changes })}
+                            />
                           )}
 
                           {rejectingId === item.id && (
-                            <div className="mt-3 rounded-lg border border-red-100 bg-red-50/50 p-3">
-                              <label
-                                htmlFor={`mod-reject-${item.id}`}
-                                className="mb-1 block text-xs font-medium text-gray-600"
-                              >
-                                Grund der Ablehnung (optional, nur für die einreichende Person sichtbar)
-                              </label>
-                              <div className="flex flex-wrap items-center gap-2">
-                                <Input
-                                  id={`mod-reject-${item.id}`}
-                                  value={rejectComment}
-                                  onChange={(e) => setRejectComment(e.target.value)}
-                                  disabled={isLoading}
-                                  placeholder="z. B. Eigenname, kein Duden-Eintrag …"
-                                  className="w-full min-w-0 flex-1 py-1.5 text-sm"
-                                />
-                                <div className="flex shrink-0 gap-2">
-                                  <Button
-                                    size="default"
-                                    variant="outline"
-                                    disabled={isLoading}
-                                    onClick={() => setRejectingId(null)}
-                                  >
-                                    Abbrechen
-                                  </Button>
-                                  <Button
-                                    size="default"
-                                    className="bg-red-600 hover:bg-red-700 text-white"
-                                    disabled={isLoading}
-                                    onClick={() =>
-                                      void decide([item.id], "reject", {
-                                        comment: rejectComment,
-                                      })
-                                    }
-                                  >
-                                    Ablehnen
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
+                            <RejectForm
+                              id={item.id}
+                              disabled={isLoading}
+                              onCancel={() => setRejectingId(null)}
+                              onSubmit={(comment) => void decide([item.id], "reject", { comment })}
+                            />
                           )}
                         </div>
                       );
