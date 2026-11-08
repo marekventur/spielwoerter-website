@@ -89,6 +89,34 @@ test("my suggestions page shows draft with Löschen button", async ({
   await expect(page.getByRole("button", { name: "Löschen" })).toBeVisible();
 });
 
+test("editing a draft saves the typed description; each draft opens with its own values", async ({
+  page,
+}) => {
+  const userId = seedUser(TEST_USER_EMAIL);
+  const first = seedSuggestion(userId, "erstentwurf", "add", "draft", { description: "Erste" });
+  const second = seedSuggestion(userId, "zweitentwurf", "add", "draft", { description: "Zweite" });
+  await loginAs(page, TEST_USER_EMAIL);
+  await page.goto("/meine-vorschlaege");
+  await page.waitForLoadState("networkidle");
+
+  const row = (word: string) => page.locator("tr", { hasText: word.toUpperCase() });
+  await row("zweitentwurf").getByRole("button", { name: "Entwurf bearbeiten" }).click();
+  await expect(page.locator(`#draft-desc-${second}`)).toHaveValue("Zweite");
+  await page.getByRole("button", { name: "Abbrechen" }).click();
+
+  await row("erstentwurf").getByRole("button", { name: "Entwurf bearbeiten" }).click();
+  await expect(page.locator(`#draft-desc-${first}`)).toHaveValue("Erste");
+  await page.locator(`#draft-desc-${first}`).fill("Erste, ergänzt");
+  await row("erstentwurf").getByRole("button", { name: "Bestätigen" }).click();
+
+  await expect
+    .poll(() => getTestDb().prepare("SELECT payload FROM suggestions WHERE id = ?").get(first))
+    .toEqual({ payload: expect.stringContaining('"description":"Erste, ergänzt"') });
+  expect(getTestDb().prepare("SELECT payload FROM suggestions WHERE id = ?").get(second)).toEqual({
+    payload: expect.stringContaining('"description":"Zweite"'),
+  });
+});
+
 test("delete draft removes it from my suggestions", async ({ page }) => {
   const userId = seedUser(TEST_USER_EMAIL);
   seedSuggestion(userId, "delword", "add", "draft");

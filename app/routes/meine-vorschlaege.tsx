@@ -264,6 +264,72 @@ export async function loader({ context }: Route.LoaderArgs) {
   return { user: context.user, suggestions };
 }
 
+/** Inline draft editor; keeps its own field state (see editingDraftId). */
+function DraftEditForm({
+  s,
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  s: Suggestion;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: (description: string, base: string) => void;
+}) {
+  const payload = parsePayload(s) ?? {};
+  const isChange = s.action === "change_description";
+  const [description, setDescription] = useState(
+    isChange ? (payload.description ?? s.word_description ?? "") : (payload.description ?? "")
+  );
+  const [base, setBase] = useState(isChange ? (payload.base ?? s.word_base ?? "") : (payload.base ?? ""));
+  return (
+    <div className="mt-3 flex flex-wrap items-end gap-x-3 gap-y-2">
+      <div className="min-w-0 flex-1">
+        <label htmlFor={`draft-desc-${s.id}`} className="mb-1 block text-xs font-medium text-gray-600">
+          Beschreibung
+        </label>
+        <Input
+          id={`draft-desc-${s.id}`}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          disabled={busy}
+          className="w-full min-w-0 py-1.5 text-sm"
+        />
+      </div>
+      <div className="w-36 shrink-0">
+        <label htmlFor={`draft-base-${s.id}`} className="mb-1 block text-xs font-medium text-gray-600">
+          Grundform
+        </label>
+        <Input
+          id={`draft-base-${s.id}`}
+          value={base}
+          onChange={(e) => setBase(e.target.value)}
+          disabled={busy}
+          className="w-full min-w-0 py-1.5 font-mono text-sm"
+        />
+      </div>
+      <div className="flex shrink-0 gap-2 pb-0.5 max-sm:w-full max-sm:justify-end">
+        <button
+          type="button"
+          className="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+          disabled={busy}
+          onClick={() => onConfirm(description, base)}
+        >
+          {busy ? "…" : "Bestätigen"}
+        </button>
+        <button
+          type="button"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+          disabled={busy}
+          onClick={onCancel}
+        >
+          Abbrechen
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function MeineVorschlaege({ loaderData }: Route.ComponentProps) {
   const { user, suggestions } = loaderData;
   const [deleting, setDeleting] = useState<number | null>(null);
@@ -272,9 +338,9 @@ export default function MeineVorschlaege({ loaderData }: Route.ComponentProps) {
   const [payloadOverrides, setPayloadOverrides] = useState<
     Record<number, string | null>
   >({});
+  // Only *which* draft is open lives here; the typed text lives in
+  // DraftEditForm, so a keystroke re-renders one form, not the whole list.
   const [editingDraftId, setEditingDraftId] = useState<number | null>(null);
-  const [editDescription, setEditDescription] = useState("");
-  const [editBase, setEditBase] = useState("");
 
   const withPayload = (s: Suggestion): Suggestion => ({
     ...s,
@@ -298,30 +364,16 @@ export default function MeineVorschlaege({ loaderData }: Route.ComponentProps) {
   };
 
   const openDraftEditor = (s: Suggestion) => {
-    const effective = withPayload(s);
-    const payload = parsePayload(effective) ?? {};
     setEditingDraftId(s.id);
-    setEditDescription(
-      s.action === "change_description"
-        ? (payload.description ?? s.word_description ?? "")
-        : (payload.description ?? "")
-    );
-    setEditBase(
-      s.action === "change_description"
-        ? (payload.base ?? s.word_base ?? "")
-        : (payload.base ?? "")
-    );
   };
 
   const cancelDraftEditor = () => {
     setEditingDraftId(null);
   };
 
-  const confirmDraftEdit = async (s: Suggestion) => {
+  const confirmDraftEdit = async (s: Suggestion, nextDesc: string, nextBaseRaw: string) => {
     const effective = withPayload(s);
     const payload = parsePayload(effective) ?? {};
-    const nextDesc = editDescription;
-    const nextBaseRaw = editBase;
     const baseNorm = nextBaseRaw.trim().toLowerCase();
 
     if (s.action === "change_description") {
@@ -435,56 +487,12 @@ export default function MeineVorschlaege({ loaderData }: Route.ComponentProps) {
                         <td className="py-2.5 px-3 align-top">
                           <SuggestionMainCell s={row} />
                           {editingDraftId === s.id && (
-                            <div className="mt-3 flex flex-wrap items-end gap-x-3 gap-y-2">
-                              <div className="min-w-0 flex-1">
-                                <label
-                                  htmlFor={`draft-desc-${s.id}`}
-                                  className="mb-1 block text-xs font-medium text-gray-600"
-                                >
-                                  Beschreibung
-                                </label>
-                                <Input
-                                  id={`draft-desc-${s.id}`}
-                                  value={editDescription}
-                                  onChange={(e) => setEditDescription(e.target.value)}
-                                  disabled={patching === s.id}
-                                  className="w-full min-w-0 py-1.5 text-sm"
-                                />
-                              </div>
-                              <div className="w-36 shrink-0">
-                                <label
-                                  htmlFor={`draft-base-${s.id}`}
-                                  className="mb-1 block text-xs font-medium text-gray-600"
-                                >
-                                  Grundform
-                                </label>
-                                <Input
-                                  id={`draft-base-${s.id}`}
-                                  value={editBase}
-                                  onChange={(e) => setEditBase(e.target.value)}
-                                  disabled={patching === s.id}
-                                  className="w-full min-w-0 py-1.5 font-mono text-sm"
-                                />
-                              </div>
-                              <div className="flex shrink-0 gap-2 pb-0.5 max-sm:w-full max-sm:justify-end">
-                                <button
-                                  type="button"
-                                  className="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-                                  disabled={patching === s.id}
-                                  onClick={() => void confirmDraftEdit(s)}
-                                >
-                                  {patching === s.id ? "…" : "Bestätigen"}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-                                  disabled={patching === s.id}
-                                  onClick={cancelDraftEditor}
-                                >
-                                  Abbrechen
-                                </button>
-                              </div>
-                            </div>
+                            <DraftEditForm
+                              s={row}
+                              busy={patching === s.id}
+                              onCancel={cancelDraftEditor}
+                              onConfirm={(desc, base) => void confirmDraftEdit(s, desc, base)}
+                            />
                           )}
                         </td>
                         <td className="py-2.5 px-2 align-top w-px">
