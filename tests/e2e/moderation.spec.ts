@@ -121,6 +121,36 @@ test("reject with comment stores reason and shows it to the submitter", async ({
   await expect(page.getByText("Kein Duden-Eintrag gefunden")).toBeVisible();
 });
 
+test("a typed rejection reason belongs to its row and starts empty for the next one", async ({
+  page,
+}) => {
+  seedUser(TEST_MOD_EMAIL, { isModerator: true });
+  const userId = seedUser(TEST_USER_EMAIL);
+  const first = seedSuggestion(userId, "erstwort", "add", "pending_review");
+  const second = seedSuggestion(userId, "zweitwort", "add", "pending_review");
+
+  await loginAs(page, TEST_MOD_EMAIL);
+  await page.goto("/moderation");
+  await page.waitForLoadState("networkidle");
+
+  const row = (word: string) => page.locator("div.px-5.py-4", { hasText: word.toUpperCase() });
+  await row("erstwort").getByRole("button", { name: "Ablehnen", exact: true }).click();
+  await page.locator(`#mod-reject-${first}`).fill("Nur für das erste Wort");
+  // Opening the prompt on another row closes the first and starts empty.
+  await row("zweitwort").getByRole("button", { name: "Ablehnen", exact: true }).first().click();
+  await expect(page.locator(`#mod-reject-${first}`)).toHaveCount(0);
+  await expect(page.locator(`#mod-reject-${second}`)).toHaveValue("");
+  await page.locator(`#mod-reject-${second}`).fill("Grund zwei");
+  await row("zweitwort").getByRole("button", { name: "Ablehnen", exact: true }).last().click();
+
+  await expect
+    .poll(() => getTestDb().prepare("SELECT moderation_comment FROM suggestions WHERE id = ?").get(second))
+    .toEqual({ moderation_comment: "Grund zwei" });
+  expect(
+    (getTestDb().prepare("SELECT status FROM suggestions WHERE id = ?").get(first) as { status: string }).status
+  ).toBe("pending_review");
+});
+
 test("approve with changes corrects the suggestion and records the original", async ({
   page,
 }) => {
