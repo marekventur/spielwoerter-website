@@ -67,7 +67,14 @@ authRouter.post("/request-code", requestCodeLimiter, async (req, res) => {
     return;
   }
 
-  const code = String(crypto.randomInt(100000, 1000000));
+  // dev.spielwoerter.de sends no mail, so it can fix every code to a known
+  // value. Only with NODE_ENV=development *and* DEV_LOGIN_CODE set; production
+  // never has both.
+  const devCode = process.env.DEV_LOGIN_CODE;
+  const code =
+    process.env.NODE_ENV === "development" && devCode && /^\d{6}$/.test(devCode)
+      ? devCode
+      : String(crypto.randomInt(100000, 1000000));
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
   db.prepare("DELETE FROM otp_codes WHERE email = ?").run(email);
