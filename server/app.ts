@@ -21,6 +21,7 @@ import { topicsRouter } from "./routes/topics.js";
 import { inboundRouter } from "./routes/inbound.js";
 import { prueflisteRouter } from "./routes/pruefliste.js";
 import { ssPrueflisteRouter } from "./routes/pruefliste-ss.js";
+import { neuesWortRouter } from "./routes/neues-wort.js";
 
 declare module "react-router" {
   interface AppLoadContext {
@@ -49,6 +50,7 @@ app.use("/api/word-comments", commentsRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/topics", topicsRouter);
 app.use("/api/pruefliste-ss", ssPrueflisteRouter);
+app.use("/api/neues-wort", neuesWortRouter);
 app.use("/api/pruefliste", prueflisteRouter);
 // Public endpoint: authenticated by a secret in the path, not by session.
 app.use("/api/inbound", inboundRouter);

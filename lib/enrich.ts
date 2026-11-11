@@ -248,6 +248,33 @@ export function llmOptionsFromEnv(): LlmOptions | null {
  * null" from "the call failed".
  */
 export async function llmSuggest(word: string, opts: LlmOptions): Promise<LlmSuggestResult> {
+  const { text, model, usage, stopReason } = await llmComplete(DEEPSEEK_SYSTEM_PROMPT, word, opts);
+
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  let suggestion: LlmSuggestion | null = null;
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[0]) as Partial<LlmSuggestion>;
+      if (parsed && typeof parsed.base === "string" && parsed.descriptions && typeof parsed.descriptions === "object") {
+        suggestion = { base: parsed.base, descriptions: parsed.descriptions };
+      }
+    } catch {
+      suggestion = null;
+    }
+  }
+  return { suggestion, raw: text, model, usage, stopReason };
+}
+
+/**
+ * One system + user round trip with whichever provider `opts` names. Throws
+ * on transport or HTTP errors (with `status` set for HTTP).
+ */
+export async function llmComplete(
+  system: string,
+  user: string,
+  opts: LlmOptions,
+  maxTokens = { anthropic: 4096, openai: 400 }
+): Promise<{ text: string; model: string; usage: LlmSuggestResult["usage"]; stopReason: string | null }> {
   let text = "";
   let model = opts.model;
   let usage = { input_tokens: 0, output_tokens: 0 };
@@ -257,9 +284,9 @@ export async function llmSuggest(word: string, opts: LlmOptions): Promise<LlmSug
     const client = new Anthropic(opts.apiKey ? { apiKey: opts.apiKey } : {});
     const res = await client.messages.create({
       model: opts.model,
-      max_tokens: 4096,
-      system: DEEPSEEK_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: word }],
+      max_tokens: maxTokens.anthropic,
+      system,
+      messages: [{ role: "user", content: user }],
       ...(opts.effort ? { output_config: { effort: opts.effort } } : {}),
     });
     text = res.content.filter((b) => b.type === "text").map((b) => b.text).join("");
@@ -277,10 +304,10 @@ export async function llmSuggest(word: string, opts: LlmOptions): Promise<LlmSug
       body: JSON.stringify({
         model: opts.model,
         temperature: 0.2,
-        max_tokens: 400,
+        max_tokens: maxTokens.openai,
         messages: [
-          { role: "system", content: DEEPSEEK_SYSTEM_PROMPT },
-          { role: "user", content: word },
+          { role: "system", content: system },
+          { role: "user", content: user },
         ],
         ...(opts.extraBody ?? {}),
       }),
@@ -301,20 +328,7 @@ export async function llmSuggest(word: string, opts: LlmOptions): Promise<LlmSug
     usage = { input_tokens: data.usage?.prompt_tokens ?? 0, output_tokens: data.usage?.completion_tokens ?? 0 };
     stopReason = data.choices?.[0]?.finish_reason ?? null;
   }
-
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  let suggestion: LlmSuggestion | null = null;
-  if (jsonMatch) {
-    try {
-      const parsed = JSON.parse(jsonMatch[0]) as Partial<LlmSuggestion>;
-      if (parsed && typeof parsed.base === "string" && parsed.descriptions && typeof parsed.descriptions === "object") {
-        suggestion = { base: parsed.base, descriptions: parsed.descriptions };
-      }
-    } catch {
-      suggestion = null;
-    }
-  }
-  return { suggestion, raw: text, model, usage, stopReason };
+  return { text, model, usage, stopReason };
 }
 
 export async function enrichWord(word: string): Promise<EnrichResult> {
