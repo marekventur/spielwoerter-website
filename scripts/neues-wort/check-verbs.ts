@@ -49,8 +49,8 @@ for (const r of list) {
 let totalGen = 0, totalHit = 0;
 for (const [infinitive, prefix, p1, p2, p3, prt, k2, part2, imp, adj, akk, pass] of SPECS) {
   const parts: VerbParts = {
-    infinitive, prefix, praesens1: p1, praesens2: p2, praesens3: p3, praeteritum: prt,
-    konjunktiv2: k2.split(","), partizip2: part2, imperativ: imp.split(","),
+    infinitive, prefix, praesens1: p1.split(","), praesens2: p2.split(","), praesens3: p3.split(","),
+    praeteritum: prt.split(","), konjunktiv2: k2.split(","), partizip2: part2.split(","), imperativ: imp.split(","),
     partizip2Adjektivisch: adj === 1, akkusativ: akk === 1, passiv: pass === 1,
   };
   const gen = generateVerbForms(parts);

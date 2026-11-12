@@ -19,15 +19,19 @@ export type VerbParts = {
   infinitive: string;
   /** Separable prefix ("auf"), or "" for none. Inseparable prefixes stay part of the verb. */
   prefix: string;
-  /** Without the separable prefix: "gebe", "gibst", "gibt", "gab". */
-  praesens1: string;
-  praesens2: string;
-  praesens3: string;
-  praeteritum: string;
+  /**
+   * Without the separable prefix: "gebe", "gibst", "gibt", "gab". Every key
+   * form is a list, since dictionaries give alternatives (fragst/frägst,
+   * fragte/frug, gewinkt/gewunken).
+   */
+  praesens1: string[];
+  praesens2: string[];
+  praesens3: string[];
+  praeteritum: string[];
   /** Without prefix; several when the dictionary lists alternatives (sönne, sänne). */
   konjunktiv2: string[];
   /** Full form, with prefix: "aufgegeben". */
-  partizip2: string;
+  partizip2: string[];
   /** Without prefix; several allowed (sieh, siehe). */
   imperativ: string[];
   /** Partizip II can be used as an adjective (transitive, or perfect with "sein"). */
@@ -103,16 +107,17 @@ export function generateVerbForms(p: VerbParts): GeneratedForm[] {
   // ("dass ich aufgebe"); that is what makes the joined finite forms valid.
 
   // Präsens
-  add(p.praesens1, `1. Pers. Sg. Präs. ${of}`);
+  for (const p1 of p.praesens1) add(p1, `1. Pers. Sg. Präs. ${of}`);
   if (el) {
     // wandere → wandre, wander (REGELN.md: -el/-er verbs)
     add(stem.slice(0, -2) + stem.slice(-1) + "e", `1. Pers. Sg. Präs. ${of} (e-Tilgung)`);
     add(stem, `1. Pers. Sg. Präs. ${of} (e-Tilgung)`);
-  } else if (mayDropFinalE(p.praesens1, kernelInf)) {
-    add(p.praesens1.slice(0, -1), `1. Pers. Sg. Präs. ${of} (e-Tilgung)`);
+  } else {
+    for (const p1 of p.praesens1)
+      if (mayDropFinalE(p1, kernelInf)) add(p1.slice(0, -1), `1. Pers. Sg. Präs. ${of} (e-Tilgung)`);
   }
-  add(p.praesens2, `2. Pers. Sg. Präs. ${of}`);
-  add(p.praesens3, `3. Pers. Sg. Präs. ${of}`);
+  for (const f of p.praesens2) add(f, `2. Pers. Sg. Präs. ${of}`);
+  for (const f of p.praesens3) add(f, `3. Pers. Sg. Präs. ${of}`);
   const pl2 = el ? stem + "t" : stem + (needsE(stem) ? "et" : "t");
   add(pl2, `2. Pers. Pl. Präs. / Imperativ Pl. ${of}`);
 
@@ -125,8 +130,8 @@ export function generateVerbForms(p: VerbParts): GeneratedForm[] {
   }
 
   // Präteritum
-  const t = p.praeteritum;
-  if (t) {
+  for (const t of p.praeteritum) {
+    if (!t) continue;
     add(t, `Prät. 1./3. Pers. Sg. ${of}`);
     if (t.endsWith("e")) {
       // weak and mixed verbs: machte, brachte
@@ -143,7 +148,9 @@ export function generateVerbForms(p: VerbParts): GeneratedForm[] {
     }
   }
 
-  // Konjunktiv II
+  // Konjunktiv II. "Weak" = every given Präteritum ends in -te (fragte
+  // alone is weak; fragte + frug is not, so früge gets its short forms).
+  const weak = p.praeteritum.length > 0 && p.praeteritum.every((t) => t.endsWith("te"));
   for (const k of p.konjunktiv2) {
     if (!k) continue;
     add(k, `Konj. II, 1./3. Pers. Sg. ${of}`);
@@ -155,7 +162,7 @@ export function generateVerbForms(p: VerbParts): GeneratedForm[] {
       add(k.slice(0, -1), `Konj. II, 1./3. Pers. Sg. ${of} (e-Tilgung)`);
       // sähst, gäbt, tätst — strong verbs only (weak and mixed ones have a
       // Präteritum in -te); no 2nd plural after d/t (fändst yes, fändt no)
-      if (!t.endsWith("te")) {
+      if (!weak) {
         add(k.slice(0, -1) + "st", `Konj. II, 2. Pers. Sg. ${of} (e-Tilgung)`);
         if (!/[dt]e$/.test(k)) add(k.slice(0, -1) + "t", `Konj. II, 2. Pers. Pl. ${of} (e-Tilgung)`);
       }
@@ -178,8 +185,8 @@ export function generateVerbForms(p: VerbParts): GeneratedForm[] {
   for (const s of ADJ_ENDINGS) add(p1Kernel + s, `dekl. Part. I ${of}`);
 
   // Partizip II (given in full, with prefix)
-  const p2 = p.partizip2;
-  if (p2) {
+  for (const p2 of p.partizip2) {
+    if (!p2) continue;
     add(p2, `Part. II ${of}`, false);
     // geschrien is ge-schri-en: its e belongs to "ie" and cannot go
     const p2Vowel = /[aeiouäöüy]h?en$/.test(p2) && !p2.endsWith("ien");
@@ -233,12 +240,12 @@ export function regularParts(infinitive: string, prefix = ""): VerbParts {
   return {
     infinitive,
     prefix,
-    praesens1: stem + "e",
-    praesens2: s ? stem + "t" : stem + e + "st",
-    praesens3: stem + e + "t",
-    praeteritum: prt,
+    praesens1: [stem + "e"],
+    praesens2: [s ? stem + "t" : stem + e + "st"],
+    praesens3: [stem + e + "t"],
+    praeteritum: [prt],
     konjunktiv2: [prt],
-    partizip2: prefix + ge + stem + e + "t",
+    partizip2: [prefix + ge + stem + e + "t"],
     imperativ: el ? [stem.slice(0, -2) + stem.slice(-1) + "e", stem] : e ? [stem + "e"] : [stem, stem + "e"],
     partizip2Adjektivisch: true,
     akkusativ: false,

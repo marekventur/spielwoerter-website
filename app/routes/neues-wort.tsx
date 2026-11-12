@@ -55,6 +55,30 @@ function YesNo({ value, onChange, label }: { value: boolean; onChange: (v: boole
   );
 }
 
+/**
+ * One key form, or several separated by commas ("fragst, frägst"). Keeps the
+ * typed text so a trailing comma survives, and resyncs when a new suggestion
+ * replaces the value from outside.
+ */
+function ListField({ label, display, value, onChange }: {
+  label: string; display?: string; value: string[]; onChange: (v: string[]) => void;
+}) {
+  const [text, setText] = useState(value.join(", "));
+  const joined = value.join(",");
+  useEffect(() => {
+    if (list(text).join(",") !== joined) setText(value.join(", "));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [joined]);
+  const bad = list(text).filter((w) => !/^[a-zäöüß]+$/.test(w));
+  return (
+    <Field label={display ?? label}>
+      <input aria-label={label} className={input} value={text}
+        onChange={(e) => { setText(e.target.value); onChange(list(e.target.value)); }} />
+      {bad.length > 0 && <span className="text-xs text-red-600">Nur Buchstaben: {bad.join(", ")}</span>}
+    </Field>
+  );
+}
+
 /** The key forms a moderator confirms; everything else is generated from them. */
 function VerbFields({ v, onChange }: { v: VerbParts; onChange: (v: VerbParts) => void }) {
   const set = (patch: Partial<VerbParts>) => onChange({ ...v, ...patch });
@@ -72,42 +96,28 @@ function VerbFields({ v, onChange }: { v: VerbParts; onChange: (v: VerbParts) =>
       </div>
       <p className="text-xs text-gray-500">
         Die folgenden Formen {sep ? <>ohne die Vorsilbe „{P}“</> : null} eingeben, so wie im Wörterbuch.
+        Nebenformen mit Komma trennen (fragst, frägst).
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Field label="ich (Präsens)">
-          <input aria-label="ich (Präsens)" className={input} value={v.praesens1} onChange={(e) => set({ praesens1: e.target.value.trim().toLowerCase() })} />
-        </Field>
-        <Field label="du (Präsens)">
-          <input aria-label="du (Präsens)" className={input} value={v.praesens2} onChange={(e) => set({ praesens2: e.target.value.trim().toLowerCase() })} />
-        </Field>
-        <Field label="er/sie/es (Präsens)">
-          <input aria-label="er/sie/es (Präsens)" className={input} value={v.praesens3} onChange={(e) => set({ praesens3: e.target.value.trim().toLowerCase() })} />
-        </Field>
-        <Field label="ich/er (Präteritum)">
-          <input aria-label="ich/er (Präteritum)" className={input} value={v.praeteritum} onChange={(e) => set({ praeteritum: e.target.value.trim().toLowerCase() })} />
-        </Field>
-        <Field label="ich/er (Konjunktiv II)" hint="mehrere mit Komma">
-          <input aria-label="ich/er (Konjunktiv II)" className={input} defaultValue={v.konjunktiv2.join(", ")}
-            key={`k-${v.infinitive}`} onChange={(e) => set({ konjunktiv2: list(e.target.value) })} />
-        </Field>
-        <Field label="Imperativ Singular" hint="mehrere mit Komma">
-          <input aria-label="Imperativ Singular" className={input} defaultValue={v.imperativ.join(", ")}
-            key={`i-${v.infinitive}`} onChange={(e) => set({ imperativ: list(e.target.value) })} />
-        </Field>
-        <Field label={`Partizip II${sep ? " (mit Vorsilbe)" : ""}`}>
-          <input aria-label="Partizip II" className={input} value={v.partizip2} onChange={(e) => set({ partizip2: e.target.value.trim().toLowerCase() })} />
-        </Field>
+        <ListField label="ich (Präsens)" value={v.praesens1} onChange={(praesens1) => set({ praesens1 })} />
+        <ListField label="du (Präsens)" value={v.praesens2} onChange={(praesens2) => set({ praesens2 })} />
+        <ListField label="er/sie/es (Präsens)" value={v.praesens3} onChange={(praesens3) => set({ praesens3 })} />
+        <ListField label="ich/er (Präteritum)" value={v.praeteritum} onChange={(praeteritum) => set({ praeteritum })} />
+        <ListField label="ich/er (Konjunktiv II)" value={v.konjunktiv2} onChange={(konjunktiv2) => set({ konjunktiv2 })} />
+        <ListField label="Imperativ Singular" value={v.imperativ} onChange={(imperativ) => set({ imperativ })} />
+        <ListField label="Partizip II" display={`Partizip II${sep ? " (mit Vorsilbe)" : ""}`} value={v.partizip2}
+          onChange={(partizip2) => set({ partizip2 })} />
       </div>
 
       <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
         <div className="flex items-center justify-between gap-4 px-3 py-2">
           <span className="text-sm text-gray-700">
-            Akkusativobjekt: Ergibt „Wen oder was {v.praesens1 || "…"} ich{sep ? ` ${P}` : ""}?“ einen Sinn?
+            Akkusativobjekt: Ergibt „Wen oder was {v.praesens1[0] || "…"} ich{sep ? ` ${P}` : ""}?“ einen Sinn?
           </span>
           <YesNo label="Akkusativobjekt" value={v.akkusativ} onChange={(akkusativ) => set({ akkusativ })} />
         </div>
         <div className="flex items-center justify-between gap-4 px-3 py-2">
-          <span className="text-sm text-gray-700">Passiv: Ergibt „Ich werde {v.partizip2 || "…"}.“ einen Sinn?</span>
+          <span className="text-sm text-gray-700">Passiv: Ergibt „Ich werde {v.partizip2[0] || "…"}.“ einen Sinn?</span>
           <YesNo label="Passiv" value={v.passiv} onChange={(passiv) => set({ passiv })} />
         </div>
         <div className="flex items-center justify-between gap-4 px-3 py-2">
