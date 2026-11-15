@@ -186,3 +186,17 @@ test("permanent failures: a bounce suppresses at once, anything else needs two m
   const row = db.prepare("SELECT source, reason FROM mail_suppressions WHERE email = 'twice@example.test'").get();
   expect(row).toEqual({ source: "mailgun", reason: "generic: 550 5.7.1 Relaying denied" });
 });
+
+test("a blocklisted sending IP never suppresses the recipient", () => {
+  const db = getTestDb();
+  const rbl =
+    "554 5.7.1 Service unavailable; Client host [161.38.204.225] blocked by RBL; " +
+    "Blocked - see https://www.spamcop.net/bl.shtml?161.38.204.225";
+  const fail = (reason: string, messageId: string, description = rbl) => ({
+    recipient: "moderator@example.test", reason, messageId, description,
+  });
+  // Two generic failures and even a "bounce" with this text: still not the recipient's fault.
+  expect(applyPermanentFailures(db, [fail("generic", "m1"), fail("generic", "m2"), fail("bounce", "m3")])).toBe(0);
+  expect(isSuppressed(db, "moderator@example.test")).toBe(false);
+  expect(applyPermanentFailures(db, [fail("generic", "m4", "550 5.2.2 Mailbox full"), fail("generic", "m5", "550 5.2.2 Mailbox full")])).toBe(1);
+});

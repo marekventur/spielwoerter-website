@@ -145,6 +145,20 @@ export type PermanentFailure = {
 const SUPPRESS_ON_FIRST = new Set(["bounce", "suppress-bounce", "suppress-complaint"]);
 
 /**
+ * Rejections because of the *sending* server's reputation: Mailgun's shared
+ * IP on a DNS blocklist ("Client host [161.38.204.225] blocked by RBL ...
+ * spamcop"). They say nothing about the recipient and clear up on their own,
+ * so they never suppress, whatever Mailgun calls them (seen November 2026:
+ * one such rejection silenced an account's login codes for a week).
+ */
+const SENDER_REPUTATION =
+  /\b(RBL|DNSBL|block-?list(ed)?|black-?list(ed)?|spamcop|spamhaus|barracuda|sorbs)\b|client host \[[^\]]*\] blocked/i;
+
+export function isSenderReputationBlock(description: string): boolean {
+  return SENDER_REPUTATION.test(description);
+}
+
+/**
  * Turn permanent failures into suppressions. Anything Mailgun calls a bounce
  * suppresses at once; any other permanent failure (e.g. "550 Relaying denied",
  * which Mailgun files as `generic` and keeps retrying on every digest) needs
@@ -157,6 +171,7 @@ export function applyPermanentFailures(
 ): number {
   const byAddress = new Map<string, { messages: Set<string>; first: boolean; reason: string }>();
   for (const f of failures) {
+    if (isSenderReputationBlock(f.description)) continue;
     const email = f.recipient.trim().toLowerCase();
     const entry = byAddress.get(email) ?? { messages: new Set(), first: false, reason: "" };
     entry.messages.add(f.messageId);
