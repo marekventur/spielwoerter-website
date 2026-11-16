@@ -150,10 +150,11 @@ export function generateVerbForms(p: VerbParts): GeneratedForm[] {
 
   // Konjunktiv II. Decided per form, not per verb, since a verb can have both
   // (backte/buk → backte/büke): a Konj. II identical to a given Präteritum is
-  // weak (backte) and gets no e-Tilgung; one in -te next to a -te Präteritum is
-  // mixed (brächte/brachte) and keeps only "brächt"; strong forms (büke, täte)
-  // also get the short 2nd persons (bükst, tätst).
-  const tePraet = p.praeteritum.some((t) => t.endsWith("te"));
+  // weak (backte) and gets no e-Tilgung; one in -te of a verb whose every
+  // Präteritum is in -te is mixed (brächte/brachte) and keeps only "brächt";
+  // strong forms (büke, täte, and sötte next to siedete/sott) also get the
+  // short 2nd persons (bükst, tätst, söttst).
+  const allTePraet = p.praeteritum.length > 0 && p.praeteritum.every((t) => t.endsWith("te"));
   for (const k of p.konjunktiv2) {
     if (!k) continue;
     add(k, `Konj. II, 1./3. Pers. Sg. ${of}`);
@@ -162,7 +163,7 @@ export function generateVerbForms(p: VerbParts): GeneratedForm[] {
     add(base + "n", `Konj. II, Pl. ${of}`);
     add(base + "t", `Konj. II, 2. Pers. Pl. ${of}`);
     const weakForm = p.praeteritum.includes(k);
-    const mixedForm = !weakForm && k.endsWith("te") && tePraet;
+    const mixedForm = !weakForm && k.endsWith("te") && allTePraet;
     if (!weakForm && k.endsWith("e") && mayDropFinalE(k, kernelInf)) {
       add(k.slice(0, -1), `Konj. II, 1./3. Pers. Sg. ${of} (e-Tilgung)`);
       // no 2nd plural after d/t (fändst yes, fändt no)

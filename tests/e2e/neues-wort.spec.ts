@@ -60,14 +60,19 @@ test("alternative key forms all generate their paradigm (fragst / frägst, fragt
 });
 
 test("weak and strong Konjunktiv II side by side (backte / büke): no e-Tilgung on the weak one", () => {
-  for (const [inf, prefix] of [["backen", ""], ["durchbacken", ""]] as const) {
-    const pre = inf.slice(0, -6);
-    const g = words({ ...regularParts(inf, prefix), praesens2: [pre + "backst", pre + "bäckst"],
-      praesens3: [pre + "backt", pre + "bäckt"], praeteritum: [pre + "backte", pre + "buk"],
-      konjunktiv2: [pre + "backte", pre + "büke"], partizip2: [inf === "backen" ? "gebacken" : "durchgebacken"] });
-    for (const w of ["backtest", "bükest", "bükst", "büke"]) expect(g, w).toContain(pre + w);
-    expect(g).not.toContain(pre + "backtst");
-  }
+  const backen = { praesens2: ["backst", "bäckst"], praesens3: ["backt", "bäckt"], praeteritum: ["backte", "buk"],
+    konjunktiv2: ["backte", "büke"] };
+  const g = words({ ...regularParts("backen"), ...backen, partizip2: ["gebacken"] });
+  for (const w of ["backtest", "bükest", "bükst", "büke"]) expect(g, w).toContain(w);
+  expect(g).not.toContain("backtst");
+  // separable (key forms without the prefix): joined and separated forms alike
+  const auf = words({ ...regularParts("aufbacken", "auf"), ...backen, partizip2: ["aufgebacken"] });
+  for (const w of ["aufbacktest", "aufbükst", "backtest", "bükst", "aufgebacken"]) expect(auf, w).toContain(w);
+  expect(auf).not.toContain("aufbacktst");
+  expect(auf).not.toContain("backtst");
+  // a strong -te Konj. II next to a weak alternative is not "mixed": sötte → söttst
+  expect(words({ ...regularParts("sieden"), praeteritum: ["siedete", "sott"], konjunktiv2: ["siedete", "sötte"],
+    partizip2: ["gesotten"] })).toContain("söttst");
   // mixed verbs keep only the 1st/3rd person short form: brächt, not brächtst
   const bringen = words({ ...regularParts("bringen"), praeteritum: ["brachte"], konjunktiv2: ["brächte"], partizip2: ["gebracht"] });
   expect(bringen).toContain("brächt");
