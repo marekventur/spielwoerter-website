@@ -19,30 +19,43 @@ export const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ESCAPES[c]
 
 const LINK_ATTRS = 'target="_blank" rel="noopener noreferrer nofollow ugc" referrerpolicy="no-referrer"';
 
-/** The href if it is safe to link, else null. Entities are decoded first so "&#106;avascript:" can't slip by. */
-function safeHref(href: string): string | null {
+/**
+ * Whether an href may be linked: http(s) or mailto. Entities are decoded for
+ * the check only, so "&#106;avascript:" can't slip by; the link itself keeps
+ * the address exactly as written.
+ */
+function isSafeHref(href: string): boolean {
   const decoded = href
     .replace(/&#x([0-9a-f]+);?/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
     .replace(/&#(\d+);?/g, (_, d) => String.fromCharCode(Number(d)))
     .replace(/&amp;/g, "&")
     .trim();
-  return /^(https?:\/\/|mailto:)/i.test(decoded) ? decoded : null;
+  return /^(https?:\/\/|mailto:)/i.test(decoded);
 }
 
-function anchor(href: string | null, innerHtml: string, title?: string | null): string {
-  if (!href) return innerHtml;
+function anchor(href: string, innerHtml: string, title?: string | null): string {
+  if (!isSafeHref(href)) return innerHtml;
   const t = title ? ` title="${escapeHtml(title)}"` : "";
-  return `<a href="${escapeHtml(href)}"${t} ${LINK_ATTRS}>${innerHtml}</a>`;
+  return `<a href="${escapeHtml(href.trim())}"${t} ${LINK_ATTRS}>${innerHtml}</a>`;
 }
 
 const md = new Marked({ gfm: true, breaks: true, async: false });
 md.use({
-  // No underlined (setext) headings: a "--" signature line under "Viele Grüße"
-  // would turn the greeting into a heading. "# Überschrift" still works.
-  // Returning undefined (not false, which falls back) skips the tokenizer.
   tokenizer: {
+    // No underlined (setext) headings: a "--" signature line under "Viele Grüße"
+    // would turn the greeting into a heading. "# Überschrift" still works.
+    // Returning undefined (not false, which falls back) skips the tokenizer.
     lheading() {
       return undefined;
+    },
+    // A single "*" is always literal: posts here use it for footnotes "(*)",
+    // gender stars "Moderator*innen" and wildcards "ge*t", which Markdown would
+    // turn into italics. Italics are "_kursiv_"; "**fett**" still works.
+    emStrong(src: string) {
+      // A plain text token is what marked would emit for a literal "*"; its
+      // types only allow Em/Strong from this tokenizer, hence the cast.
+      if (src[0] === "*" && src[1] !== "*") return { type: "text", raw: "*", text: "*" } as unknown as Tokens.Em;
+      return false;
     },
   },
   renderer: {
@@ -50,11 +63,12 @@ md.use({
       return escapeHtml(token.text);
     },
     link(token: Tokens.Link) {
-      return anchor(safeHref(token.href), this.parser.parseInline(token.tokens), token.title);
+      // An image inside a link is itself a link here: keep one, not nested <a>s.
+      const inner = this.parser.parseInline(token.tokens).replace(/<\/?a\b[^>]*>/g, "");
+      return anchor(token.href, inner, token.title);
     },
     image(token: Tokens.Image) {
-      const label = escapeHtml(token.text || token.href);
-      return anchor(safeHref(token.href), `🖼 ${label}`, token.title);
+      return anchor(token.href, `🖼 ${escapeHtml(token.text || token.href)}`, token.title);
     },
   },
 });
@@ -63,17 +77,32 @@ export function markdownToHtml(body: string): string {
   return md.parse(body) as string;
 }
 
-// Bare URL; trailing punctuation that usually ends a sentence is not part of it.
-const URL_RE = /\bhttps?:\/\/[^\s<>"]+[^\s<>".,;:!?)\]'»“]/gi;
+const URL_RE = /\bhttps?:\/\/[^\s<>"]+/gi;
+
+/**
+ * A matched URL without the sentence punctuation after it. A closing bracket
+ * stays when the URL opened one (…/wiki/Bank_(Möbel)), otherwise it ends the URL.
+ */
+function trimUrl(url: string): string {
+  for (;;) {
+    const last = url.at(-1)!;
+    const count = (c: string) => url.split(c).length - 1;
+    if (/[.,;:!?'"»“]/.test(last)) url = url.slice(0, -1);
+    else if (last === ")" && count(")") > count("(")) url = url.slice(0, -1);
+    else if (last === "]" && count("]") > count("[")) url = url.slice(0, -1);
+    else return url;
+  }
+}
 
 /** Plain text with its URLs linked; newlines are kept by the caller's CSS. */
 export function plainTextToHtml(body: string): string {
   let out = "";
   let last = 0;
   for (const m of body.matchAll(URL_RE)) {
+    const url = trimUrl(m[0]);
     out += escapeHtml(body.slice(last, m.index));
-    out += anchor(safeHref(m[0]), escapeHtml(m[0]));
-    last = m.index! + m[0].length;
+    out += anchor(url, escapeHtml(url));
+    last = m.index! + url.length;
   }
   return out + escapeHtml(body.slice(last));
 }

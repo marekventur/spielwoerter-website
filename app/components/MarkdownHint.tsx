@@ -2,7 +2,7 @@
 export function MarkdownHint() {
   return (
     <p className="text-xs text-gray-400 mt-1">
-      Formatierung mit Markdown: **fett**, *kursiv*, [Linktext](https://…), Listen mit „- “, Zitate mit „&gt; “.
+      Formatierung mit Markdown: **fett**, _kursiv_, [Linktext](https://…), Listen mit „- “, Zitate mit „&gt; “.
       Links werden automatisch erkannt.
     </p>
   );

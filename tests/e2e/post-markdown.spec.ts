@@ -14,7 +14,7 @@ const REL = 'rel="noopener noreferrer nofollow ugc"';
 
 test("web posts: Markdown, autolinks without referrer, no raw HTML or unsafe links", () => {
   const html = postToHtml(
-    "**fett** und *kursiv*\nzweite Zeile\n\n- eins\n\nSiehe https://www.dwds.de/wb/backen. Und [Duden](https://www.duden.de/x)!",
+    "**fett** und _kursiv_\nzweite Zeile\n\n- eins\n\nSiehe https://www.dwds.de/wb/backen. Und [Duden](https://www.duden.de/x)!",
     "web"
   );
   expect(html).toContain("<strong>fett</strong>");
@@ -35,11 +35,26 @@ test("web posts: Markdown, autolinks without referrer, no raw HTML or unsafe lin
   expect(img).not.toContain("<img");
   expect(img).toContain('href="https://example.com/a.png"');
 
+  // single asterisks stay literal: footnotes, gender stars, wildcards
+  for (const s of ["söge (*)\nsögest (*)", "Moderator*innen und Leser*innen", "ge*t und ver*t"])
+    expect(postToHtml(s, "web"), s).not.toContain("<em>");
+  expect(postToHtml("auf_hören", "web")).not.toContain("<em>");
+
+  // an image inside a link is one link, not nested anchors
+  expect(postToHtml("[![Bild](https://e.x/a.png)](https://e.x/)", "web").match(/<a /g)).toHaveLength(1);
+
   // a "--" signature line does not turn the greeting into a heading
   expect(postToHtml("Viele Grüße\n--\nJojo", "web")).not.toContain("<h2>");
 });
 
 test("email posts stay plain text with linked URLs", () => {
+  // a URL may end in a bracket it opened, but not in one around it
+  const wiki = postToHtml("(siehe https://de.wikipedia.org/wiki/Bank_(Möbel)).", "email");
+  expect(wiki).toContain('href="https://de.wikipedia.org/wiki/Bank_(Möbel)"');
+  expect(wiki).toContain("</a>).");
+  // the link is the address as written, not an entity-decoded variant
+  expect(postToHtml("https://x.de/?a=1&amp;b=2", "email")).toContain('href="https://x.de/?a=1&amp;amp;b=2"');
+
   const html = postToHtml("Hallo *alle*,\n> zitiert\nsiehe https://dwds.de/wb/x. <b>", "email");
   expect(html).toContain("Hallo *alle*,\n&gt; zitiert");
   expect(html).toContain(`<a href="https://dwds.de/wb/x" target="_blank" ${REL}`);
