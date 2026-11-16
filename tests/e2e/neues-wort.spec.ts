@@ -59,6 +59,23 @@ test("alternative key forms all generate their paradigm (fragst / frägst, fragt
   expect(words({ ...regularParts("fragen"), praesens2: ["fragst", "fräg st"] })).toContain("fragst");
 });
 
+test("weak and strong Konjunktiv II side by side (backte / büke): no e-Tilgung on the weak one", () => {
+  for (const [inf, prefix] of [["backen", ""], ["durchbacken", ""]] as const) {
+    const pre = inf.slice(0, -6);
+    const g = words({ ...regularParts(inf, prefix), praesens2: [pre + "backst", pre + "bäckst"],
+      praesens3: [pre + "backt", pre + "bäckt"], praeteritum: [pre + "backte", pre + "buk"],
+      konjunktiv2: [pre + "backte", pre + "büke"], partizip2: [inf === "backen" ? "gebacken" : "durchgebacken"] });
+    for (const w of ["backtest", "bükest", "bükst", "büke"]) expect(g, w).toContain(pre + w);
+    expect(g).not.toContain(pre + "backtst");
+  }
+  // mixed verbs keep only the 1st/3rd person short form: brächt, not brächtst
+  const bringen = words({ ...regularParts("bringen"), praeteritum: ["brachte"], konjunktiv2: ["brächte"], partizip2: ["gebracht"] });
+  expect(bringen).toContain("brächt");
+  expect(bringen).not.toContain("brächtst");
+  // strong in -te: täte → tätst
+  expect(words({ ...regularParts("tun"), praeteritum: ["tat"], konjunktiv2: ["täte"], partizip2: ["getan"] })).toContain("tätst");
+});
+
 test("non-moderators cannot use the new-word API", async ({ request }) => {
   cleanDb();
   seedUser(TEST_USER_EMAIL);
