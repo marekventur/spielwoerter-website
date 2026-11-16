@@ -15,6 +15,16 @@ import type Database from "better-sqlite3";
 export const MAX_TOPIC_TITLE_LENGTH = 150;
 /** Web posts only. Inbound mail is deliberately not truncated. */
 export const MAX_POST_LENGTH = 10_000;
+
+/**
+ * Mail replies have no form to enforce the length, so they are cut to the same
+ * limit as web posts, marked as shortened. Keeps one crafted mail from making
+ * its thread slow to render.
+ */
+export function clampMailBody(text: string): string {
+  const note = "\n\n[… gekürzt]";
+  return text.length > MAX_POST_LENGTH ? text.slice(0, MAX_POST_LENGTH - note.length) + note : text;
+}
 /** Word threads (lib/conversations.ts), web and mail. */
 export const MAX_MESSAGE_LENGTH = 5000;
 
