@@ -13,6 +13,7 @@
  *   thread), they become a link to the image.
  */
 import { Marked, type Tokens } from "marked";
+import { MAX_POST_LENGTH } from "./topics.js";
 
 const ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 export const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ESCAPES[c]);
@@ -73,25 +74,46 @@ md.use({
   },
 });
 
+// marked recurses once per quote level; thousands of "> > > …" overflow the
+// stack. Nobody quotes more than a few levels deep, so cap the run at 10.
+const DEEP_QUOTE = /^((?:[ \t]*>){10})(?:[ \t]*>)+/gm;
+
 export function markdownToHtml(body: string): string {
-  return md.parse(body) as string;
+  try {
+    return md.parse(body.replace(DEEP_QUOTE, "$1")) as string;
+  } catch (e) {
+    // Any other input marked can't handle must not take the thread page down.
+    console.warn("[post-markdown] falling back to plain text:", e instanceof Error ? e.message : e);
+    return plainTextToHtml(body);
+  }
 }
 
-const URL_RE = /\bhttps?:\/\/[^\s<>"]+/gi;
+// Bounded, so a crafted mail can't make one "URL" arbitrarily long.
+const URL_RE = /\bhttps?:\/\/[^\s<>"]{1,2000}/gi;
 
 /**
  * A matched URL without the sentence punctuation after it. A closing bracket
- * stays when the URL opened one (…/wiki/Bank_(Möbel)), otherwise it ends the URL.
+ * stays when the URL opened one (…/wiki/Bank_(Möbel)), otherwise it ends the
+ * URL. Brackets are counted once and adjusted while trimming, so this stays
+ * linear however many brackets trail the URL.
  */
 function trimUrl(url: string): string {
-  for (;;) {
-    const last = url.at(-1)!;
-    const count = (c: string) => url.split(c).length - 1;
-    if (/[.,;:!?'"»“]/.test(last)) url = url.slice(0, -1);
-    else if (last === ")" && count(")") > count("(")) url = url.slice(0, -1);
-    else if (last === "]" && count("]") > count("[")) url = url.slice(0, -1);
-    else return url;
+  let open = 0, closeParen = 0, openSq = 0, closeSq = 0;
+  for (const c of url) {
+    if (c === "(") open++;
+    else if (c === ")") closeParen++;
+    else if (c === "[") openSq++;
+    else if (c === "]") closeSq++;
   }
+  let end = url.length;
+  while (end > 0) {
+    const last = url[end - 1];
+    if (/[.,;:!?'"»“]/.test(last)) end--;
+    else if (last === ")" && closeParen > open) { end--; closeParen--; }
+    else if (last === "]" && closeSq > openSq) { end--; closeSq--; }
+    else break;
+  }
+  return url.slice(0, end);
 }
 
 /** Plain text with its URLs linked; newlines are kept by the caller's CSS. */
@@ -107,6 +129,14 @@ export function plainTextToHtml(body: string): string {
   return out + escapeHtml(body.slice(last));
 }
 
+/**
+ * Rendering bound: posts are capped at MAX_POST_LENGTH on the way in (web and
+ * mail); this is the backstop for anything already stored longer, so no
+ * single row can make a thread page slow to render.
+ */
+const RENDER_LIMIT = 2 * MAX_POST_LENGTH;
+
 export function postToHtml(body: string, source: string): string {
-  return source === "email" ? plainTextToHtml(body) : markdownToHtml(body);
+  const text = body.length > RENDER_LIMIT ? body.slice(0, RENDER_LIMIT) + " …" : body;
+  return source === "email" ? plainTextToHtml(text) : markdownToHtml(text);
 }

@@ -9,6 +9,7 @@ import { loginAs, loginViaApi } from "../helpers/auth";
 import { getTestDb } from "../helpers/db";
 import { TEST_MOD_EMAIL } from "../helpers/test-config";
 import { postToHtml } from "../../lib/post-markdown";
+import { clampMailBody, MAX_POST_LENGTH } from "../../lib/topics";
 
 const REL = 'rel="noopener noreferrer nofollow ugc"';
 
@@ -59,6 +60,25 @@ test("email posts stay plain text with linked URLs", () => {
   expect(html).toContain("Hallo *alle*,\n&gt; zitiert");
   expect(html).toContain(`<a href="https://dwds.de/wb/x" target="_blank" ${REL}`);
   expect(html).toContain("</a>. &lt;b&gt;");
+});
+
+test("hostile sizes stay cheap: trailing brackets, deep quotes, overlong mail", () => {
+  // trailing brackets were quadratic in the URL trimmer
+  let t = performance.now();
+  const html = postToHtml("https://x.de/a" + ")".repeat(200_000), "email");
+  expect(performance.now() - t).toBeLessThan(500);
+  expect(html).toContain('href="https://x.de/a"');
+
+  // thousands of nested quotes overflowed marked's stack; now capped, never thrown
+  t = performance.now();
+  expect(() => postToHtml("> ".repeat(5_000) + "x", "web")).not.toThrow();
+  expect(performance.now() - t).toBeLessThan(1_000);
+
+  // mail replies are cut to the web limit, marked as shortened
+  const long = clampMailBody("a".repeat(MAX_POST_LENGTH * 3));
+  expect(long.length).toBe(MAX_POST_LENGTH);
+  expect(long.endsWith("[… gekürzt]")).toBe(true);
+  expect(clampMailBody("kurz")).toBe("kurz");
 });
 
 test("the thread page renders a Markdown post", async ({ page, request }) => {
