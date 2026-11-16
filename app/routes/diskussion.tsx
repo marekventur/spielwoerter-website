@@ -13,6 +13,7 @@ import {
 } from "../../lib/topics";
 import { screenName } from "../../lib/screen-name";
 import type { Route } from "./+types/diskussion";
+import { MarkdownHint } from "~/components/MarkdownHint";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -97,6 +98,7 @@ export default function DiskussionPage({ loaderData }: Route.ComponentProps) {
               placeholder="Deine Nachricht"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"
             />
+            <MarkdownHint />
             {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
             <div className="mt-2 flex gap-2">
               <Button

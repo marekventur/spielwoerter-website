@@ -16,6 +16,8 @@ import { screenName } from "../../lib/screen-name";
 import { canSeeTopic, threadParticipants } from "../../lib/conversations";
 import type { Route } from "./+types/diskussion.$id";
 import { upper } from "../../lib/normalise.js";
+import { postToHtml } from "../../lib/post-markdown";
+import { MarkdownHint } from "~/components/MarkdownHint";
 
 export function meta({ data }: Route.MetaArgs) {
   return [
@@ -81,13 +83,13 @@ function Post({
           {formatTimestamp(repliesTo.created_at)}
         </p>
       )}
-      <p
-        className={`mt-1 text-sm whitespace-pre-wrap ${
-          hidden ? "text-gray-400 italic" : "text-gray-800"
-        }`}
-      >
-        {post.body}
-      </p>
+      <div
+        className={`post-body mt-1 text-sm break-words ${
+          post.source === "email" ? "whitespace-pre-wrap" : ""
+        } ${hidden ? "text-gray-400 italic" : "text-gray-800"}`}
+        // Escaped and link-checked in lib/post-markdown.ts; raw HTML never passes.
+        dangerouslySetInnerHTML={{ __html: postToHtml(post.body, post.source) }}
+      />
       {onHide && (
         <button
           className="mt-1 text-xs text-gray-400 hover:text-orange-600 inline-flex items-center gap-1"
@@ -233,6 +235,7 @@ export default function TopicPage({ loaderData }: Route.ComponentProps) {
             placeholder="Deine Antwort"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"
           />
+          <MarkdownHint />
           {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
           <div className="mt-2">
             <Button
