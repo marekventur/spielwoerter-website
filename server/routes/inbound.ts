@@ -2,7 +2,7 @@ import express, { Router } from "express";
 import { timingSafeEqual } from "node:crypto";
 import rateLimit from "express-rate-limit";
 import { getDb } from "../../lib/db.js";
-import { clampMailBody } from "../../lib/topics.js";
+import { clampMailBody, MAX_MESSAGE_LENGTH, MAX_POST_LENGTH } from "../../lib/topics.js";
 import {
   createTopic,
   insertPost,
@@ -246,7 +246,7 @@ async function handleWordThreadInbound(req: express.Request): Promise<void> {
   }
 
   const rawBody = fields["body-plain"] ?? "";
-  const body = clampMailBody((fields["stripped-text"] ?? rawBody).trim());
+  const body = clampMailBody((fields["stripped-text"] ?? rawBody).trim(), MAX_MESSAGE_LENGTH);
   if (!body) return void console.warn(`[inbound] Word thread: dropped, empty body from ${sender}`);
 
   // Parent only within the same thread; a foreign Message-Id is ignored.
@@ -297,7 +297,7 @@ async function handleInbound(req: express.Request): Promise<void> {
   }
 
   const rawBody = fields["body-plain"] ?? "";
-  const body = clampMailBody((fields["stripped-text"] ?? rawBody).trim());
+  const body = clampMailBody((fields["stripped-text"] ?? rawBody).trim(), MAX_POST_LENGTH);
   if (!body) {
     console.warn(`[inbound] Dropped: empty body from ${sender}`);
     return;

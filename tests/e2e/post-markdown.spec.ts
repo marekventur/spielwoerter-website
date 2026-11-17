@@ -9,7 +9,7 @@ import { loginAs, loginViaApi } from "../helpers/auth";
 import { getTestDb } from "../helpers/db";
 import { TEST_MOD_EMAIL } from "../helpers/test-config";
 import { postToHtml } from "../../lib/post-markdown";
-import { clampMailBody, MAX_POST_LENGTH } from "../../lib/topics";
+import { clampMailBody, MAX_MESSAGE_LENGTH, MAX_POST_LENGTH } from "../../lib/topics";
 
 const REL = 'rel="noopener noreferrer nofollow ugc"';
 
@@ -35,6 +35,8 @@ test("web posts: Markdown, autolinks without referrer, no raw HTML or unsafe lin
   const img = postToHtml("![Foto](https://example.com/a.png)", "web");
   expect(img).not.toContain("<img");
   expect(img).toContain('href="https://example.com/a.png"');
+  // alt text is escaped exactly once
+  expect(postToHtml("![Tom & Jerry](https://example.com/a.png)", "web")).toContain("🖼 Tom &amp; Jerry<");
 
   // single asterisks stay literal: footnotes, gender stars, wildcards
   for (const s of ["söge (*)\nsögest (*)", "Moderator*innen und Leser*innen", "ge*t und ver*t"])
@@ -75,10 +77,12 @@ test("hostile sizes stay cheap: trailing brackets, deep quotes, overlong mail", 
   expect(performance.now() - t).toBeLessThan(1_000);
 
   // mail replies are cut to the web limit, marked as shortened
-  const long = clampMailBody("a".repeat(MAX_POST_LENGTH * 3));
+  const long = clampMailBody("a".repeat(MAX_POST_LENGTH * 3), MAX_POST_LENGTH);
   expect(long.length).toBe(MAX_POST_LENGTH);
   expect(long.endsWith("[… gekürzt]")).toBe(true);
-  expect(clampMailBody("kurz")).toBe("kurz");
+  expect(clampMailBody("kurz", MAX_POST_LENGTH)).toBe("kurz");
+  // word threads have the smaller limit their web form enforces
+  expect(clampMailBody("a".repeat(MAX_POST_LENGTH), MAX_MESSAGE_LENGTH).length).toBe(MAX_MESSAGE_LENGTH);
 });
 
 test("the thread page renders a Markdown post", async ({ page, request }) => {
