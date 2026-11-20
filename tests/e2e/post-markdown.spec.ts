@@ -46,6 +46,13 @@ test("web posts: Markdown, autolinks without referrer, no raw HTML or unsafe lin
   // an image inside a link is one link, not nested anchors
   expect(postToHtml("[![Bild](https://e.x/a.png)](https://e.x/)", "web").match(/<a /g)).toHaveLength(1);
 
+  // indented text is not a code block; only ``` fences are
+  const indented = postToHtml("I. Regeln\n\n\t1. Zulässig sind alle Wörter\n\t\ta. ein Wort\n    b. vier Leerzeichen", "web");
+  expect(indented).not.toContain("<pre>");
+  expect(indented).toContain("Zulässig sind alle Wörter");
+  expect(indented).toContain("vier Leerzeichen");
+  expect(postToHtml("```\nconst a = 1;\n```", "web")).toContain("<pre><code>const a = 1;");
+
   // a "--" signature line does not turn the greeting into a heading
   expect(postToHtml("Viele Grüße\n--\nJojo", "web")).not.toContain("<h2>");
 });
