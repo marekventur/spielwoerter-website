@@ -49,6 +49,12 @@ md.use({
     lheading() {
       return undefined;
     },
+    // No indented code blocks: people indent rules and sub-points with tabs or
+    // spaces, and a whole indented section turned into one unwrapped monospace
+    // block. Code needs a ``` fence; indented text stays ordinary text.
+    code() {
+      return undefined;
+    },
     // A single "*" is always literal: posts here use it for footnotes "(*)",
     // gender stars "Moderator*innen" and wildcards "ge*t", which Markdown would
     // turn into italics. Italics are "_kursiv_"; "**fett**" still works.
